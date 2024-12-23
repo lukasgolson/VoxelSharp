@@ -1,0 +1,73 @@
+﻿using VoxelSharp.World;
+
+namespace VoxelSharp.Mesh;
+
+public struct VoxelVertex
+{
+    public readonly float X; // Position
+    public readonly float Y; // Position
+    public readonly float Z; // Position
+    public readonly float R; // Color components
+    public readonly float G; // Color components
+    public readonly float B; // Color components
+    public readonly float A; // Color components
+    public readonly float FaceId; // Identifier for the face
+
+
+    public VoxelVertex(int x, int y, int z, Voxel voxel, FaceId faceId)
+    {
+        X = x;
+        Y = y;
+        Z = z;
+        R = voxel.Color.R / 255.0f;
+        G = voxel.Color.G / 255.0f;
+        B = voxel.Color.B / 255.0f;
+        A = voxel.Color.A / 255.0f;
+        FaceId = (float)faceId;
+    }
+
+  
+
+
+    public static IEnumerable<VoxelVertex> CreateFace(int x, int y, int z, Voxel voxel, FaceId faceID)
+    {
+        switch (faceID)
+        {
+            case Mesh.FaceId.Top:
+                return
+                [
+                    new VoxelVertex(x + 0, y + 1, z + 0, voxel, faceID),
+                    new VoxelVertex(x + 1, y + 1, z + 0, voxel, faceID),
+                    new VoxelVertex(x + 1, y + 1, z + 1, voxel, faceID),
+                    new VoxelVertex(x + 0, y + 1, z + 0, voxel, faceID),
+                    new VoxelVertex(x + 1, y + 1, z + 1, voxel, faceID),
+                    new VoxelVertex(x + 0, y + 1, z + 1, voxel, faceID)
+                ];
+            case Mesh.FaceId.Bottom:
+                return
+                [
+                    new VoxelVertex(x + 0, y + 0, z + 0, voxel, faceID),
+                    new VoxelVertex(x + 1, y + 0, z + 0, voxel, faceID),
+                    new VoxelVertex(x + 1, y + 0, z + 1, voxel, faceID),
+                    new VoxelVertex(x + 0, y + 0, z + 0, voxel, faceID),
+                    new VoxelVertex(x + 1, y + 0, z + 1, voxel, faceID),
+                    new VoxelVertex(x + 0, y + 0, z + 1, voxel, faceID)
+                ];
+            // Add cases for other faces (Right, Left, Back, Front)
+            default:
+                throw new ArgumentException("Invalid face ID.");
+        }
+        
+    }
+
+}
+
+public enum FaceId : byte
+{
+    Top = 0,
+    Bottom = 1,
+    Right = 2,
+    Left = 3,
+    Back = 4,
+    Front = 5
+}
