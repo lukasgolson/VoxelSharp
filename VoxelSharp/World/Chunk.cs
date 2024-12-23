@@ -15,7 +15,7 @@ public class Chunk
     public Position<int> Position { get; }
 
 
-    Chunk(Position<int> position, int chunkSize = 16)
+    public Chunk(Position<int> position, int chunkSize = 16)
     {
         Voxels = new Voxel[ChunkSize * ChunkSize * ChunkSize];
         Position = position;
@@ -25,13 +25,15 @@ public class Chunk
         ChunkVolume = ChunkSize * ChunkSize * ChunkSize;
     }
 
-    void SetVoxel(Position<int> position, Voxel value)
+    public bool SetVoxel(Position<int> position, Voxel value)
     {
         Voxels[GetVoxelIndex(position)] = value;
         IsDirty = true;
+
+        return true; // TODO: Implement proper return value. True if successful, false if not.
     }
 
-    Voxel GetVoxel(Position<int> position)
+    public Voxel GetVoxel(Position<int> position)
     {
         return Voxels[GetVoxelIndex(position)];
     }

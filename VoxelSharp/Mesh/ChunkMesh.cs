@@ -108,6 +108,7 @@ public class ChunkMesh(Chunk chunk) : BaseMesh
     public void AssociateChunk(Chunk chunk)
     {
         this._associatedChunk = chunk;
+        
     }
 
     public bool IsInitialized()

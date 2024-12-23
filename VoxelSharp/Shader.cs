@@ -1,4 +1,5 @@
 ﻿using OpenTK.Graphics.OpenGL4;
+using OpenTK.Mathematics;
 
 namespace VoxelSharp;
 
@@ -99,5 +100,10 @@ public class Shader
     public int GetAttribLocation(string attribName)
     {
         return GL.GetAttribLocation(_handle, attribName);
+    }
+
+    public void SetModelMatrix(Matrix4 getModelMatrix)
+    {
+        throw new NotImplementedException();
     }
 }
