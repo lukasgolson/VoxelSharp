@@ -4,5 +4,5 @@ namespace VoxelSharp.World;
 
 public struct Voxel(Color value)
 {
-    private readonly Color _color = value;
+    public readonly Color Color = value;
 }
