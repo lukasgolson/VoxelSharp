@@ -26,40 +26,68 @@ public struct VoxelVertex
         FaceId = (float)faceId;
     }
 
-  
 
-
-    public static IEnumerable<VoxelVertex> CreateFace(int x, int y, int z, Voxel voxel, FaceId faceID)
+    public static IEnumerable<VoxelVertex> CreateFace(int x, int y, int z, Voxel voxel, FaceId faceId)
     {
-        switch (faceID)
+        return faceId switch
         {
-            case Mesh.FaceId.Top:
-                return
-                [
-                    new VoxelVertex(x + 0, y + 1, z + 0, voxel, faceID),
-                    new VoxelVertex(x + 1, y + 1, z + 0, voxel, faceID),
-                    new VoxelVertex(x + 1, y + 1, z + 1, voxel, faceID),
-                    new VoxelVertex(x + 0, y + 1, z + 0, voxel, faceID),
-                    new VoxelVertex(x + 1, y + 1, z + 1, voxel, faceID),
-                    new VoxelVertex(x + 0, y + 1, z + 1, voxel, faceID)
-                ];
-            case Mesh.FaceId.Bottom:
-                return
-                [
-                    new VoxelVertex(x + 0, y + 0, z + 0, voxel, faceID),
-                    new VoxelVertex(x + 1, y + 0, z + 0, voxel, faceID),
-                    new VoxelVertex(x + 1, y + 0, z + 1, voxel, faceID),
-                    new VoxelVertex(x + 0, y + 0, z + 0, voxel, faceID),
-                    new VoxelVertex(x + 1, y + 0, z + 1, voxel, faceID),
-                    new VoxelVertex(x + 0, y + 0, z + 1, voxel, faceID)
-                ];
-            // Add cases for other faces (Right, Left, Back, Front)
-            default:
-                throw new ArgumentException("Invalid face ID.");
-        }
-        
+            Mesh.FaceId.Top =>
+            [
+                new VoxelVertex(x + 0, y + 1, z + 0, voxel, faceId),
+                new VoxelVertex(x + 1, y + 1, z + 0, voxel, faceId),
+                new VoxelVertex(x + 1, y + 1, z + 1, voxel, faceId),
+                new VoxelVertex(x + 0, y + 1, z + 0, voxel, faceId),
+                new VoxelVertex(x + 1, y + 1, z + 1, voxel, faceId),
+                new VoxelVertex(x + 0, y + 1, z + 1, voxel, faceId)
+            ],
+            Mesh.FaceId.Bottom =>
+            [
+                new VoxelVertex(x + 0, y + 0, z + 0, voxel, faceId),
+                new VoxelVertex(x + 1, y + 0, z + 0, voxel, faceId),
+                new VoxelVertex(x + 1, y + 0, z + 1, voxel, faceId),
+                new VoxelVertex(x + 0, y + 0, z + 0, voxel, faceId),
+                new VoxelVertex(x + 1, y + 0, z + 1, voxel, faceId),
+                new VoxelVertex(x + 0, y + 0, z + 1, voxel, faceId)
+            ],
+            Mesh.FaceId.Right =>
+            [
+                new VoxelVertex(x + 1, y + 0, z + 0, voxel, faceId),
+                new VoxelVertex(x + 1, y + 1, z + 0, voxel, faceId),
+                new VoxelVertex(x + 1, y + 1, z + 1, voxel, faceId),
+                new VoxelVertex(x + 1, y + 0, z + 0, voxel, faceId),
+                new VoxelVertex(x + 1, y + 1, z + 1, voxel, faceId),
+                new VoxelVertex(x + 1, y + 0, z + 1, voxel, faceId)
+            ],
+            Mesh.FaceId.Left =>
+            [
+                new VoxelVertex(x + 0, y + 0, z + 0, voxel, faceId),
+                new VoxelVertex(x + 0, y + 1, z + 0, voxel, faceId),
+                new VoxelVertex(x + 0, y + 1, z + 1, voxel, faceId),
+                new VoxelVertex(x + 0, y + 0, z + 0, voxel, faceId),
+                new VoxelVertex(x + 0, y + 1, z + 1, voxel, faceId),
+                new VoxelVertex(x + 0, y + 0, z + 1, voxel, faceId)
+            ],
+            Mesh.FaceId.Back =>
+            [
+                new VoxelVertex(x + 0, y + 0, z + 0, voxel, faceId),
+                new VoxelVertex(x + 0, y + 1, z + 0, voxel, faceId),
+                new VoxelVertex(x + 1, y + 1, z + 0, voxel, faceId),
+                new VoxelVertex(x + 0, y + 0, z + 0, voxel, faceId),
+                new VoxelVertex(x + 1, y + 1, z + 0, voxel, faceId),
+                new VoxelVertex(x + 1, y + 0, z + 0, voxel, faceId)
+            ],
+            Mesh.FaceId.Front =>
+            [
+                new VoxelVertex(x + 0, y + 0, z + 1, voxel, faceId),
+                new VoxelVertex(x + 0, y + 1, z + 1, voxel, faceId),
+                new VoxelVertex(x + 1, y + 1, z + 1, voxel, faceId),
+                new VoxelVertex(x + 0, y + 0, z + 1, voxel, faceId),
+                new VoxelVertex(x + 1, y + 1, z + 1, voxel, faceId),
+                new VoxelVertex(x + 1, y + 0, z + 1, voxel, faceId)
+            ],
+            _ => throw new ArgumentException("Invalid face ID.")
+        };
     }
-
 }
 
 public enum FaceId : byte
