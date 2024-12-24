@@ -3,7 +3,7 @@ using OpenTK.Mathematics;
 
 namespace VoxelSharp.Mesh;
 
-public abstract class BaseMesh
+public abstract class BaseMesh : IDisposable
 {
     protected int Vao = 0;
     protected int Vbo = 0;
