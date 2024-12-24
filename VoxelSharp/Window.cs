@@ -8,7 +8,10 @@ namespace VoxelSharp
     public class Window(GameWindowSettings gameWindowSettings, NativeWindowSettings nativeWindowSettings)
         : GameWindow(gameWindowSettings, nativeWindowSettings)
     {
-        private Shader? _shader;
+        private Shader? _chunkShader;
+
+        private World.World _world = new(12, 16);
+
 
 
         // Now, we start initializing OpenGL.
@@ -16,7 +19,7 @@ namespace VoxelSharp
         {
             base.OnLoad();
 
-            _shader = new Shader("Shaders/shader.vert", "Shaders/shader.frag");
+            _chunkShader = new Shader("Shaders/chunk.vert", "Shaders/chunk.frag");
 
 
             GL.ClearColor(0.2f, 0.3f, 0.3f, 1.0f);
@@ -29,6 +32,12 @@ namespace VoxelSharp
 
             GL.Clear(ClearBufferMask.ColorBufferBit);
 
+            _chunkShader.Use();
+            
+            _world.Render(_chunkShader);
+
+
+            Shader.UnUse();
 
             SwapBuffers();
         }

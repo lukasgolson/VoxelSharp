@@ -2,7 +2,7 @@
 
 namespace VoxelSharp.World;
 
-public struct Voxel(Color value)
+public readonly struct Voxel(Color value)
 {
     public readonly Color Color = value;
 }

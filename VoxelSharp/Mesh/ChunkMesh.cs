@@ -8,15 +8,12 @@ namespace VoxelSharp.Mesh;
 
 public class ChunkMesh(Chunk chunk) : BaseMesh
 {
-    private Chunk _associatedChunk = chunk;
-
-
     public override void Render()
     {
-        if (_associatedChunk.IsDirty || !IsInitialized())
+        if (chunk.IsDirty || !IsInitialized())
         {
             SetupMesh(8);
-            _associatedChunk.IsDirty = false;
+            chunk.IsDirty = false;
         }
 
         base.Render();
@@ -26,50 +23,52 @@ public class ChunkMesh(Chunk chunk) : BaseMesh
     {
         var vertexData = new List<float>
         {
-            Capacity = _associatedChunk.ChunkVolume * 18 * 5
+            Capacity = chunk.ChunkVolume * 18 * 5
         };
 
-        for (int x = 0; x < _associatedChunk.ChunkSize; ++x)
+        for (int x = 0; x < chunk.ChunkSize; ++x)
         {
-            for (int z = 0; z < _associatedChunk.ChunkSize; ++z)
+            for (int z = 0; z < chunk.ChunkSize; ++z)
             {
-                for (int y = 0; y < _associatedChunk.ChunkSize; ++y)
+                for (int y = 0; y < chunk.ChunkSize; ++y)
                 {
-                    var voxel = _associatedChunk.Voxels[_associatedChunk.GetVoxelIndex(new Position<int>(x, y, z))];
+                    Voxel voxel = chunk.Voxels[chunk.GetVoxelIndex(new Position<int>(x, y, z))];
+
                     if (voxel.Color.A == 0) continue;
 
+
                     // Top face
-                    if (IsVoid(x, y + 1, z, voxel.Color.A, _associatedChunk.Voxels))
+                    if (IsVoid(x, y + 1, z, voxel.Color.A, chunk.Voxels))
                     {
                         AddVerticesToData(vertexData, VoxelVertex.CreateFace(x, y, z, voxel, FaceId.Top));
                     }
 
                     // Bottom face
-                    if (IsVoid(x, y - 1, z, voxel.Color.A, _associatedChunk.Voxels))
+                    if (IsVoid(x, y - 1, z, voxel.Color.A, chunk.Voxels))
                     {
                         AddVerticesToData(vertexData, VoxelVertex.CreateFace(x, y, z, voxel, FaceId.Bottom));
                     }
 
                     // Right face
-                    if (IsVoid(x + 1, y, z, voxel.Color.A, _associatedChunk.Voxels))
+                    if (IsVoid(x + 1, y, z, voxel.Color.A, chunk.Voxels))
                     {
                         AddVerticesToData(vertexData, VoxelVertex.CreateFace(x, y, z, voxel, FaceId.Right));
                     }
 
                     // Left face
-                    if (IsVoid(x - 1, y, z, voxel.Color.A, _associatedChunk.Voxels))
+                    if (IsVoid(x - 1, y, z, voxel.Color.A, chunk.Voxels))
                     {
                         AddVerticesToData(vertexData, VoxelVertex.CreateFace(x, y, z, voxel, FaceId.Left));
                     }
 
                     // Back face
-                    if (IsVoid(x, y, z - 1, voxel.Color.A, _associatedChunk.Voxels))
+                    if (IsVoid(x, y, z - 1, voxel.Color.A, chunk.Voxels))
                     {
                         AddVerticesToData(vertexData, VoxelVertex.CreateFace(x, y, z, voxel, FaceId.Back));
                     }
 
                     // Front face
-                    if (IsVoid(x, y, z + 1, voxel.Color.A, _associatedChunk.Voxels))
+                    if (IsVoid(x, y, z + 1, voxel.Color.A, chunk.Voxels))
                     {
                         AddVerticesToData(vertexData, VoxelVertex.CreateFace(x, y, z, voxel, FaceId.Front));
                     }
@@ -94,33 +93,27 @@ public class ChunkMesh(Chunk chunk) : BaseMesh
             (IntPtr)(7 * sizeof(float)));
     }
 
-    public bool IsVoid(int x, int y, int z, int currentAlpha, Voxel[] voxels)
+    private bool IsVoid(int x, int y, int z, int currentAlpha, Voxel[] voxels)
     {
-        if (x < 0 || x >= _associatedChunk.ChunkSize || y < 0 || y >= _associatedChunk.ChunkSize || z < 0 ||
-            z >= _associatedChunk.ChunkSize)
+        if (x < 0 || x >= chunk.ChunkSize || y < 0 || y >= chunk.ChunkSize || z < 0 ||
+            z >= chunk.ChunkSize)
         {
             return true;
         }
 
-        return voxels[_associatedChunk.GetVoxelIndex(new Position<int>(x, y, z))].Color.A != currentAlpha;
-    }
-
-    public void AssociateChunk(Chunk chunk)
-    {
-        this._associatedChunk = chunk;
-        
+        return voxels[chunk.GetVoxelIndex(new Position<int>(x, y, z))].Color.A != currentAlpha;
     }
 
     public bool IsInitialized()
     {
-        return this.Vao != 0;
+        return Vao != 0;
     }
 
     public override Matrix4 GetModelMatrix()
     {
-        return Matrix4.CreateTranslation(new Vector3(_associatedChunk.Position.X * _associatedChunk.ChunkSize,
-            _associatedChunk.Position.Y * _associatedChunk.ChunkSize,
-            _associatedChunk.Position.Z * _associatedChunk.ChunkSize));
+        return Matrix4.CreateTranslation(new Vector3(chunk.Position.X * chunk.ChunkSize,
+            chunk.Position.Y * chunk.ChunkSize,
+            chunk.Position.Z * chunk.ChunkSize));
     }
 
     public static void AddVerticesToData(List<float> data, IEnumerable<VoxelVertex> vertices)

@@ -13,7 +13,7 @@ public class World
     private readonly ChunkMesh[] _chunkMeshArray;
 
 
-    World(int worldSize, int chunkSize)
+    public World(int worldSize, int chunkSize)
     {
         _worldSize = worldSize;
         _chunkSize = chunkSize;
@@ -42,11 +42,11 @@ public class World
     }
 
 
-    void Render(Shader shaderProgram)
+    public void Render(Shader shaderProgram)
     {
         foreach (var chunkMesh in _chunkMeshArray)
         {
-            shaderProgram.SetModelMatrix(chunkMesh.GetModelMatrix());
+            shaderProgram.SetUniform("m_model",chunkMesh.GetModelMatrix());
             chunkMesh.Render();
         }
     }

@@ -17,12 +17,21 @@ public class Chunk
 
     public Chunk(Position<int> position, int chunkSize = 16)
     {
-        Voxels = new Voxel[ChunkSize * ChunkSize * ChunkSize];
+        
         Position = position;
 
         ChunkSize = chunkSize;
         ChunkArea = ChunkSize * ChunkSize;
         ChunkVolume = ChunkSize * ChunkSize * ChunkSize;
+
+        Voxels = new Voxel[ChunkVolume];
+
+        
+        // fill the Voxels array with empty voxels
+        for (int i = 0; i < ChunkVolume; i++)
+        {
+            Voxels[i] = new Voxel(Color.White);
+        }
     }
 
     public bool SetVoxel(Position<int> position, Voxel value)
