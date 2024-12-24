@@ -30,7 +30,7 @@ public class Chunk
         // fill the Voxels array with empty voxels
         for (int i = 0; i < ChunkVolume; i++)
         {
-            Voxels[i] = new Voxel(Color.White);
+            Voxels[i] = new Voxel(Color.Transparent);
         }
     }
 

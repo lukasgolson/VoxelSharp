@@ -1,5 +1,4 @@
-﻿using System.Diagnostics;
-using System.Numerics;
+﻿using System.Numerics;
 using System.Runtime.CompilerServices;
 
 namespace VoxelSharp.Structs;
@@ -38,18 +37,6 @@ public readonly struct Position<T> where T : INumber<T>
         X = x;
         Y = y;
         Z = z;
-
-        if (typeof(T) == typeof(float))
-        {
-            WarnAboutFloatType();
-        }
-    }
-
-    [Conditional("DEBUG")] // Only emits the warning in Debug builds
-    private static void WarnAboutFloatType()
-    {
-        Debug.WriteLine(
-            "Warning: Position<float> is not recommended for performance-critical code because it does not support SIMD operations. Consider using Vector3 instead.");
     }
 
 
@@ -98,6 +85,17 @@ public readonly struct Position<T> where T : INumber<T>
     public static Position<T> operator -(Position<T> a, Position<T> b)
     {
         return new Position<T>(a.X - b.X, a.Y - b.Y, a.Z - b.Z);
+    }
+
+
+    /// <summary>
+    /// Negates a vector.
+    /// </summary>
+    /// <param name="a">The vector to negate.</param>
+    /// <returns>The negated vector.</returns>
+    public static Position<T> operator -(Position<T> a)
+    {
+        return new Position<T>(-a.X, -a.Y, -a.Z);
     }
 
 

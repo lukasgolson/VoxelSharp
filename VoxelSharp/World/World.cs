@@ -1,4 +1,4 @@
-﻿using VoxelSharp.Mesh;
+﻿using VoxelSharp.Renderer.Mesh.World;
 using VoxelSharp.Structs;
 
 namespace VoxelSharp.World;
@@ -46,8 +46,7 @@ public class World
     {
         foreach (var chunkMesh in _chunkMeshArray)
         {
-            shaderProgram.SetUniform("m_model",chunkMesh.GetModelMatrix());
-            chunkMesh.Render();
+            chunkMesh.Render(shaderProgram);
         }
     }
 

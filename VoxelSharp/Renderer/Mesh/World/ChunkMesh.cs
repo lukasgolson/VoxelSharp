@@ -1,30 +1,31 @@
-﻿using Microsoft.VisualBasic;
-using OpenTK.Graphics.OpenGL4;
+﻿using OpenTK.Graphics.OpenGL4;
 using OpenTK.Mathematics;
 using VoxelSharp.Structs;
 using VoxelSharp.World;
 
-namespace VoxelSharp.Mesh;
+namespace VoxelSharp.Renderer.Mesh.World;
 
 public class ChunkMesh(Chunk chunk) : BaseMesh
 {
-    public override void Render()
+    public override void Render(Shader shaderProgram)
     {
+        shaderProgram.SetUniform("m_model", GetModelMatrix());
+
         if (chunk.IsDirty || !IsInitialized())
         {
             SetupMesh(8);
             chunk.IsDirty = false;
         }
 
-        base.Render();
+        base.Render(shaderProgram);
     }
+
+
 
     public override List<float> GetVertexData()
     {
-        var vertexData = new List<float>
-        {
-            Capacity = chunk.ChunkVolume * 18 * 5
-        };
+        List<float> vertexData = new(capacity: chunk.ChunkVolume * 18 * 5);
+
 
         for (int x = 0; x < chunk.ChunkSize; ++x)
         {

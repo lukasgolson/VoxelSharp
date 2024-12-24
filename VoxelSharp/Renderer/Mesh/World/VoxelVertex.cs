@@ -1,6 +1,6 @@
 ﻿using VoxelSharp.World;
 
-namespace VoxelSharp.Mesh;
+namespace VoxelSharp.Renderer.Mesh.World;
 
 public struct VoxelVertex
 {
@@ -31,7 +31,7 @@ public struct VoxelVertex
     {
         return faceId switch
         {
-            Mesh.FaceId.Top =>
+            World.FaceId.Top =>
             [
                 new VoxelVertex(x + 0, y + 1, z + 0, voxel, faceId),
                 new VoxelVertex(x + 1, y + 1, z + 0, voxel, faceId),
@@ -40,7 +40,7 @@ public struct VoxelVertex
                 new VoxelVertex(x + 1, y + 1, z + 1, voxel, faceId),
                 new VoxelVertex(x + 0, y + 1, z + 1, voxel, faceId)
             ],
-            Mesh.FaceId.Bottom =>
+            World.FaceId.Bottom =>
             [
                 new VoxelVertex(x + 0, y + 0, z + 0, voxel, faceId),
                 new VoxelVertex(x + 1, y + 0, z + 0, voxel, faceId),
@@ -49,7 +49,7 @@ public struct VoxelVertex
                 new VoxelVertex(x + 1, y + 0, z + 1, voxel, faceId),
                 new VoxelVertex(x + 0, y + 0, z + 1, voxel, faceId)
             ],
-            Mesh.FaceId.Right =>
+            World.FaceId.Right =>
             [
                 new VoxelVertex(x + 1, y + 0, z + 0, voxel, faceId),
                 new VoxelVertex(x + 1, y + 1, z + 0, voxel, faceId),
@@ -58,7 +58,7 @@ public struct VoxelVertex
                 new VoxelVertex(x + 1, y + 1, z + 1, voxel, faceId),
                 new VoxelVertex(x + 1, y + 0, z + 1, voxel, faceId)
             ],
-            Mesh.FaceId.Left =>
+            World.FaceId.Left =>
             [
                 new VoxelVertex(x + 0, y + 0, z + 0, voxel, faceId),
                 new VoxelVertex(x + 0, y + 1, z + 0, voxel, faceId),
@@ -67,7 +67,7 @@ public struct VoxelVertex
                 new VoxelVertex(x + 0, y + 1, z + 1, voxel, faceId),
                 new VoxelVertex(x + 0, y + 0, z + 1, voxel, faceId)
             ],
-            Mesh.FaceId.Back =>
+            World.FaceId.Back =>
             [
                 new VoxelVertex(x + 0, y + 0, z + 0, voxel, faceId),
                 new VoxelVertex(x + 0, y + 1, z + 0, voxel, faceId),
@@ -76,7 +76,7 @@ public struct VoxelVertex
                 new VoxelVertex(x + 1, y + 1, z + 0, voxel, faceId),
                 new VoxelVertex(x + 1, y + 0, z + 0, voxel, faceId)
             ],
-            Mesh.FaceId.Front =>
+            World.FaceId.Front =>
             [
                 new VoxelVertex(x + 0, y + 0, z + 1, voxel, faceId),
                 new VoxelVertex(x + 0, y + 1, z + 1, voxel, faceId),

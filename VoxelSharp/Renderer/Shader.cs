@@ -65,7 +65,7 @@ namespace VoxelSharp
             // Check for compilation errors
             GL.GetShader(shader, ShaderParameter.CompileStatus, out var code);
             if (code == (int)All.True) return;
-            
+
             var infoLog = GL.GetShaderInfoLog(shader);
             throw new Exception($"Error occurred while compiling Shader({shader}).\n\n{infoLog}");
         }
@@ -89,13 +89,13 @@ namespace VoxelSharp
         {
             GL.UseProgram(Handle);
         }
-        
+
         public static void UnUse()
         {
             GL.UseProgram(0);
         }
 
-       
+
         public int GetAttribLocation(string attribName)
         {
             return GL.GetAttribLocation(Handle, attribName);
@@ -111,52 +111,69 @@ namespace VoxelSharp
         //     3. Use the appropriate GL.Uniform* function to set the uniform.
 
         /// <summary>
-        /// Set a uniform int on this shader.
+        /// Internal method to handle common uniform-setting operations.
         /// </summary>
-        /// <param name="name">The name of the uniform</param>
-        /// <param name="data">The data to set</param>
+        private void SetUniformInternal(string name, out int location)
+        {
+            GL.UseProgram(Handle);
+
+            if (_uniformLocations.TryGetValue(name, out location))
+            {
+                Console.WriteLine($"Setting uniform {name}");
+            }
+            else
+            {
+                Console.WriteLine($"Uniform {name} not found in shader.");
+                location = -1; // Indicate that the uniform was not found
+            }
+        }
+
+        /// <summary>
+        /// Sets an int uniform variable.
+        /// </summary>
         public void SetUniform(string name, int data)
         {
-            GL.UseProgram(Handle);
-            GL.Uniform1(_uniformLocations[name], data);
+            SetUniformInternal(name, out var location);
+            if (location != -1)
+            {
+                GL.Uniform1(location, data);
+            }
         }
 
         /// <summary>
-        /// Set a uniform float on this shader.
+        /// Sets a float uniform variable.
         /// </summary>
-        /// <param name="name">The name of the uniform</param>
-        /// <param name="data">The data to set</param>
         public void SetUniform(string name, float data)
         {
-            GL.UseProgram(Handle);
-            GL.Uniform1(_uniformLocations[name], data);
+            SetUniformInternal(name, out var location);
+            if (location != -1)
+            {
+                GL.Uniform1(location, data);
+            }
         }
 
         /// <summary>
-        /// Set a uniform Matrix4 on this shader
+        /// Sets a Matrix4 uniform variable.
         /// </summary>
-        /// <param name="name">The name of the uniform</param>
-        /// <param name="data">The data to set</param>
-        /// <remarks>
-        ///   <para>
-        ///   The matrix is transposed before being sent to the shader.
-        ///   </para>
-        /// </remarks>
         public void SetUniform(string name, Matrix4 data)
         {
-            GL.UseProgram(Handle);
-            GL.UniformMatrix4(_uniformLocations[name], true, ref data);
+            SetUniformInternal(name, out var location);
+            if (location != -1)
+            {
+                GL.UniformMatrix4(location, true, ref data);
+            }
         }
 
         /// <summary>
-        /// Set a uniform Vector3 on this shader.
+        /// Sets a Vector3 uniform variable.
         /// </summary>
-        /// <param name="name">The name of the uniform</param>
-        /// <param name="data">The data to set</param>
         public void SetUniform(string name, Vector3 data)
         {
-            GL.UseProgram(Handle);
-            GL.Uniform3(_uniformLocations[name], data);
+            SetUniformInternal(name, out var location);
+            if (location != -1)
+            {
+                GL.Uniform3(location, ref data);
+            }
         }
     }
 }

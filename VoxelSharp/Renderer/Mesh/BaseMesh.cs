@@ -1,7 +1,7 @@
 ﻿using OpenTK.Graphics.OpenGL4;
 using OpenTK.Mathematics;
 
-namespace VoxelSharp.Mesh;
+namespace VoxelSharp.Renderer.Mesh;
 
 public abstract class BaseMesh : IDisposable
 {
@@ -46,7 +46,7 @@ public abstract class BaseMesh : IDisposable
         if (Vbo != 0) GL.DeleteBuffer(Vbo);
     }
 
-    public virtual void Render()
+    public virtual void Render(Shader shaderProgram)
     {
         // Bind the Vertex Array Object (VAO) for rendering
         GL.BindVertexArray(Vao);

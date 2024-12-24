@@ -13,7 +13,6 @@
 
     <ItemGroup>
       <Folder Include="Modding\" />
-      <Folder Include="Renderer\" />
     </ItemGroup>
 
     <ItemGroup>
@@ -24,10 +23,10 @@
         <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       </None>
       <None Update="Shaders\chunk.frag">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       </None>
       <None Update="Shaders\chunk.vert">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       </None>
     </ItemGroup>
 
