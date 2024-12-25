@@ -2,29 +2,16 @@
 
 namespace VoxelSharp.Renderer.Mesh.World;
 
-public struct VoxelVertex
+public readonly struct VoxelVertex(int x, int y, int z, Voxel voxel, FaceId faceId)
 {
-    public readonly float X; // Position
-    public readonly float Y; // Position
-    public readonly float Z; // Position
-    public readonly float R; // Color components
-    public readonly float G; // Color components
-    public readonly float B; // Color components
-    public readonly float A; // Color components
-    public readonly float FaceId; // Identifier for the face
-
-
-    public VoxelVertex(int x, int y, int z, Voxel voxel, FaceId faceId)
-    {
-        X = x;
-        Y = y;
-        Z = z;
-        R = voxel.Color.R / 255.0f;
-        G = voxel.Color.G / 255.0f;
-        B = voxel.Color.B / 255.0f;
-        A = voxel.Color.A / 255.0f;
-        FaceId = (float)faceId;
-    }
+    public readonly float X = x; // Position
+    public readonly float Y = y; // Position
+    public readonly float Z = z; // Position
+    public readonly float R = voxel.Color.R / 255.0f; // Color components
+    public readonly float G = voxel.Color.G / 255.0f; // Color components
+    public readonly float B = voxel.Color.B / 255.0f; // Color components
+    public readonly float A = voxel.Color.A / 255.0f; // Color components
+    public readonly float FaceId = (float)faceId; // Identifier for the face
 
 
     public static IEnumerable<VoxelVertex> CreateFace(int x, int y, int z, Voxel voxel, FaceId faceId)

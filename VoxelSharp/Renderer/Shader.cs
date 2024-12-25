@@ -119,7 +119,7 @@ namespace VoxelSharp
 
             if (_uniformLocations.TryGetValue(name, out location))
             {
-                Console.WriteLine($"Setting uniform {name}");
+                //   Console.WriteLine($"Setting uniform {name} at location {location}");
             }
             else
             {

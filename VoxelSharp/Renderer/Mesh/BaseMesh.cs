@@ -1,67 +1,97 @@
 ﻿using OpenTK.Graphics.OpenGL4;
 using OpenTK.Mathematics;
+using System.Buffers;
 
-namespace VoxelSharp.Renderer.Mesh;
-
-public abstract class BaseMesh : IDisposable
+namespace VoxelSharp.Renderer.Mesh
 {
-    protected int Vao = 0;
-    protected int Vbo = 0;
-    protected int VertexCount = 0;
-
-    protected abstract void SetVertexAttributes();
-
-    protected virtual void SetupMesh(int elementsPerVertex)
+    public abstract class BaseMesh : IDisposable
     {
-        // Check if VAO exists and delete it
-        if (Vao != 0)
+        protected int Vao = 0;
+        protected int Vbo = 0;
+        protected int VertexCount = 0;
+
+        protected abstract void SetVertexAttributes();
+
+        protected virtual void SetupMesh(int elementsPerVertex)
         {
-            GL.DeleteVertexArray(Vao);
+            if (Vao != 0)
+            {
+                GL.DeleteVertexArray(Vao);
+                Vao = 0;
+            }
+
+            // Get vertex data using Memory<float> to minimize heap allocations
+            using var vertexMemoryOwner = GetVertexDataMemory(out int vertexCount);
+            VertexCount = vertexCount / elementsPerVertex;
+
+            // Generate VAO and VBO
+            Vao = GL.GenVertexArray();
+            GL.BindVertexArray(Vao);
+
+            Vbo = GL.GenBuffer();
+            GL.BindBuffer(BufferTarget.ArrayBuffer, Vbo);
+
+            // Bind vertex data from Memory<T>
+            var vertexSpan = vertexMemoryOwner.Memory.Span.Slice(0, vertexCount);
+            GL.BufferData(BufferTarget.ArrayBuffer, vertexSpan.Length * sizeof(float), ref vertexSpan[0], BufferUsageHint.StaticDraw);
+
+            // Set vertex attributes
+            SetVertexAttributes();
+
+            // Unbind VAO and VBO
+            GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
+            GL.BindVertexArray(0);
         }
 
-        var vertexData = GetVertexData();
-        VertexCount = vertexData.Count / elementsPerVertex; // Render this based on your vertex structure
+        public virtual void Render(Shader shaderProgram)
+        {
+            // Bind the VAO
+            GL.BindVertexArray(Vao);
 
-        // Generate and bind Vertex Array Object (VAO)
-        Vao = GL.GenVertexArray();
-        GL.BindVertexArray(Vao);
+            // Issue OpenGL draw call
+            GL.DrawArrays(PrimitiveType.Triangles, 0, VertexCount);
 
-        // Generate and bind Vertex Buffer Object (VBO)
-        Vbo = GL.GenBuffer();
-        GL.BindBuffer(BufferTarget.ArrayBuffer, Vbo);
-        GL.BufferData(BufferTarget.ArrayBuffer, vertexData.Count * sizeof(float), vertexData.ToArray(),
-            BufferUsageHint.StaticDraw);
+            // Unbind the VAO
+            GL.BindVertexArray(0);
+        }
 
-        SetVertexAttributes();
+        public virtual Matrix4 GetModelMatrix()
+        {
+            return Matrix4.Identity;
+        }
 
-        // Unbind VAO and VBO
-        GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
-        GL.BindVertexArray(0);
-    }
+        // Use Memory<T> for better control over data and memory allocation
+        protected abstract IMemoryOwner<float> GetVertexDataMemory(out int vertexCount);
 
-    public virtual void Dispose()
-    {
-        // Clean up the VAO and VBO when the mesh is destroyed
-        if (Vao != 0) GL.DeleteVertexArray(Vao);
-        if (Vbo != 0) GL.DeleteBuffer(Vbo);
-    }
+        // Proper disposal to avoid resource leaks
+        protected virtual void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                if (Vao != 0)
+                {
+                    GL.DeleteVertexArray(Vao);
+                    Vao = 0;
+                }
+                if (Vbo != 0)
+                {
+                    GL.DeleteBuffer(Vbo);
+                    Vbo = 0;
+                }
+            }
+        }
 
-    public virtual void Render(Shader shaderProgram)
-    {
-        // Bind the Vertex Array Object (VAO) for rendering
-        GL.BindVertexArray(Vao);
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
 
-        // Issue OpenGL draw calls to render the mesh
-        GL.DrawArrays(PrimitiveType.Triangles, 0, VertexCount);
+        ~BaseMesh()
+        {
+            Dispose(false);
+        }
 
-        // Unbind the VAO after rendering
-        GL.BindVertexArray(0);
-    }
-
-    public abstract List<float> GetVertexData(); // Pure abstract function
-
-    public virtual Matrix4 GetModelMatrix()
-    {
-        return Matrix4.Identity;
+        protected bool IsInitialized => Vao != 0 && Vbo != 0;
     }
 }

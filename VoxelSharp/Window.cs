@@ -34,23 +34,23 @@ namespace VoxelSharp
         }
 
 
-        float[] vertices =
-        {
-            -0.5f, -0.5f, 0.0f, //Bottom-left vertex
-            0.5f, -0.5f, 0.0f, //Bottom-right vertex
-            0.0f, 0.5f, 0.0f //Top vertex
-        };
+     
 
 
         protected override void OnLoad()
         {
             base.OnLoad();
 
-            _chunkShader = new Shader("Shaders/shader.vert", "Shaders/shader.frag");
+            GL.Enable(EnableCap.DepthTest); // Enable depth testing for proper 3D rendering
+            GL.Enable(EnableCap.CullFace); // Enable face culling to improve performance
+            GL.Enable(EnableCap.Blend); // Enable blending for transparency
+            GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha); // Set blending function
+
+            _chunkShader = new Shader("Shaders/chunk.vert", "Shaders/chunk.frag");
 
 
             GL.ClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-            GL.Enable(EnableCap.DepthTest); // Enable depth testing for proper 3D rendering
+        
         }
 
         protected override void OnRenderFrame(FrameEventArgs e)

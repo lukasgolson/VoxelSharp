@@ -22,6 +22,9 @@ const int uv_indices[12] = int[12](
 );
 
 
+
+
+
 void main() {
     voxel_color = in_color;
     gl_Position = m_projection * m_view * m_model * vec4(in_position, 1.0);
