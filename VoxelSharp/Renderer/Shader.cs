@@ -1,90 +1,106 @@
 ﻿using OpenTK.Graphics.OpenGL4;
 using OpenTK.Mathematics;
+using System.Collections.Generic;
+using System.IO;
 
-namespace VoxelSharp
+namespace VoxelSharp.Renderer
 {
-    // A simple class meant to help create shaders.
     public class Shader
     {
         public readonly int Handle;
 
         private readonly Dictionary<string, int> _uniformLocations;
+        private readonly Dictionary<string, int> _attributeLocations;
 
         public Shader(string vertPath, string fragPath)
         {
-            // Load the shader source from the file.
-            var shaderSource = File.ReadAllText(vertPath);
-            var vertexShader = GL.CreateShader(ShaderType.VertexShader);
-            GL.ShaderSource(vertexShader, shaderSource);
-            CompileShader(vertexShader);
+            if (!File.Exists(vertPath) || !File.Exists(fragPath))
+            {
+                throw new FileNotFoundException("Shader file not found.");
+            }
 
-            // We do the same for the fragment shader.
-            shaderSource = File.ReadAllText(fragPath);
-            var fragmentShader = GL.CreateShader(ShaderType.FragmentShader);
-            GL.ShaderSource(fragmentShader, shaderSource);
-            CompileShader(fragmentShader);
+            // Load and compile shaders
+            var vertexShader = LoadAndCompileShader(vertPath, ShaderType.VertexShader);
+            var fragmentShader = LoadAndCompileShader(fragPath, ShaderType.FragmentShader);
 
-            // These two shaders must then be merged into a shader program, which can then be used by OpenGL.
-            // To do this, create a program...
+            // Create shader program and link shaders
             Handle = GL.CreateProgram();
-
-            // Attach both shaders...
             GL.AttachShader(Handle, vertexShader);
             GL.AttachShader(Handle, fragmentShader);
-
-            // And then link them together.
             LinkProgram(Handle);
 
-            // We can now detach and delete the shaders, as they are no longer needed.
+            // Clean up individual shaders
             GL.DetachShader(Handle, vertexShader);
             GL.DetachShader(Handle, fragmentShader);
-            GL.DeleteShader(fragmentShader);
             GL.DeleteShader(vertexShader);
+            GL.DeleteShader(fragmentShader);
 
-            // Now, we can get the locations of the uniforms in the shader and cache them.
+            // cache attribute locations
+            GL.GetProgram(Handle, GetProgramParameterName.ActiveAttributes, out var numberOfAttributes);
+            _attributeLocations = new Dictionary<string, int>();
 
+            for (var i = 0; i < numberOfAttributes; i++)
+            {
+                var key = GL.GetActiveAttrib(Handle, i, out _, out _);
+                var location = GL.GetAttribLocation(Handle, key);
+
+                if (location == -1)
+                {
+                    Console.WriteLine($"Warning: Attribute '{key}' is not active in the shader.");
+                }
+
+                _attributeLocations[key] = location;
+            }
+
+            // Cache uniform locations
             GL.GetProgram(Handle, GetProgramParameterName.ActiveUniforms, out var numberOfUniforms);
-
             _uniformLocations = new Dictionary<string, int>();
 
             for (var i = 0; i < numberOfUniforms; i++)
             {
                 var key = GL.GetActiveUniform(Handle, i, out _, out _);
-
                 var location = GL.GetUniformLocation(Handle, key);
 
-                _uniformLocations.Add(key, location);
+                if (location == -1)
+                {
+                    Console.WriteLine($"Warning: Uniform '{key}' is not active in the shader.");
+                }
+
+                _uniformLocations[key] = location;
             }
+        }
+
+        private static int LoadAndCompileShader(string path, ShaderType type)
+        {
+            var shaderSource = File.ReadAllText(path);
+            var shader = GL.CreateShader(type);
+            GL.ShaderSource(shader, shaderSource);
+            CompileShader(shader);
+            return shader;
         }
 
         private static void CompileShader(int shader)
         {
-            // Try to compile the shader
             GL.CompileShader(shader);
-
-            // Check for compilation errors
             GL.GetShader(shader, ShaderParameter.CompileStatus, out var code);
+
             if (code == (int)All.True) return;
 
             var infoLog = GL.GetShaderInfoLog(shader);
-            throw new Exception($"Error occurred while compiling Shader({shader}).\n\n{infoLog}");
+            throw new Exception($"Error occurred while compiling Shader({shader}):\n{infoLog}");
         }
 
         private static void LinkProgram(int program)
         {
-            // We link the program
             GL.LinkProgram(program);
-
-            // Check for linking errors
             GL.GetProgram(program, GetProgramParameterName.LinkStatus, out var code);
-            if (code != (int)All.True)
-            {
-                // We can use `GL.GetProgramInfoLog(program)` to get information about the error.
-                throw new Exception($"Error occurred whilst linking Program({program})");
-            }
+
+            if (code == (int)All.True) return;
+
+            var infoLog = GL.GetProgramInfoLog(program);
+            throw new Exception($"Error occurred whilst linking Program({program}):\n{infoLog}");
         }
 
-        // A wrapper function that enables the shader program.
         public void Use()
         {
             GL.UseProgram(Handle);
@@ -95,85 +111,49 @@ namespace VoxelSharp
             GL.UseProgram(0);
         }
 
-
         public int GetAttribLocation(string attribName)
         {
-            return GL.GetAttribLocation(Handle, attribName);
+            if (_attributeLocations.TryGetValue(attribName, out var location) && location != -1) return location;
+            Console.WriteLine($"Warning: Attribute '{attribName}' not found in shader.");
+            return 0;
         }
 
         // Uniform setters
-        // Uniforms are variables that can be set by user code, instead of reading them from the VBO.
-        // You use VBOs for vertex-related data, and uniforms for almost everything else.
-
-        // Setting a uniform is almost always the exact same, so I'll explain it here once, instead of in every method:
-        //     1. Bind the program you want to set the uniform on
-        //     2. Get a handle to the location of the uniform
-        //     3. Use the appropriate GL.Uniform* function to set the uniform.
-
-        /// <summary>
-        /// Internal method to handle common uniform-setting operations.
-        /// </summary>
-        private void SetUniformInternal(string name, out int location)
-        {
-            GL.UseProgram(Handle);
-
-            if (_uniformLocations.TryGetValue(name, out location))
-            {
-                //   Console.WriteLine($"Setting uniform {name} at location {location}");
-            }
-            else
-            {
-                Console.WriteLine($"Uniform {name} not found in shader.");
-                location = -1; // Indicate that the uniform was not found
-            }
-        }
-
-        /// <summary>
-        /// Sets an int uniform variable.
-        /// </summary>
         public void SetUniform(string name, int data)
         {
-            SetUniformInternal(name, out var location);
-            if (location != -1)
+            if (_uniformLocations.TryGetValue(name, out var location) && location != -1)
             {
                 GL.Uniform1(location, data);
             }
         }
 
-        /// <summary>
-        /// Sets a float uniform variable.
-        /// </summary>
         public void SetUniform(string name, float data)
         {
-            SetUniformInternal(name, out var location);
-            if (location != -1)
+            if (_uniformLocations.TryGetValue(name, out var location) && location != -1)
             {
                 GL.Uniform1(location, data);
             }
         }
 
-        /// <summary>
-        /// Sets a Matrix4 uniform variable.
-        /// </summary>
         public void SetUniform(string name, Matrix4 data)
         {
-            SetUniformInternal(name, out var location);
-            if (location != -1)
+            if (_uniformLocations.TryGetValue(name, out var location) && location != -1)
             {
                 GL.UniformMatrix4(location, true, ref data);
             }
         }
 
-        /// <summary>
-        /// Sets a Vector3 uniform variable.
-        /// </summary>
         public void SetUniform(string name, Vector3 data)
         {
-            SetUniformInternal(name, out var location);
-            if (location != -1)
+            if (_uniformLocations.TryGetValue(name, out var location) && location != -1)
             {
                 GL.Uniform3(location, ref data);
             }
+        }
+
+        ~Shader()
+        {
+            GL.DeleteProgram(Handle);
         }
     }
 }

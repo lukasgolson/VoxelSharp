@@ -18,28 +18,33 @@ namespace VoxelSharp.Renderer.Mesh.World
 
         public override void Render(Shader shaderProgram)
         {
-            // Bind the model matrix to the shader program
-            shaderProgram.SetUniform("m_model", GetModelMatrix());
-
-            // Check if the chunk is dirty or mesh is uninitialized
+            // Check if the chunk is dirty or uninitialized
             if (_chunk.IsDirty || !IsInitialized)
             {
-                SetupMesh(8); // 8 elements per vertex: position (3), color (4), face ID (1)
+                SetupMesh(8, shaderProgram); // Rebuild the mesh (8 elements per vertex)
                 _chunk.IsDirty = false;
             }
 
-            // Call the base render to handle VAO binding and drawing
+            // After setup, skip rendering if there are no vertices
+            if (VertexCount == 0) return;
+
+            // Set the model matrix for this chunk
+            shaderProgram.SetUniform("m_model", GetModelMatrix());
+
+            // Call the base Render to handle VAO binding and OpenGL draw calls
             base.Render(shaderProgram);
         }
 
         protected override IMemoryOwner<float> GetVertexDataMemory(out int vertexCount)
         {
             // Estimate the required size for the vertex buffer
-            int estimatedVertexCount = _chunk.ChunkVolume * 6 * 6 * 8; // Max possible vertices: 6 faces per voxel, 6 vertices per face, 8 elements per vertex
-            IMemoryOwner<float> memoryOwner = MemoryPool<float>.Shared.Rent(estimatedVertexCount);
+            var estimatedVertexCount =
+                _chunk.ChunkVolume * 6 * 6 *
+                8; // Max possible vertices: 6 faces per voxel, 6 vertices per face, 8 elements per vertex
+            var memoryOwner = MemoryPool<float>.Shared.Rent(estimatedVertexCount);
 
             var span = memoryOwner.Memory.Span;
-            int index = 0;
+            var index = 0;
 
             for (int x = 0; x < _chunk.ChunkSize; ++x)
             {
@@ -47,10 +52,10 @@ namespace VoxelSharp.Renderer.Mesh.World
                 {
                     for (int y = 0; y < _chunk.ChunkSize; ++y)
                     {
-                        Voxel voxel = _chunk.Voxels[_chunk.GetVoxelIndex(new Position<int>(x, y, z))];
+                        var voxel = _chunk.Voxels[_chunk.GetVoxelIndex(new Position<int>(x, y, z))];
 
                         // Skip transparent voxels
-                        if (voxel.Color.A == 0) continue;
+                        //if (voxel.Color.A == 0) continue;
 
                         // Add visible faces
                         AddVisibleFacesToSpan(span, ref index, x, y, z, voxel);
@@ -62,20 +67,23 @@ namespace VoxelSharp.Renderer.Mesh.World
             return memoryOwner;
         }
 
-        protected override void SetVertexAttributes()
+        protected override void SetVertexAttributes(Shader shaderProgram)
         {
-            // Position attribute (location = 0)
-            GL.EnableVertexAttribArray(0);
-            GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, 8 * sizeof(float), IntPtr.Zero);
+            // Position attribute 
+            int posIndex = shaderProgram.GetAttribLocation("in_position");
+            GL.EnableVertexAttribArray(posIndex);
+            GL.VertexAttribPointer(posIndex, 3, VertexAttribPointerType.Float, false, 8 * sizeof(float), IntPtr.Zero);
 
-            // Color attribute (location = 1)
-            GL.EnableVertexAttribArray(1);
-            GL.VertexAttribPointer(1, 4, VertexAttribPointerType.Float, false, 8 * sizeof(float),
+            // Color attribute 
+            int colorIndex = shaderProgram.GetAttribLocation("in_color");
+            GL.EnableVertexAttribArray(colorIndex);
+            GL.VertexAttribPointer(colorIndex, 4, VertexAttribPointerType.Float, false, 8 * sizeof(float),
                 (IntPtr)(3 * sizeof(float)));
 
-            // Face ID attribute (location = 2)
-            GL.EnableVertexAttribArray(2);
-            GL.VertexAttribPointer(2, 1, VertexAttribPointerType.Float, false, 8 * sizeof(float),
+            // Face ID attribute
+            int faceIndex = shaderProgram.GetAttribLocation("face_id");
+            GL.EnableVertexAttribArray(faceIndex);
+            GL.VertexAttribPointer(faceIndex, 1, VertexAttribPointerType.Float, false, 8 * sizeof(float),
                 (IntPtr)(7 * sizeof(float)));
         }
 

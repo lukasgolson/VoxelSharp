@@ -17,7 +17,6 @@ public class Chunk
 
     public Chunk(Position<int> position, int chunkSize = 16)
     {
-        
         Position = position;
 
         ChunkSize = chunkSize;
@@ -26,11 +25,19 @@ public class Chunk
 
         Voxels = new Voxel[ChunkVolume];
 
-        
+
         // fill the Voxels array with empty voxels
         for (int i = 0; i < ChunkVolume; i++)
         {
+#if DEBUG
+            // fill the chunk with random colors
+            Voxels[i] = new Voxel(Color.GetRandomColor());
+
+#else
+            // fill the chunk with transparent voxels
             Voxels[i] = new Voxel(Color.Transparent);
+
+#endif
         }
     }
 

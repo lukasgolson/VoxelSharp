@@ -2,7 +2,7 @@
 
 namespace VoxelSharp.Renderer;
 
-public class FlyingCamera : Camera
+public class FlyingCamera : Camera.Camera
 {
     private float _speed = 0.01f;
 

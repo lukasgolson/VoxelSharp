@@ -10,9 +10,9 @@ namespace VoxelSharp.Renderer.Mesh
         protected int Vbo = 0;
         protected int VertexCount = 0;
 
-        protected abstract void SetVertexAttributes();
+        protected abstract void SetVertexAttributes(Shader shaderProgram);
 
-        protected virtual void SetupMesh(int elementsPerVertex)
+        protected virtual void SetupMesh(int elementsPerVertex, Shader shaderProgram)
         {
             if (Vao != 0)
             {
@@ -21,7 +21,15 @@ namespace VoxelSharp.Renderer.Mesh
             }
 
             // Get vertex data using Memory<float> to minimize heap allocations
-            using var vertexMemoryOwner = GetVertexDataMemory(out int vertexCount);
+            using var vertexMemoryOwner = GetVertexDataMemory(out var vertexCount);
+
+            if (vertexCount == 0)
+            {
+                // No data, skip setup
+                VertexCount = 0;
+                return;
+            }
+            
             VertexCount = vertexCount / elementsPerVertex;
 
             // Generate VAO and VBO
@@ -32,11 +40,11 @@ namespace VoxelSharp.Renderer.Mesh
             GL.BindBuffer(BufferTarget.ArrayBuffer, Vbo);
 
             // Bind vertex data from Memory<T>
-            var vertexSpan = vertexMemoryOwner.Memory.Span.Slice(0, vertexCount);
+            var vertexSpan = vertexMemoryOwner.Memory.Span[..vertexCount];
             GL.BufferData(BufferTarget.ArrayBuffer, vertexSpan.Length * sizeof(float), ref vertexSpan[0], BufferUsageHint.StaticDraw);
 
             // Set vertex attributes
-            SetVertexAttributes();
+            SetVertexAttributes(shaderProgram);
 
             // Unbind VAO and VBO
             GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
@@ -45,6 +53,11 @@ namespace VoxelSharp.Renderer.Mesh
 
         public virtual void Render(Shader shaderProgram)
         {
+            if (Vbo == 0 || Vao == 0 || VertexCount == 0)
+            {
+                return;
+            }
+            
             // Bind the VAO
             GL.BindVertexArray(Vao);
 

@@ -11,7 +11,7 @@ namespace VoxelSharp
 {
     public class Window : GameWindow, IWindow
     {
-        private Shader? _chunkShader;
+        private Shader _chunkShader;
 
         private readonly World.World _world;
 
@@ -34,27 +34,24 @@ namespace VoxelSharp
         }
 
 
-     
-
-
         protected override void OnLoad()
         {
             base.OnLoad();
 
             GL.Enable(EnableCap.DepthTest); // Enable depth testing for proper 3D rendering
-            GL.Enable(EnableCap.CullFace); // Enable face culling to improve performance
+            //GL.Enable(EnableCap.CullFace); // Enable face culling to improve performance
             GL.Enable(EnableCap.Blend); // Enable blending for transparency
             GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha); // Set blending function
 
             _chunkShader = new Shader("Shaders/chunk.vert", "Shaders/chunk.frag");
 
 
-            GL.ClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-        
+            GL.ClearColor(0.1f, 0.1f, 0.1f, 1.0f);
         }
 
         protected override void OnRenderFrame(FrameEventArgs e)
         {
+            Console.WriteLine("Rendering frame");
             base.OnRenderFrame(e);
 
 
@@ -62,14 +59,14 @@ namespace VoxelSharp
 
             _chunkShader.Use();
 
-
             _chunkShader.SetUniform("m_view", _camera.GetViewMatrix());
             _chunkShader.SetUniform("m_projection", _camera.GetProjectionMatrix());
+
 
             _world.Render(_chunkShader);
 
 
-            Shader.UnUse();
+            //Shader.UnUse();
 
             SwapBuffers();
         }
