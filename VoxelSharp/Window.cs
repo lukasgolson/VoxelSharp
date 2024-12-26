@@ -109,7 +109,6 @@ namespace VoxelSharp
             _camera.UpdateRotation(deltaX, -deltaY);
 
             // Update camera state
-            _camera.Update((float)e.Time);
 
 
             _elapsedTime += e.Time; // Accumulate the total elapsed time

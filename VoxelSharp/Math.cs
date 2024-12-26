@@ -10,6 +10,11 @@ public static class Math
     /// <returns>The remainder of the division, adjusted to be non-negative.</returns>
     public static int EModulo(int value, int mod)
     {
-        return (value % mod + mod) % mod;
+        return mod switch
+        {
+            0 => throw new DivideByZeroException("Modulo by zero is undefined."),
+            < 0 => throw new ArgumentException("Modulo must be positive.", nameof(mod)),
+            _ => (value % mod + mod) % mod
+        };
     }
 }

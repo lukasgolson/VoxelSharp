@@ -11,16 +11,6 @@ public class FlyingCamera : Camera.Camera
     }
 
 
-    public override void Update(float deltaTime)
-    {
-        base.Update(deltaTime);
-
-        // Console.WriteLine(Position);
-        //
-        // Console.WriteLine(_pitch);
-        // Console.WriteLine(_yaw);
-    }
-
     public void MoveForward()
     {
         var deltaPosition = Forward * _speed;
