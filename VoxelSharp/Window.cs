@@ -23,10 +23,17 @@ namespace VoxelSharp
             _camera = new FlyingCamera((float)Size.X / Size.Y);
             _world = new World.World(2, 16);
 
-            _world.SetVoxel(new Position<int>(0, 0, 0), new Voxel(Color.GetRandomColor()));
+            // create a test plane
+
+            for (int x = 0; x < 16; x++)
+            {
+                for (int z = 0; z < 16; z++)
+                {
 
 
-
+                    _world.SetVoxel(new Position<int>(x, 0, z), new Voxel(Color.Red));
+                }
+            }
         }
 
 
@@ -41,8 +48,7 @@ namespace VoxelSharp
 
             GL.Clear(ClearBufferMask.DepthBufferBit);
 
-            
-       
+
             GL.Enable(EnableCap.Blend); // Enable blending for transparency
             GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha); // Set blending function
 
@@ -100,7 +106,7 @@ namespace VoxelSharp
 
             // Handle mouse inputs for camera rotation
             var (deltaX, deltaY) = MouseState.Delta;
-            _camera.UpdateRotation(deltaX, deltaY);
+            _camera.UpdateRotation(deltaX, -deltaY);
 
             // Update camera state
             _camera.Update((float)e.Time);
@@ -108,7 +114,6 @@ namespace VoxelSharp
 
             _elapsedTime += e.Time; // Accumulate the total elapsed time
             _redValue = 0.25f * (MathF.Sin((float)(_elapsedTime * 0.5)) + 1); // Oscillate smoothly
-
         }
 
         protected override void OnResize(ResizeEventArgs e)
