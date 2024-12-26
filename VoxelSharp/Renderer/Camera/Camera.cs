@@ -1,118 +1,125 @@
 ﻿using OpenTK.Mathematics;
-using VoxelSharp.Extensions;
-using VoxelSharp.Renderer.interfaces;
-using VoxelSharp.Structs;
 
-namespace VoxelSharp.Renderer.Camera;
-
-public abstract class Camera : IUpdatable
+namespace VoxelSharp.Renderer.Camera
 {
-    // Rotation
-    protected float Yaw = 0; // Horizontal rotation
-    protected float Pitch = 0; // Vertical rotation
-
-    // Camera position and directions
-    public Position<float> Position = new(0.0f, 0.0f, 0.0f);
-    protected Position<float> Up = new(0.0f, 1.0f, 0.0f);
-    protected Position<float> Right = new(1.0f, 0.0f, 0.0f);
-    protected Position<float> Forward = new(0.0f, 0.0f, -1.0f);
-
-    // Matrices
-    private Matrix4 _viewMatrix;
-    private Matrix4 _projectionMatrix;
-
-    public Camera(float aspectRatio)
+    public abstract class Camera
     {
-        var verticalFov = MathHelper.DegreesToRadians(45.0f);
-        SetProjectionMatrix(verticalFov, aspectRatio);
-        _viewMatrix = Matrix4.Identity;
-    }
+        // Rotation
+        protected float Yaw = 0f;  // Horizontal rotation
+        protected float Pitch = 0f;  // Vertical rotation
 
-    /// <summary>
-    /// Sets the projection matrix for the camera.
-    /// </summary>
-    private void SetProjectionMatrix(float verticalFov, float aspectRatio)
-    {
-        const float nearPlane = 0.1f;
-        const float farPlane = 2000.0f;
+        // Camera position and directions
+        public Vector3 Position = Vector3.Zero;
+        protected Vector3 Up = Vector3.UnitY;
+        protected Vector3 Right = Vector3.UnitX;
+        protected Vector3 Forward = -Vector3.UnitZ;
 
-        _projectionMatrix = Matrix4.CreatePerspectiveFieldOfView(verticalFov, aspectRatio, nearPlane, farPlane);
-    }
+        // Matrices
+        private Matrix4 _viewMatrix = Matrix4.Identity;
+        private Matrix4 _projectionMatrix;
+        private float _mouseSensitivity = 0.5f;
 
-    /// <summary>
-    /// Updates the view matrix based on the camera's position and direction.
-    /// </summary>
-    private void UpdateViewMatrix()
-    {
-        _viewMatrix = Matrix4.LookAt(Position.ToVector3(), (Position + Forward).ToVector3(), Up.ToVector3());
-    }
+        /// <summary>
+        /// Initializes a new instance of the Camera class.
+        /// </summary>
+        /// <param name="aspectRatio">The aspect ratio of the camera's view.</param>
+        public Camera(float aspectRatio)
+        {
+            var verticalFov = MathHelper.DegreesToRadians(45f);
+            SetProjectionMatrix(verticalFov, aspectRatio);
+        }
 
-    /// <summary>
-    /// Updates the camera's relative directional vectors based on its rotation.
-    /// </summary>
-    private void UpdateRelativeVectors()
-    {
-        var x = MathF.Cos(MathHelper.DegreesToRadians(Yaw)) * MathF.Cos(MathHelper.DegreesToRadians(Pitch));
-        var y = MathF.Sin(MathHelper.DegreesToRadians(Pitch));
-        var z = MathF.Sin(MathHelper.DegreesToRadians(Yaw)) * MathF.Cos(MathHelper.DegreesToRadians(Pitch));
+        /// <summary>
+        /// Sets the projection matrix for the camera.
+        /// </summary>
+        private void SetProjectionMatrix(float verticalFov, float aspectRatio)
+        {
+            const float nearPlane = 0.1f;
+            const float farPlane = 2000f;
 
-        Forward = new Position<float>(x, y, z).Normalize();
-        Right = Position<float>.Cross(Forward, new Position<float>(0, 1, 0)).Normalize();
-        Up = Position<float>.Cross(Right, Forward).Normalize();
-    }
+            _projectionMatrix = Matrix4.CreatePerspectiveFieldOfView(verticalFov, aspectRatio, nearPlane, farPlane);
+        }
 
-    /// <summary>
-    /// Updates the camera's position based on the given delta position.
-    /// </summary>
-    public void UpdatePosition(Position<float> deltaPosition)
-    {
-        Position += Right * deltaPosition.X;
-        Position += Up * deltaPosition.Y;
-        Position += Forward * deltaPosition.Z;
-    }
+        /// <summary>
+        /// Updates the view matrix based on the camera's position and direction.
+        /// </summary>
+        private void UpdateViewMatrix()
+        {
+            _viewMatrix = Matrix4.LookAt(Position, Position + Forward, Up);
+        }
 
-    /// <summary>
-    /// Updates the camera's rotation based on the given yaw and pitch deltas.
-    /// </summary>
-    public void UpdateRotation(float deltaYaw, float deltaPitch)
-    {
-        Yaw = (Yaw + deltaYaw) % 360.0f; // Normalize yaw to the range [0, 360)
-        if (Yaw < 0) Yaw += 360.0f; // Ensure positive yaw
+        /// <summary>
+        /// Updates the camera's relative directional vectors based on its rotation.
+        /// </summary>
+        private void UpdateRelativeVectors()
+        {
+            var pitchRadians = MathHelper.DegreesToRadians(Pitch);
+            var yawRadians = MathHelper.DegreesToRadians(Yaw);
 
-        Pitch = MathHelper.Clamp(Pitch + deltaPitch, -89.0f, 89.0f); // Clamp pitch to avoid gimbal lock
-    }
+            Forward = new Vector3(
+                MathF.Cos(yawRadians) * MathF.Cos(pitchRadians),
+                MathF.Sin(pitchRadians),
+                MathF.Sin(yawRadians) * MathF.Cos(pitchRadians)
+            ).Normalized();
 
-    /// <summary>
-    /// Updates the camera's view matrix and relative vectors.
-    /// </summary>
-    public virtual void Update(float deltaTime)
-    {
-        UpdateRelativeVectors();
-        UpdateViewMatrix();
-    }
+            Right = Vector3.Cross(Forward, Vector3.UnitY).Normalized();
+            Up = Vector3.Cross(Right, Forward).Normalized();
+        }
 
-    /// <summary>
-    /// Gets the camera's view matrix.
-    /// </summary>
-    public Matrix4 GetViewMatrix()
-    {
-        return _viewMatrix;
-    }
+        /// <summary>
+        /// Updates the camera's position based on the given delta position.
+        /// </summary>
+        public void UpdatePosition(Vector3 deltaPosition)
+        {
+            Position += Right * deltaPosition.X;
+            Position += Up * deltaPosition.Y;
+            Position += Forward * deltaPosition.Z;
+        }
 
-    /// <summary>
-    /// Gets the camera's projection matrix.
-    /// </summary>
-    public Matrix4 GetProjectionMatrix()
-    {
-        return _projectionMatrix;
-    }
+        /// <summary>
+        /// Updates the camera's rotation based on the given yaw and pitch deltas.
+        /// </summary>
+        public void UpdateRotation(float deltaYaw, float deltaPitch)
+        {
+            Yaw = (Yaw + deltaYaw * _mouseSensitivity) % 360f; // Normalize yaw to the range [0, 360)
+            if (Yaw < 0f) Yaw += 360f;    // Ensure positive yaw
 
-    /// <summary>
-    /// Updates the aspect ratio for the camera's projection matrix.
-    /// </summary>
-    public void UpdateAspectRatio(float aspectRatio)
-    {
-        var verticalFov = MathHelper.DegreesToRadians(45.0f);
-        SetProjectionMatrix(verticalFov, aspectRatio);
+            Pitch = MathHelper.Clamp(Pitch + (deltaPitch * _mouseSensitivity), -89f, 89f); // Clamp pitch to avoid gimbal lock
+            Console.WriteLine(Yaw);
+        }
+
+        /// <summary>
+        /// Updates the camera's view matrix and relative vectors.
+        /// </summary>
+        public virtual void Update(float deltaTime)
+        {
+            UpdateRelativeVectors();
+            UpdateViewMatrix();
+        }
+
+        /// <summary>
+        /// Gets the camera's view matrix.
+        /// </summary>
+        public Matrix4 GetViewMatrix()
+        {
+            return _viewMatrix;
+        }
+
+        /// <summary>
+        /// Gets the camera's projection matrix.
+        /// </summary>
+        public Matrix4 GetProjectionMatrix()
+        {
+            return _projectionMatrix;
+        }
+
+        /// <summary>
+        /// Updates the aspect ratio for the camera's projection matrix.
+        /// </summary>
+        public void UpdateAspectRatio(float aspectRatio)
+        {
+            var verticalFov = MathHelper.DegreesToRadians(45f);
+            SetProjectionMatrix(verticalFov, aspectRatio);
+        }
     }
 }

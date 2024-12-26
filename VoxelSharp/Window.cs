@@ -49,13 +49,19 @@ namespace VoxelSharp
             GL.ClearColor(0.1f, 0.1f, 0.1f, 1.0f);
         }
 
+        private float _redValue = 0.0f;
+        private double _elapsedTime = 0.0f; // Accumulate total time
+
+
         protected override void OnRenderFrame(FrameEventArgs e)
         {
-            Console.WriteLine("Rendering frame");
             base.OnRenderFrame(e);
 
 
-            GL.Clear(ClearBufferMask.ColorBufferBit);
+            GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
+
+
+            GL.ClearColor(_redValue, 0.3f, 0.3f, 1.0f); // Change background colour
 
             _chunkShader.Use();
 
@@ -66,10 +72,11 @@ namespace VoxelSharp
             _world.Render(_chunkShader);
 
 
-            //Shader.UnUse();
+            Shader.UnUse();
 
             SwapBuffers();
         }
+
 
         protected override void OnUpdateFrame(FrameEventArgs e)
         {
@@ -94,6 +101,11 @@ namespace VoxelSharp
 
             // Update camera state
             _camera.Update((float)e.Time);
+
+
+            _elapsedTime += e.Time; // Accumulate the total elapsed time
+            _redValue = 0.25f * (MathF.Sin((float)(_elapsedTime * 0.5)) + 1); // Oscillate smoothly
+
         }
 
         protected override void OnResize(ResizeEventArgs e)

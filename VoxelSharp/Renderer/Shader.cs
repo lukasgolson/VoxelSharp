@@ -114,6 +114,7 @@ namespace VoxelSharp.Renderer
         public int GetAttribLocation(string attribName)
         {
             if (_attributeLocations.TryGetValue(attribName, out var location) && location != -1) return location;
+            
             Console.WriteLine($"Warning: Attribute '{attribName}' not found in shader.");
             return 0;
         }

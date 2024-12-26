@@ -13,6 +13,11 @@ public class Chunk
     public Voxel[] Voxels { get; }
 
     public Position<int> Position { get; }
+    
+    
+    // IDEA: Change the voxel array to a Memory<Voxel> to minimize heap allocations; Add a method to get a Memory<Voxel> slice for a specific chunk area
+    // and update the ChunkMesh to use this method to get the voxel data for the mesh generation.
+    // Further, allow methods to directly modify the Memory<Voxel> slice to update the voxel data.
 
 
     public Chunk(Position<int> position, int chunkSize = 16)
