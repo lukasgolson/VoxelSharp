@@ -71,20 +71,32 @@ namespace VoxelSharp.Renderer.Mesh.World
         {
             // Position attribute 
             int posIndex = shaderProgram.GetAttribLocation("in_position");
-            GL.EnableVertexAttribArray(posIndex);
-            GL.VertexAttribPointer(posIndex, 3, VertexAttribPointerType.Float, false, 8 * sizeof(float), IntPtr.Zero);
+            if (posIndex != -1)
+            {
+                GL.EnableVertexAttribArray(posIndex);
+                GL.VertexAttribPointer(posIndex, 3, VertexAttribPointerType.Float, false, 8 * sizeof(float),
+                    IntPtr.Zero);
+            }
 
             // Color attribute 
             int colorIndex = shaderProgram.GetAttribLocation("in_color");
-            GL.EnableVertexAttribArray(colorIndex);
-            GL.VertexAttribPointer(colorIndex, 4, VertexAttribPointerType.Float, false, 8 * sizeof(float),
-                (IntPtr)(3 * sizeof(float)));
+
+            if (colorIndex != -1)
+            {
+                GL.EnableVertexAttribArray(colorIndex);
+                GL.VertexAttribPointer(colorIndex, 4, VertexAttribPointerType.Float, false, 8 * sizeof(float),
+                    (IntPtr)(3 * sizeof(float)));
+            }
 
             // Face ID attribute
             int faceIndex = shaderProgram.GetAttribLocation("face_id");
-            GL.EnableVertexAttribArray(faceIndex);
-            GL.VertexAttribPointer(faceIndex, 1, VertexAttribPointerType.Float, false, 8 * sizeof(float),
-                (IntPtr)(7 * sizeof(float)));
+
+            if (faceIndex != -1)
+            {
+                GL.EnableVertexAttribArray(faceIndex);
+                GL.VertexAttribPointer(faceIndex, 1, VertexAttribPointerType.Float, false, 8 * sizeof(float),
+                    (IntPtr)(7 * sizeof(float)));
+            }
         }
 
         public override Matrix4 GetModelMatrix()
