@@ -12,7 +12,7 @@ public class Chunk
 
     public Voxel[] Voxels { get; }
 
-    public Position<int> Position { get; }
+    public Position<int> ChunkCoordinates { get; }
 
 
     // IDEA: Change the voxel array to a Memory<Voxel> to minimize heap allocations; Add a method to get a Memory<Voxel> slice for a specific chunk area
@@ -20,11 +20,14 @@ public class Chunk
     // Further, allow methods to directly modify the Memory<Voxel> slice to update the voxel data.
 
 
-    public Chunk(Position<int> position, int chunkSize = 16)
+    public Chunk(Position<int> chunkCoordinates, int chunkSize = 16)
     {
-        Position = position;
+        ChunkCoordinates = chunkCoordinates;
 
-        Console.WriteLine($"Creating chunk at position {position}");
+        if (chunkSize < 0)
+        {
+            throw new ArgumentException("Chunk size must be greater than or equal to 0.", nameof(chunkSize));
+        }
 
         ChunkSize = chunkSize;
         ChunkArea = ChunkSize * ChunkSize;
