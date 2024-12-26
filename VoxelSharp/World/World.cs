@@ -34,7 +34,7 @@ public class World
                 {
                     var chunk = new Chunk(new Position<int>(x, y, z), _chunkSize);
                     var chunkMesh = new ChunkMesh(chunk);
-
+                    
                     _chunkArray[new Position<int>(x, y, z).ToIndex(_worldSize)] = chunk;
                     _chunkMeshArray[new Position<int>(x, y, z).ToIndex(_worldSize)] = chunkMesh;
                 }

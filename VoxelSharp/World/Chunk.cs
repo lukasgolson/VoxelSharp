@@ -13,8 +13,8 @@ public class Chunk
     public Voxel[] Voxels { get; }
 
     public Position<int> Position { get; }
-    
-    
+
+
     // IDEA: Change the voxel array to a Memory<Voxel> to minimize heap allocations; Add a method to get a Memory<Voxel> slice for a specific chunk area
     // and update the ChunkMesh to use this method to get the voxel data for the mesh generation.
     // Further, allow methods to directly modify the Memory<Voxel> slice to update the voxel data.
@@ -23,6 +23,8 @@ public class Chunk
     public Chunk(Position<int> position, int chunkSize = 16)
     {
         Position = position;
+
+        Console.WriteLine($"Creating chunk at position {position}");
 
         ChunkSize = chunkSize;
         ChunkArea = ChunkSize * ChunkSize;
@@ -34,15 +36,8 @@ public class Chunk
         // fill the Voxels array with empty voxels
         for (int i = 0; i < ChunkVolume; i++)
         {
-#if DEBUG
-            // fill the chunk with random colors
-            Voxels[i] = new Voxel(Color.GetRandomColor());
-
-#else
             // fill the chunk with transparent voxels
             Voxels[i] = new Voxel(Color.Transparent);
-
-#endif
         }
     }
 

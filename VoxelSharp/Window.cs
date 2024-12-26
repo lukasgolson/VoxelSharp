@@ -20,17 +20,13 @@ namespace VoxelSharp
         public Window(GameWindowSettings gameWindowSettings, NativeWindowSettings nativeWindowSettings) :
             base(gameWindowSettings, nativeWindowSettings)
         {
-            _camera = new FlyingCamera(1.77f);
-            _world = new World.World(1, 16);
+            _camera = new FlyingCamera((float)Size.X / Size.Y);
+            _world = new World.World(2, 16);
+
+            _world.SetVoxel(new Position<int>(0, 0, 0), new Voxel(Color.GetRandomColor()));
 
 
-            for (int x = 0; x < 16; x++)
-            {
-                for (int z = 0; z < 16; z++)
-                {
-                    _world.SetVoxel(new Position<int>(x, 0, z), new Voxel(Color.White));
-                }
-            }
+
         }
 
 
@@ -38,8 +34,15 @@ namespace VoxelSharp
         {
             base.OnLoad();
 
-            GL.Enable(EnableCap.DepthTest); // Enable depth testing for proper 3D rendering
-            //GL.Enable(EnableCap.CullFace); // Enable face culling to improve performance
+
+            GL.Enable(EnableCap.DepthTest);
+            GL.DepthFunc(DepthFunction.Less);
+            GL.Disable(EnableCap.CullFace);
+
+            GL.Clear(ClearBufferMask.DepthBufferBit);
+
+            
+       
             GL.Enable(EnableCap.Blend); // Enable blending for transparency
             GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha); // Set blending function
 

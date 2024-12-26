@@ -44,6 +44,9 @@ namespace VoxelSharp.Renderer.Mesh.World
             var memoryOwner = MemoryPool<float>.Shared.Rent(estimatedVertexCount);
 
             var span = memoryOwner.Memory.Span;
+            
+            span.Clear(); // Clear the memory before writing to it
+            
             var index = 0;
 
             for (int x = 0; x < _chunk.ChunkSize; ++x)
@@ -55,7 +58,7 @@ namespace VoxelSharp.Renderer.Mesh.World
                         var voxel = _chunk.Voxels[_chunk.GetVoxelIndex(new Position<int>(x, y, z))];
 
                         // Skip transparent voxels
-                        //if (voxel.Color.A == 0) continue;
+                        if (voxel.Color.A == 0) continue;
 
                         // Add visible faces
                         AddVisibleFacesToSpan(span, ref index, x, y, z, voxel);
@@ -102,15 +105,21 @@ namespace VoxelSharp.Renderer.Mesh.World
         public override Matrix4 GetModelMatrix()
         {
             // Calculate the translation for this chunk
-            return Matrix4.CreateTranslation(
+            var matrix = Matrix4.CreateTranslation(
                 _chunk.Position.X * _chunk.ChunkSize,
                 _chunk.Position.Y * _chunk.ChunkSize,
                 _chunk.Position.Z * _chunk.ChunkSize
             );
+            
+            //Console.WriteLine(matrix);
+            
+            return matrix;
         }
 
         private bool IsVoid(int x, int y, int z, int currentAlpha, Voxel[] voxels)
         {
+            if (currentAlpha == 0) return true;
+            
             if (!IsWithinBounds(x, y, z)) return true;
 
             return voxels[_chunk.GetVoxelIndex(new Position<int>(x, y, z))].Color.A != currentAlpha;
@@ -147,8 +156,14 @@ namespace VoxelSharp.Renderer.Mesh.World
 
         private void AddVerticesToSpan(Span<float> span, ref int index, IEnumerable<VoxelVertex> vertices)
         {
+            
+            
             foreach (var vertex in vertices)
             {
+                Console.WriteLine(
+                    $"Vertex: ({vertex.X}, {vertex.Y}, {vertex.Z}) Color: ({vertex.R}, {vertex.G}, {vertex.B}, {vertex.A}) FaceId: {vertex.id}");
+
+                
                 span[index++] = vertex.X;
                 span[index++] = vertex.Y;
                 span[index++] = vertex.Z;
@@ -156,7 +171,7 @@ namespace VoxelSharp.Renderer.Mesh.World
                 span[index++] = vertex.G;
                 span[index++] = vertex.B;
                 span[index++] = vertex.A;
-                span[index++] = vertex.FaceId;
+                span[index++] = vertex.id;
             }
         }
     }

@@ -2,78 +2,114 @@
 
 namespace VoxelSharp.Renderer.Mesh.World;
 
-public readonly struct VoxelVertex(int x, int y, int z, Voxel voxel, FaceId faceId)
+public readonly struct VoxelVertex
 {
-    public readonly float X = x; // Position
-    public readonly float Y = y; // Position
-    public readonly float Z = z; // Position
-    public readonly float R = voxel.Color.R / 255.0f; // Color components
-    public readonly float G = voxel.Color.G / 255.0f; // Color components
-    public readonly float B = voxel.Color.B / 255.0f; // Color components
-    public readonly float A = voxel.Color.A / 255.0f; // Color components
-    public readonly float FaceId = (float)faceId; // Identifier for the face
+    public readonly float X;
+    public readonly float Y;
+    public readonly float Z;
+    public readonly float R; // Color components (Red)
+    public readonly float G; // Color components (Green)
+    public readonly float B; // Color components (Blue)
+    public readonly float A = 1.0f; // Alpha (fully opaque)
+    public readonly float id; // Identifier for the face
+
+    public VoxelVertex(int x, int y, int z, Voxel voxel, FaceId faceId)
+    {
+        X = x;
+        Y = y;
+        Z = z;
+
+
+#if DEBUG
+        // Assign unique colors based on FaceId for debugging
+        (R, G, B) = faceId switch
+        {
+            FaceId.Top => (1.0f, 0.0f, 0.0f), // Red
+            FaceId.Bottom => (0.0f, 1.0f, 0.0f), // Green
+            FaceId.Right => (0.0f, 0.0f, 1.0f), // Blue
+            FaceId.Left => (1.0f, 1.0f, 0.0f), // Yellow
+            FaceId.Back => (0.0f, 1.0f, 1.0f), // Cyan
+            FaceId.Front => (1.0f, 0.0f, 1.0f), // Magenta
+            _ => (1.0f, 1.0f, 1.0f) // White (fallback)
+        };
+
+#else
+        // Assign the color of the voxel to the vertex
+        (R, G, B) = (voxel.Color.R, voxel.Color.G, voxel.Color.B);
+
+#endif
+    }
 
 
     public static IEnumerable<VoxelVertex> CreateFace(int x, int y, int z, Voxel voxel, FaceId faceId)
     {
-        return faceId switch
+        // top face
+
+        switch (faceId)
         {
-            World.FaceId.Top =>
-            [
-                new VoxelVertex(x + 0, y + 1, z + 0, voxel, faceId),
-                new VoxelVertex(x + 1, y + 1, z + 0, voxel, faceId),
-                new VoxelVertex(x + 1, y + 1, z + 1, voxel, faceId),
-                new VoxelVertex(x + 0, y + 1, z + 0, voxel, faceId),
-                new VoxelVertex(x + 1, y + 1, z + 1, voxel, faceId),
-                new VoxelVertex(x + 0, y + 1, z + 1, voxel, faceId)
-            ],
-            World.FaceId.Bottom =>
-            [
-                new VoxelVertex(x + 0, y + 0, z + 0, voxel, faceId),
-                new VoxelVertex(x + 1, y + 0, z + 0, voxel, faceId),
-                new VoxelVertex(x + 1, y + 0, z + 1, voxel, faceId),
-                new VoxelVertex(x + 0, y + 0, z + 0, voxel, faceId),
-                new VoxelVertex(x + 1, y + 0, z + 1, voxel, faceId),
-                new VoxelVertex(x + 0, y + 0, z + 1, voxel, faceId)
-            ],
-            World.FaceId.Right =>
-            [
-                new VoxelVertex(x + 1, y + 0, z + 0, voxel, faceId),
-                new VoxelVertex(x + 1, y + 1, z + 0, voxel, faceId),
-                new VoxelVertex(x + 1, y + 1, z + 1, voxel, faceId),
-                new VoxelVertex(x + 1, y + 0, z + 0, voxel, faceId),
-                new VoxelVertex(x + 1, y + 1, z + 1, voxel, faceId),
-                new VoxelVertex(x + 1, y + 0, z + 1, voxel, faceId)
-            ],
-            World.FaceId.Left =>
-            [
-                new VoxelVertex(x + 0, y + 0, z + 0, voxel, faceId),
-                new VoxelVertex(x + 0, y + 1, z + 0, voxel, faceId),
-                new VoxelVertex(x + 0, y + 1, z + 1, voxel, faceId),
-                new VoxelVertex(x + 0, y + 0, z + 0, voxel, faceId),
-                new VoxelVertex(x + 0, y + 1, z + 1, voxel, faceId),
-                new VoxelVertex(x + 0, y + 0, z + 1, voxel, faceId)
-            ],
-            World.FaceId.Back =>
-            [
-                new VoxelVertex(x + 0, y + 0, z + 0, voxel, faceId),
-                new VoxelVertex(x + 0, y + 1, z + 0, voxel, faceId),
-                new VoxelVertex(x + 1, y + 1, z + 0, voxel, faceId),
-                new VoxelVertex(x + 0, y + 0, z + 0, voxel, faceId),
-                new VoxelVertex(x + 1, y + 1, z + 0, voxel, faceId),
-                new VoxelVertex(x + 1, y + 0, z + 0, voxel, faceId)
-            ],
-            World.FaceId.Front =>
-            [
-                new VoxelVertex(x + 0, y + 0, z + 1, voxel, faceId),
-                new VoxelVertex(x + 0, y + 1, z + 1, voxel, faceId),
-                new VoxelVertex(x + 1, y + 1, z + 1, voxel, faceId),
-                new VoxelVertex(x + 0, y + 0, z + 1, voxel, faceId),
-                new VoxelVertex(x + 1, y + 1, z + 1, voxel, faceId),
-                new VoxelVertex(x + 1, y + 0, z + 1, voxel, faceId)
-            ],
-            _ => throw new ArgumentException("Invalid face ID.")
-        };
+            case FaceId.Top:
+            {
+                var v0 = new VoxelVertex(x, y + 1, z, voxel, faceId);
+                var v1 = new VoxelVertex(x + 1, y + 1, z, voxel, faceId);
+                var v2 = new VoxelVertex(x + 1, y + 1, z + 1, voxel, faceId);
+                var v3 = new VoxelVertex(x, y + 1, z + 1, voxel, faceId);
+
+                // add in order: 0,3,2,0,2,1
+                return [v0,v3,v2,v0,v2,v1];
+            }
+            case FaceId.Bottom:
+            {
+                var v0 = new VoxelVertex(x, y, z, voxel, faceId);
+                var v1 = new VoxelVertex(x + 1, y, z, voxel, faceId);
+                var v2 = new VoxelVertex(x + 1, y, z + 1, voxel, faceId);   
+                var v3 = new VoxelVertex(x, y, z + 1, voxel, faceId);
+            
+                // add in order: 0,2,3,0,1,2
+                return [v0,v2,v3,v0,v1,v2];
+            }
+            case FaceId.Right:
+            {
+                var v0 = new VoxelVertex(x + 1, y, z, voxel, faceId);
+                var v1 = new VoxelVertex(x + 1, y + 1, z, voxel, faceId);
+                var v2 = new VoxelVertex(x + 1, y + 1, z + 1, voxel, faceId);
+                var v3 = new VoxelVertex(x + 1, y, z + 1, voxel, faceId);
+            
+                // add in order: 0, 1, 2, 0, 2, 3
+                return [v0,v1,v2,v0,v2,v3];
+            }
+            case FaceId.Left:
+            {
+                var v0 = new VoxelVertex(x, y, z, voxel, faceId);
+                var v1 = new VoxelVertex(x, y + 1, z, voxel, faceId);
+                var v2 = new VoxelVertex(x, y + 1, z + 1, voxel, faceId);
+                var v3 = new VoxelVertex(x, y, z + 1, voxel, faceId);
+
+                // add in order: 0, 2, 1, 0, 3, 2
+                return [v0, v2, v1, v0, v3, v2];
+            }
+            case FaceId.Back:
+            {
+                var v0 = new VoxelVertex(x, y, z, voxel, faceId);
+                var v1 = new VoxelVertex(x, y + 1, z, voxel, faceId);
+                var v2 = new VoxelVertex(x + 1, y + 1, z, voxel, faceId);
+                var v3 = new VoxelVertex(x + 1, y, z, voxel, faceId);
+            
+                // add in order: 0, 1, 2, 0, 2, 3
+                return [v0, v1, v2, v0, v2, v3];
+            }
+            case FaceId.Front:
+            {
+                var v0 = new VoxelVertex(x, y, z + 1, voxel, faceId);
+                var v1 = new VoxelVertex(x, y + 1, z + 1, voxel, faceId);
+                var v2 = new VoxelVertex(x + 1, y + 1, z + 1, voxel, faceId);
+                var v3 = new VoxelVertex(x + 1, y, z + 1, voxel, faceId);
+            
+                // add in order: 0, 2, 1, 0, 3, 2
+                return [v0, v2, v1, v0, v3, v2];
+            }
+            default:
+                throw new ArgumentOutOfRangeException(nameof(faceId), faceId, "Invalid face id");
+        }
     }
 }
 

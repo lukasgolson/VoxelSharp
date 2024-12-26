@@ -25,8 +25,7 @@ namespace VoxelSharp.Renderer.Camera
         /// <param name="aspectRatio">The aspect ratio of the camera's view.</param>
         public Camera(float aspectRatio)
         {
-            var verticalFov = MathHelper.DegreesToRadians(45f);
-            SetProjectionMatrix(verticalFov, aspectRatio);
+            SetProjectionMatrix(45, aspectRatio);
         }
 
         /// <summary>
@@ -34,10 +33,12 @@ namespace VoxelSharp.Renderer.Camera
         /// </summary>
         private void SetProjectionMatrix(float verticalFov, float aspectRatio)
         {
-            const float nearPlane = 0.1f;
+            const float nearPlane = 0.01f;
             const float farPlane = 2000f;
 
-            _projectionMatrix = Matrix4.CreatePerspectiveFieldOfView(verticalFov, aspectRatio, nearPlane, farPlane);
+            var verticalFovRadians = MathHelper.DegreesToRadians(verticalFov);
+            
+            _projectionMatrix = Matrix4.CreatePerspectiveFieldOfView(verticalFovRadians, aspectRatio, nearPlane, farPlane);
         }
 
         /// <summary>
@@ -64,6 +65,7 @@ namespace VoxelSharp.Renderer.Camera
 
             Right = Vector3.Cross(Forward, Vector3.UnitY).Normalized();
             Up = Vector3.Cross(Right, Forward).Normalized();
+
         }
 
         /// <summary>
@@ -71,9 +73,7 @@ namespace VoxelSharp.Renderer.Camera
         /// </summary>
         public void UpdatePosition(Vector3 deltaPosition)
         {
-            Position += Right * deltaPosition.X;
-            Position += Up * deltaPosition.Y;
-            Position += Forward * deltaPosition.Z;
+            Position += deltaPosition;
         }
 
         /// <summary>
@@ -85,7 +85,6 @@ namespace VoxelSharp.Renderer.Camera
             if (Yaw < 0f) Yaw += 360f;    // Ensure positive yaw
 
             Pitch = MathHelper.Clamp(Pitch + (deltaPitch * _mouseSensitivity), -89f, 89f); // Clamp pitch to avoid gimbal lock
-            Console.WriteLine(Yaw);
         }
 
         /// <summary>
@@ -118,8 +117,7 @@ namespace VoxelSharp.Renderer.Camera
         /// </summary>
         public void UpdateAspectRatio(float aspectRatio)
         {
-            var verticalFov = MathHelper.DegreesToRadians(45f);
-            SetProjectionMatrix(verticalFov, aspectRatio);
+            SetProjectionMatrix(45, aspectRatio);
         }
     }
 }
