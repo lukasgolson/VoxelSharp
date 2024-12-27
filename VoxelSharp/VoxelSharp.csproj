@@ -12,10 +12,6 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Folder Include="Modding\" />
-    </ItemGroup>
-
-    <ItemGroup>
       <None Update="Shaders\shader.frag">
         <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       </None>
