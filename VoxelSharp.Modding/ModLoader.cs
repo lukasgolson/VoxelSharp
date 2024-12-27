@@ -1,4 +1,5 @@
 using System.Reflection;
+using HarmonyLib;
 using VoxelSharp.Modding.Interfaces;
 using VoxelSharp.Modding.Structs;
 
@@ -34,7 +35,8 @@ public class ModLoader(string modsPath)
 
         foreach (var mod in orderedMods)
         {
-            mod.Initialize();
+            var harmony = new Harmony(mod.ModInfo.Id);
+            mod.Initialize(harmony);
         }
 
         _mods = orderedMods;
