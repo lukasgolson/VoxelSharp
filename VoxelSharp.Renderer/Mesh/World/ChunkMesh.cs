@@ -1,13 +1,16 @@
-﻿using OpenTK.Graphics.OpenGL4;
+﻿using System.Buffers;
+using OpenTK.Graphics.OpenGL4;
 using OpenTK.Mathematics;
-using System;
-using System.Buffers;
+using VoxelSharp.Core.Renderer;
+using VoxelSharp.Core.Renderer.Mesh;
+using VoxelSharp.Core.Renderer.Mesh.World;
 using VoxelSharp.Core.Structs;
 using VoxelSharp.Core.World;
+using VoxelSharp.Renderer.Interfaces;
 
-namespace VoxelSharp.Core.Renderer.Mesh.World
+namespace VoxelSharp.Renderer.Mesh.World
 {
-    public class ChunkMesh : BaseMesh
+    public class ChunkMesh : BaseMesh, IRenderable
     {
         private readonly Chunk _chunk;
 

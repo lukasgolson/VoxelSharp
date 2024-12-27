@@ -7,6 +7,7 @@ using VoxelSharp.Core.Renderer;
 using VoxelSharp.Core.Renderer.Camera;
 using VoxelSharp.Core.Structs;
 using VoxelSharp.Core.World;
+using VoxelSharp.Renderer.Interfaces;
 
 namespace VoxelSharp.Core
 {

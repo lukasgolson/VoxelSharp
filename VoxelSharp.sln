@@ -4,6 +4,12 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VoxelSharp.Core", "VoxelSha
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VoxelSharp.Modding", "VoxelSharp.Modding\VoxelSharp.Modding.csproj", "{5DC42F2B-B415-4ECD-A914-52736597B1F2}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ExampleMod", "ExampleMod\ExampleMod.csproj", "{B0A128DD-0A73-4D97-B1BC-1C9EA52C491D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VoxelSharp.Renderer", "VoxelSharp.Renderer\VoxelSharp.Renderer.csproj", "{BE5E5900-90B2-47BA-B506-C93A30059C5B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VoxelSharp.Client", "VoxelSharp.Client\VoxelSharp.Client.csproj", "{32210AEA-3B06-4EA6-AF80-E7BE2E563C31}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -18,5 +24,17 @@ Global
 		{5DC42F2B-B415-4ECD-A914-52736597B1F2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5DC42F2B-B415-4ECD-A914-52736597B1F2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5DC42F2B-B415-4ECD-A914-52736597B1F2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B0A128DD-0A73-4D97-B1BC-1C9EA52C491D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B0A128DD-0A73-4D97-B1BC-1C9EA52C491D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B0A128DD-0A73-4D97-B1BC-1C9EA52C491D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B0A128DD-0A73-4D97-B1BC-1C9EA52C491D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BE5E5900-90B2-47BA-B506-C93A30059C5B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BE5E5900-90B2-47BA-B506-C93A30059C5B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BE5E5900-90B2-47BA-B506-C93A30059C5B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BE5E5900-90B2-47BA-B506-C93A30059C5B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{32210AEA-3B06-4EA6-AF80-E7BE2E563C31}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{32210AEA-3B06-4EA6-AF80-E7BE2E563C31}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{32210AEA-3B06-4EA6-AF80-E7BE2E563C31}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{32210AEA-3B06-4EA6-AF80-E7BE2E563C31}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

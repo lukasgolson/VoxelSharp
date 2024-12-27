@@ -3,6 +3,7 @@ using OpenTK.Windowing.Common;
 using OpenTK.Windowing.Desktop;
 using VoxelSharp.Core.Interfaces;
 using VoxelSharp.Core.Wrappers;
+using VoxelSharp.Renderer.Interfaces;
 
 namespace VoxelSharp.Core;
 
@@ -33,7 +34,7 @@ class Program
         var nativeWindowSettings = new NativeWindowSettings()
         {
             ClientSize = new Vector2i(800, 600),
-            Title = "VoxelSharp.Core",
+            Title = "VoxelSharp.CorelSharp.Core",
             Flags = ContextFlags.ForwardCompatible,
         };
 

@@ -1,5 +1,7 @@
 using VoxelSharp.Core.Interfaces;
+using VoxelSharp.Core.Renderer;
 using VoxelSharp.Modding;
+using VoxelSharp.Renderer.Interfaces;
 
 namespace VoxelSharp.Core.Wrappers;
 
@@ -30,13 +32,12 @@ public class ModLoaderWrapper : IRenderable, IUpdatable
     /// <summary>
     /// Renders the mods by delegating to the underlying ModLoader.
     /// </summary>
-    public void Render() => ModLoader.Render();
+    public void Render(Shader shaderProgram) => ModLoader.Render();
+
 
     /// <summary>
     /// Updates the mods by delegating to the underlying ModLoader.
     /// </summary>
     /// <param name="deltaTime">The time elapsed since the last update.</param>
     public void Update(float deltaTime) => ModLoader.Update(deltaTime);
-
-
 }

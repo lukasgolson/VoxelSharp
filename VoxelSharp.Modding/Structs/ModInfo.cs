@@ -1,12 +1,12 @@
 namespace VoxelSharp.Modding.Structs;
 
-public readonly struct ModInfo(string name, string id, Version version, string author, List<Dependency> dependencies)
+public readonly struct ModInfo(string name, string id, Version version, string author, Dependency[] dependencies = null)
     : IEquatable<ModInfo>
 {
     public string Id { get; } = id;
     public Version Version { get; } = version;
 
-    public Dependency[] Dependencies { get; } = dependencies?.ToArray() ?? [];
+    public Dependency[] Dependencies { get; } = dependencies ?? [];
     public string Name { get; } = name;
     public string Author { get; } = author;
 

@@ -4,11 +4,20 @@
         <TargetFramework>net8.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
-        <RootNamespace>VoxelSharp.Modding</RootNamespace>
+        <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+        <Authors>Lukas Olson</Authors>
     </PropertyGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\VoxelSharp.Modding\VoxelSharp.Modding.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
       <PackageReference Include="HarmonyX" Version="2.13.0" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Content Include=".template.config\template.json" />
     </ItemGroup>
 
 </Project>

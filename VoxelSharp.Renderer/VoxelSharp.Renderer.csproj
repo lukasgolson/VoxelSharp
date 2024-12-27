@@ -4,11 +4,15 @@
         <TargetFramework>net8.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
-        <RootNamespace>VoxelSharp.Modding</RootNamespace>
+        <OutputType>Exe</OutputType>
     </PropertyGroup>
 
     <ItemGroup>
-      <PackageReference Include="HarmonyX" Version="2.13.0" />
+      <PackageReference Include="OpenTK" Version="4.9.3" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\VoxelSharp.Core\VoxelSharp.Core.csproj" />
     </ItemGroup>
 
 </Project>
