@@ -2,6 +2,8 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VoxelSharp", "VoxelSharp\VoxelSharp.csproj", "{D0847867-DEDA-4298-B6F9-D79D51E177F6}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VoxelSharp.Modding", "VoxelSharp.Modding\VoxelSharp.Modding.csproj", "{5DC42F2B-B415-4ECD-A914-52736597B1F2}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -12,5 +14,9 @@ Global
 		{D0847867-DEDA-4298-B6F9-D79D51E177F6}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D0847867-DEDA-4298-B6F9-D79D51E177F6}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D0847867-DEDA-4298-B6F9-D79D51E177F6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5DC42F2B-B415-4ECD-A914-52736597B1F2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5DC42F2B-B415-4ECD-A914-52736597B1F2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5DC42F2B-B415-4ECD-A914-52736597B1F2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5DC42F2B-B415-4ECD-A914-52736597B1F2}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
