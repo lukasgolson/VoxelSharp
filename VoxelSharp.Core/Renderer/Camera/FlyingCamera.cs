@@ -1,8 +1,7 @@
-﻿using VoxelSharp.Renderer.interfaces;
+﻿
+namespace VoxelSharp.Core.Renderer.Camera;
 
-namespace VoxelSharp.Renderer;
-
-public class FlyingCamera : Camera.Camera
+public class FlyingCamera : Camera
 {
     private float _speed = 0.01f;
 

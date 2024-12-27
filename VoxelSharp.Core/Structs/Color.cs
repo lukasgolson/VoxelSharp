@@ -1,4 +1,4 @@
-﻿namespace VoxelSharp.Structs;
+﻿namespace VoxelSharp.Core.Structs;
 
 public readonly struct Color(byte r, byte g, byte b, byte a) : IEquatable<Color>
 {

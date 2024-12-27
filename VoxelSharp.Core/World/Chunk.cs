@@ -1,6 +1,6 @@
-﻿using VoxelSharp.Structs;
+﻿using VoxelSharp.Core.Structs;
 
-namespace VoxelSharp.World;
+namespace VoxelSharp.Core.World;
 
 public class Chunk
 {

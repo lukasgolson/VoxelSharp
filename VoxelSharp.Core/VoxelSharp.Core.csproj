@@ -26,4 +26,8 @@
       </None>
     </ItemGroup>
 
+    <ItemGroup>
+      <ProjectReference Include="..\VoxelSharp.Modding\VoxelSharp.Modding.csproj" />
+    </ItemGroup>
+
 </Project>

@@ -1,7 +1,7 @@
 ﻿using System.Numerics;
 using System.Runtime.CompilerServices;
 
-namespace VoxelSharp.Structs;
+namespace VoxelSharp.Core.Structs;
 
 /// <summary>
 /// Represents a 3D position with generic numeric type.

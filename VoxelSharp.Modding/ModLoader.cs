@@ -40,7 +40,7 @@ public class ModLoader(string modsPath)
         _mods = orderedMods;
         _initialized = true;
     }
-    
+
     public void Update(float deltaTime)
     {
         foreach (var mod in _mods)
@@ -48,7 +48,7 @@ public class ModLoader(string modsPath)
             mod.Update(deltaTime);
         }
     }
-    
+
     public void Render()
     {
         foreach (var mod in _mods)

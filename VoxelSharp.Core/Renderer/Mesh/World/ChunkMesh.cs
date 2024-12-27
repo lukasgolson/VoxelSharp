@@ -1,11 +1,11 @@
 ﻿using OpenTK.Graphics.OpenGL4;
 using OpenTK.Mathematics;
-using VoxelSharp.Structs;
-using VoxelSharp.World;
 using System;
 using System.Buffers;
+using VoxelSharp.Core.Structs;
+using VoxelSharp.Core.World;
 
-namespace VoxelSharp.Renderer.Mesh.World
+namespace VoxelSharp.Core.Renderer.Mesh.World
 {
     public class ChunkMesh : BaseMesh
     {

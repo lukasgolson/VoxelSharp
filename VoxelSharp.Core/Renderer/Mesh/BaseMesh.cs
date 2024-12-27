@@ -2,7 +2,7 @@
 using OpenTK.Mathematics;
 using System.Buffers;
 
-namespace VoxelSharp.Renderer.Mesh
+namespace VoxelSharp.Core.Renderer.Mesh
 {
     public abstract class BaseMesh : IDisposable
     {

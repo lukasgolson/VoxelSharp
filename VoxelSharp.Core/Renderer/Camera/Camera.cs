@@ -1,6 +1,6 @@
 ﻿using OpenTK.Mathematics;
 
-namespace VoxelSharp.Renderer.Camera
+namespace VoxelSharp.Core.Renderer.Camera
 {
     public abstract class Camera
     {

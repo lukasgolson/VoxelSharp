@@ -1,9 +1,7 @@
 ﻿using OpenTK.Graphics.OpenGL4;
 using OpenTK.Mathematics;
-using System.Collections.Generic;
-using System.IO;
 
-namespace VoxelSharp.Renderer
+namespace VoxelSharp.Core.Renderer
 {
     public class Shader
     {

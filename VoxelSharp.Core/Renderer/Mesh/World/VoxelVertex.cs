@@ -1,6 +1,6 @@
-﻿using VoxelSharp.World;
+﻿using VoxelSharp.Core.World;
 
-namespace VoxelSharp.Renderer.Mesh.World;
+namespace VoxelSharp.Core.Renderer.Mesh.World;
 
 public readonly struct VoxelVertex
 {

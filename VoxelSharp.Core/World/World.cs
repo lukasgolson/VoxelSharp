@@ -1,8 +1,8 @@
-﻿using VoxelSharp.Renderer;
-using VoxelSharp.Renderer.Mesh.World;
-using VoxelSharp.Structs;
+﻿using VoxelSharp.Core.Renderer;
+using VoxelSharp.Core.Renderer.Mesh.World;
+using VoxelSharp.Core.Structs;
 
-namespace VoxelSharp.World;
+namespace VoxelSharp.Core.World;
 
 public class World
 {

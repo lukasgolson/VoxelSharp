@@ -2,12 +2,13 @@
 using OpenTK.Windowing.Common;
 using OpenTK.Windowing.Desktop;
 using OpenTK.Windowing.GraphicsLibraryFramework;
-using VoxelSharp.Renderer;
-using VoxelSharp.Renderer.interfaces;
-using VoxelSharp.Structs;
-using VoxelSharp.World;
+using VoxelSharp.Core.Interfaces;
+using VoxelSharp.Core.Renderer;
+using VoxelSharp.Core.Renderer.Camera;
+using VoxelSharp.Core.Structs;
+using VoxelSharp.Core.World;
 
-namespace VoxelSharp
+namespace VoxelSharp.Core
 {
     public class Window : GameWindow, IWindow
     {
@@ -17,11 +18,21 @@ namespace VoxelSharp
 
         private readonly FlyingCamera _camera;
 
-        public Window(GameWindowSettings gameWindowSettings, NativeWindowSettings nativeWindowSettings) :
+        private readonly List<IUpdatable> _updatables;
+        private readonly List<IRenderable> _renderables;
+
+        public Window(GameWindowSettings gameWindowSettings, NativeWindowSettings nativeWindowSettings,
+            List<IUpdatable>? updatables = null, List<IRenderable>? renderables = null) :
             base(gameWindowSettings, nativeWindowSettings)
         {
+            _chunkShader = new Shader("Shaders/chunk.vert", "Shaders/chunk.frag");
+
+
             _camera = new FlyingCamera((float)Size.X / Size.Y);
             _world = new World.World(2, 16);
+
+            _updatables = updatables ?? [];
+            _renderables = renderables ?? [];
 
             // create a test plane
 
@@ -29,8 +40,6 @@ namespace VoxelSharp
             {
                 for (int z = 0; z < 16; z++)
                 {
-
-
                     _world.SetVoxel(new Position<int>(x, 0, z), new Voxel(Color.Red));
                 }
             }
@@ -51,8 +60,6 @@ namespace VoxelSharp
 
             GL.Enable(EnableCap.Blend); // Enable blending for transparency
             GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha); // Set blending function
-
-            _chunkShader = new Shader("Shaders/chunk.vert", "Shaders/chunk.frag");
 
 
             GL.ClearColor(0.1f, 0.1f, 0.1f, 1.0f);
@@ -80,8 +87,12 @@ namespace VoxelSharp
 
             _world.Render(_chunkShader);
 
-
             Shader.UnUse();
+
+            foreach (var renderable in _renderables)
+            {
+                renderable.Render();
+            }
 
             SwapBuffers();
         }
@@ -110,6 +121,11 @@ namespace VoxelSharp
 
             // Update camera state
             _camera.Update((float)e.Time);
+
+            foreach (var updatable in _updatables)
+            {
+                updatable.Update((float)e.Time);
+            }
 
 
             _elapsedTime += e.Time; // Accumulate the total elapsed time

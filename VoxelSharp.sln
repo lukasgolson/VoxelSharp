@@ -1,6 +1,6 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VoxelSharp", "VoxelSharp\VoxelSharp.csproj", "{D0847867-DEDA-4298-B6F9-D79D51E177F6}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VoxelSharp.Core", "VoxelSharp.Core\VoxelSharp.Core.csproj", "{D0847867-DEDA-4298-B6F9-D79D51E177F6}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VoxelSharp.Modding", "VoxelSharp.Modding\VoxelSharp.Modding.csproj", "{5DC42F2B-B415-4ECD-A914-52736597B1F2}"
 EndProject

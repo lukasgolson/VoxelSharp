@@ -1,9 +1,9 @@
 ﻿using System.Diagnostics;
 using System.Numerics;
-using VoxelSharp.Structs;
+using VoxelSharp.Core.Structs;
 using Vector3 = OpenTK.Mathematics.Vector3;
 
-namespace VoxelSharp.Extensions;
+namespace VoxelSharp.Core.Extensions;
 
 public static class OpenTkPositionExtension
 {

@@ -1,4 +1,4 @@
-﻿namespace VoxelSharp;
+﻿namespace VoxelSharp.Core;
 
 public static class Math
 {
