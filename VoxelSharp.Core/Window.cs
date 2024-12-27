@@ -12,7 +12,7 @@ namespace VoxelSharp.Core
 {
     public class Window : GameWindow, IWindow
     {
-        private Shader _chunkShader;
+        private readonly Shader _chunkShader;
 
         private readonly World.World _world;
 
