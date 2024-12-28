@@ -1,60 +1,43 @@
-﻿
-namespace VoxelSharp.Core.Renderer.Camera;
+﻿namespace VoxelSharp.Renderer.Camera;
 
-public class FlyingCamera : Camera
+public class FlyingCamera(float aspectRatio) : Camera(aspectRatio)
 {
-    private float _speed = 0.01f;
+    private const float Speed = 0.01f;
 
-    public FlyingCamera(float aspectRatio) : base(aspectRatio)
-    {
-    }
-
-
-    public override void Update(float deltaTime)
-    {
-        base.Update(deltaTime);
-
-        // Console.WriteLine(Position);
-        //
-        // Console.WriteLine(_pitch);
-        // Console.WriteLine(_yaw);
-    }
 
     public void MoveForward()
     {
-        var deltaPosition = Forward * _speed;
+        var deltaPosition = Forward * Speed;
         UpdatePosition(deltaPosition);
     }
 
     public void MoveBackward()
     {
-        var deltaPosition = -Forward * _speed;
+        var deltaPosition = -Forward * Speed;
         UpdatePosition(deltaPosition);
     }
 
     public void MoveLeft()
     {
-        var deltaPosition = -Right * _speed;
+        var deltaPosition = -Right * Speed;
         UpdatePosition(deltaPosition);
     }
 
     public void MoveRight()
     {
-        var deltaPosition = Right * _speed;
+        var deltaPosition = Right * Speed;
         UpdatePosition(deltaPosition);
     }
 
     public void MoveUp()
     {
-        var deltaPosition = Up * _speed;
+        var deltaPosition = Up * Speed;
         UpdatePosition(deltaPosition);
     }
 
     public void MoveDown()
     {
-        var deltaPosition = -Up * _speed;
+        var deltaPosition = -Up * Speed;
         UpdatePosition(deltaPosition);
     }
-
-  
 }

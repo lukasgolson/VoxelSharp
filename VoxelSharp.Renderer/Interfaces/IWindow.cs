@@ -1,4 +1,4 @@
-﻿namespace VoxelSharp.Core.Interfaces;
+﻿namespace VoxelSharp.Renderer.Interfaces;
 
 public interface IWindow
 {

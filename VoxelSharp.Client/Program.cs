@@ -1,11 +1,14 @@
 ﻿using OpenTK.Mathematics;
 using OpenTK.Windowing.Common;
 using OpenTK.Windowing.Desktop;
+using VoxelSharp.Core;
 using VoxelSharp.Core.Interfaces;
 using VoxelSharp.Core.Wrappers;
+using VoxelSharp.Renderer;
 using VoxelSharp.Renderer.Interfaces;
+using VoxelSharp.Renderer.Mesh.World;
 
-namespace VoxelSharp.Core;
+namespace VoxelSharp.Client;
 
 class Program
 {
@@ -40,8 +43,13 @@ class Program
 
         modLoader.ModLoader.LoadMods();
 
+
+        Core.World.World _world = new Core.World.World(2, 16);
+
+        var worldRenderer = new WorldRenderer(_world);
+        
         var updatables = new List<IUpdatable> { modLoader };
-        var renderables = new List<IRenderable> { modLoader };
+        var renderables = new List<IRenderable> { modLoader, worldRenderer };
 
         using var window = new Window(GameWindowSettings.Default, nativeWindowSettings, updatables, renderables);
 

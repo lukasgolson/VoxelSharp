@@ -8,7 +8,7 @@ public class WorldRenderer : IRenderable
     private readonly ChunkMesh[] _chunkMeshArray;
 
 
-    private WorldRenderer(Core.World.World world)
+    public WorldRenderer(Core.World.World world)
     {
         var worldVolume = world.WorldSize * world.WorldSize * world.WorldSize;
         _chunkMeshArray = new ChunkMesh[worldVolume];

@@ -1,8 +1,10 @@
 ﻿using OpenTK.Mathematics;
+using VoxelSharp.Core.Interfaces;
+using VoxelSharp.Renderer.Interfaces;
 
-namespace VoxelSharp.Core.Renderer.Camera
+namespace VoxelSharp.Renderer.Camera
 {
-    public abstract class Camera
+    public abstract class Camera : ICamera, IUpdatable
     {
         // Rotation
         protected float Yaw = 0f;  // Horizontal rotation
