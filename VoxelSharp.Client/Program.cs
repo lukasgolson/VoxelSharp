@@ -30,13 +30,7 @@ internal class Program
         // Initialize ModLoader with the specified directory
         var modLoader = new ModLoaderWrapper(modsDirectory);
 
-        var nativeWindowSettings = new NativeWindowSettings
-        {
-            ClientSize = new Vector2i(800, 600),
-            Title = "VoxelSharp.CorelSharp.Core",
-            Flags = ContextFlags.ForwardCompatible
-        };
-
+        
         modLoader.ModLoader.LoadMods();
 
 
@@ -49,7 +43,7 @@ internal class Program
         var updatables = new List<IUpdatable> { modLoader };
         var renderables = new List<IRenderer> { modLoader, worldRenderer };
 
-        using var window = new Window(GameWindowSettings.Default, nativeWindowSettings, updatables, renderables);
+        using var window = new Window(updatables, renderables);
 
         window.Run();
     }
