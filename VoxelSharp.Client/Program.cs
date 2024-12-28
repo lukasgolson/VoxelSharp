@@ -1,7 +1,4 @@
-﻿using OpenTK.Mathematics;
-using OpenTK.Windowing.Common;
-using OpenTK.Windowing.Desktop;
-using VoxelSharp.Client.Wrappers;
+﻿using VoxelSharp.Client.Wrappers;
 using VoxelSharp.Core.Interfaces;
 using VoxelSharp.Core.Structs;
 using VoxelSharp.Core.World;
