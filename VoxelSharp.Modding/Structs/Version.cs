@@ -1,17 +1,10 @@
 namespace VoxelSharp.Modding.Structs;
 
-public struct Version : IComparable<Version>
+public readonly struct Version(int major, int minor, int patch) : IComparable<Version>, IEquatable<Version>
 {
-    public int Major { get; }
-    public int Minor { get; }
-    public int Patch { get; }
-
-    public Version(int major, int minor, int patch)
-    {
-        Major = major;
-        Minor = minor;
-        Patch = patch;
-    }
+    public int Major { get; } = major;
+    public int Minor { get; } = minor;
+    public int Patch { get; } = patch;
 
     public int CompareTo(Version other)
     {
@@ -23,16 +16,13 @@ public struct Version : IComparable<Version>
             ? Minor.CompareTo(other.Minor)
             : Patch.CompareTo(other.Patch);
     }
-    
+
     // Implement a compatible Equals method. If two versions have the same major and minor version, they are considered equal.
-    
+
 
     public override bool Equals(object? obj)
     {
-        if (obj is Version other)
-        {
-            return Major == other.Major && Minor == other.Minor && Patch == other.Patch;
-        }
+        if (obj is Version other) return Major == other.Major && Minor == other.Minor && Patch == other.Patch;
 
         return false;
     }
@@ -42,20 +32,43 @@ public struct Version : IComparable<Version>
         return HashCode.Combine(Major, Minor, Patch);
     }
 
-    public static bool operator ==(Version left, Version right) => left.Equals(right);
+    public static bool operator ==(Version left, Version right)
+    {
+        return left.Equals(right);
+    }
 
-    public static bool operator !=(Version left, Version right) => !left.Equals(right);
+    public static bool operator !=(Version left, Version right)
+    {
+        return !left.Equals(right);
+    }
 
-    public static bool operator <(Version left, Version right) => left.CompareTo(right) < 0;
+    public static bool operator <(Version left, Version right)
+    {
+        return left.CompareTo(right) < 0;
+    }
 
-    public static bool operator >(Version left, Version right) => left.CompareTo(right) > 0;
+    public static bool operator >(Version left, Version right)
+    {
+        return left.CompareTo(right) > 0;
+    }
 
-    public static bool operator <=(Version left, Version right) => left.CompareTo(right) <= 0;
+    public static bool operator <=(Version left, Version right)
+    {
+        return left.CompareTo(right) <= 0;
+    }
 
-    public static bool operator >=(Version left, Version right) => left.CompareTo(right) >= 0;
+    public static bool operator >=(Version left, Version right)
+    {
+        return left.CompareTo(right) >= 0;
+    }
 
     public override string ToString()
     {
         return $"{Major}.{Minor}.{Patch}";
+    }
+
+    public bool Equals(Version other)
+    {
+        return Major == other.Major && Minor == other.Minor && Patch == other.Patch;
     }
 }

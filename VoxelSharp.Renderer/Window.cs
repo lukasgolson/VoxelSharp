@@ -3,125 +3,101 @@ using OpenTK.Windowing.Common;
 using OpenTK.Windowing.Desktop;
 using OpenTK.Windowing.GraphicsLibraryFramework;
 using VoxelSharp.Core.Interfaces;
-using VoxelSharp.Core.Renderer;
 using VoxelSharp.Renderer.Camera;
 using VoxelSharp.Renderer.Interfaces;
 
-namespace VoxelSharp.Renderer
+namespace VoxelSharp.Renderer;
+
+public class Window : GameWindow, IWindow
 {
-    public class Window : GameWindow, IWindow
+    private readonly FlyingCamera _camera;
+    private readonly List<IRenderer> _renderers;
+
+    private readonly List<IUpdatable> _updatables;
+
+    public Window(GameWindowSettings gameWindowSettings, NativeWindowSettings nativeWindowSettings,
+        List<IUpdatable>? updatables = null, List<IRenderer>? renderers = null) :
+        base(gameWindowSettings, nativeWindowSettings)
     {
+        _camera = new FlyingCamera((float)Size.X / Size.Y);
 
 
-
-        private readonly FlyingCamera _camera;
-
-        private readonly List<IUpdatable> _updatables;
-        private readonly List<IRenderer> _renderers;
-
-        public Window(GameWindowSettings gameWindowSettings, NativeWindowSettings nativeWindowSettings,
-            List<IUpdatable>? updatables = null, List<IRenderer>? renderers = null) :
-            base(gameWindowSettings, nativeWindowSettings)
-        {
-
-            _camera = new FlyingCamera((float)Size.X / Size.Y);
-            
-
-            _updatables = updatables ?? [];
-            _renderers = renderers ?? [];
-        }
+        _updatables = updatables ?? [];
+        _renderers = renderers ?? [];
+    }
 
 
-        protected override void OnLoad()
-        {
-            base.OnLoad();
+    public (int Width, int Height) ScreenSize => (Size.X, Size.Y);
 
 
-            GL.Enable(EnableCap.DepthTest);
-            GL.DepthFunc(DepthFunction.Less);
-            GL.Disable(EnableCap.CullFace);
-
-            GL.Clear(ClearBufferMask.DepthBufferBit);
+    protected override void OnLoad()
+    {
+        base.OnLoad();
 
 
-            GL.Enable(EnableCap.Blend); // Enable blending for transparency
-            GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha); // Set blending function
+        GL.Enable(EnableCap.DepthTest);
+        GL.DepthFunc(DepthFunction.Less);
+        GL.Disable(EnableCap.CullFace);
+
+        GL.Clear(ClearBufferMask.DepthBufferBit);
 
 
-            GL.ClearColor(0.1f, 0.1f, 0.1f, 1.0f);
-            
-            foreach (var renderer in _renderers)
-            {
-                renderer.InitializeShaders();
-            }
-        }
+        GL.Enable(EnableCap.Blend); // Enable blending for transparency
+        GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha); // Set blending function
 
 
+        GL.ClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 
-        protected override void OnRenderFrame(FrameEventArgs e)
-        {
-            base.OnRenderFrame(e);
-            
-            GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
-
-            foreach (var renderer in _renderers)
-            {
-                renderer.Render(_camera);
-            }
-
-            Shader.UnUse();
+        foreach (var renderer in _renderers) renderer.InitializeShaders();
+    }
 
 
-            SwapBuffers();
-        }
+    protected override void OnRenderFrame(FrameEventArgs e)
+    {
+        base.OnRenderFrame(e);
+
+        GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
+
+        foreach (var renderer in _renderers) renderer.Render(_camera);
+
+        Shader.UnUse();
 
 
-        protected override void OnUpdateFrame(FrameEventArgs e)
-        {
-            base.OnUpdateFrame(e);
-
-            if (KeyboardState.IsKeyDown(Keys.Escape))
-            {
-                Close();
-            }
-
-            // Handle movement inputs
-            if (KeyboardState.IsKeyDown(Keys.W))
-            {
-                _camera.MoveForward();
-            }
-            if (KeyboardState.IsKeyDown(Keys.S)) _camera.MoveBackward();
-            if (KeyboardState.IsKeyDown(Keys.A)) _camera.MoveLeft();
-            if (KeyboardState.IsKeyDown(Keys.D)) _camera.MoveRight();
-            if (KeyboardState.IsKeyDown(Keys.Space)) _camera.MoveUp();
-            if (KeyboardState.IsKeyDown(Keys.LeftShift)) _camera.MoveDown();
-
-            // Handle mouse inputs for camera rotation
-            var (deltaX, deltaY) = MouseState.Delta;
-            _camera.UpdateRotation(deltaX, -deltaY);
-
-            // Update camera state
-            _camera.Update((float)e.Time);
-            
-            foreach (var updatable in _updatables)
-            {
-                updatable.Update((float)e.Time);
-            }
+        SwapBuffers();
+    }
 
 
-        }
+    protected override void OnUpdateFrame(FrameEventArgs e)
+    {
+        base.OnUpdateFrame(e);
 
-        protected override void OnResize(ResizeEventArgs e)
-        {
-            base.OnResize(e);
+        if (KeyboardState.IsKeyDown(Keys.Escape)) Close();
 
-            GL.Viewport(0, 0, Size.X, Size.Y);
+        // Handle movement inputs
+        if (KeyboardState.IsKeyDown(Keys.W)) _camera.MoveForward();
+        if (KeyboardState.IsKeyDown(Keys.S)) _camera.MoveBackward();
+        if (KeyboardState.IsKeyDown(Keys.A)) _camera.MoveLeft();
+        if (KeyboardState.IsKeyDown(Keys.D)) _camera.MoveRight();
+        if (KeyboardState.IsKeyDown(Keys.Space)) _camera.MoveUp();
+        if (KeyboardState.IsKeyDown(Keys.LeftShift)) _camera.MoveDown();
 
-            // Update projection matrix for the new aspect ratio
-            _camera.UpdateAspectRatio((float)Size.X / Size.Y);
-        }
+        // Handle mouse inputs for camera rotation
+        var (deltaX, deltaY) = MouseState.Delta;
+        _camera.UpdateRotation(deltaX, -deltaY);
 
+        // Update camera state
+        _camera.Update((float)e.Time);
 
-        public (int Width, int Height) ScreenSize => (Size.X, Size.Y);
+        foreach (var updatable in _updatables) updatable.Update((float)e.Time);
+    }
+
+    protected override void OnResize(ResizeEventArgs e)
+    {
+        base.OnResize(e);
+
+        GL.Viewport(0, 0, Size.X, Size.Y);
+
+        // Update projection matrix for the new aspect ratio
+        _camera.UpdateAspectRatio((float)Size.X / Size.Y);
     }
 }

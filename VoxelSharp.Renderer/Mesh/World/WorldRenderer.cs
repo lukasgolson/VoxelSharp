@@ -1,4 +1,3 @@
-using VoxelSharp.Core.Renderer;
 using VoxelSharp.Renderer.Interfaces;
 
 namespace VoxelSharp.Renderer.Mesh.World;
@@ -20,7 +19,6 @@ public class WorldRenderer : IRenderer
 
             _chunkMeshArray[chunk.Position.ToIndex(world.WorldSize)] = chunkMesh;
         }
-
     }
 
     public void InitializeShaders()
@@ -36,10 +34,7 @@ public class WorldRenderer : IRenderer
         _chunkShader.SetUniform("m_view", camera.GetViewMatrix());
         _chunkShader.SetUniform("m_projection", camera.GetProjectionMatrix());
 
-        foreach (var chunkMesh in _chunkMeshArray)
-        {
-            chunkMesh.Render(_chunkShader);
-        }
+        foreach (var chunkMesh in _chunkMeshArray) chunkMesh.Render(_chunkShader);
 
         Shader.UnUse();
     }

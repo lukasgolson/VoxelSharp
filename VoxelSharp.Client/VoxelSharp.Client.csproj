@@ -8,9 +8,9 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\VoxelSharp.Core\VoxelSharp.Core.csproj" />
-      <ProjectReference Include="..\VoxelSharp.Modding\VoxelSharp.Modding.csproj" />
-      <ProjectReference Include="..\VoxelSharp.Renderer\VoxelSharp.Renderer.csproj" />
+        <ProjectReference Include="..\VoxelSharp.Core\VoxelSharp.Core.csproj"/>
+        <ProjectReference Include="..\VoxelSharp.Modding\VoxelSharp.Modding.csproj"/>
+        <ProjectReference Include="..\VoxelSharp.Renderer\VoxelSharp.Renderer.csproj"/>
     </ItemGroup>
 
 </Project>

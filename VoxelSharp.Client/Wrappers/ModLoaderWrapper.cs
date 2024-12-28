@@ -1,33 +1,36 @@
 using VoxelSharp.Core.Interfaces;
-using VoxelSharp.Core.Renderer;
 using VoxelSharp.Modding;
 using VoxelSharp.Renderer.Interfaces;
 
-namespace VoxelSharp.Core.Wrappers;
+namespace VoxelSharp.Client.Wrappers;
 
 /// <summary>
-/// A wrapper around the ModLoader class, enabling rendering and updating through IRenderable and IUpdatable.
+///     A wrapper around the ModLoader class, enabling rendering and updating through IRenderable and IUpdatable.
 /// </summary>
 public class ModLoaderWrapper : IRenderer, IUpdatable
 {
     /// <summary>
-    /// Gets the underlying ModLoader instance.
-    /// </summary>
-    public ModLoader ModLoader { get; }
-
-    /// <summary>
-    /// Initializes a new instance of the ModLoaderWrapper.
+    ///     Initializes a new instance of the ModLoaderWrapper.
     /// </summary>
     /// <param name="modPath">The path to the mods to load.</param>
     public ModLoaderWrapper(string modPath)
-        => ModLoader = new ModLoader(modPath);
+    {
+        ModLoader = new ModLoader(modPath);
+    }
 
     /// <summary>
-    /// Initializes a new instance of the ModLoaderWrapper with an existing ModLoader instance.
+    ///     Initializes a new instance of the ModLoaderWrapper with an existing ModLoader instance.
     /// </summary>
     /// <param name="modLoader">An existing ModLoader instance.</param>
     public ModLoaderWrapper(ModLoader modLoader)
-        => ModLoader = modLoader;
+    {
+        ModLoader = modLoader;
+    }
+
+    /// <summary>
+    ///     Gets the underlying ModLoader instance.
+    /// </summary>
+    public ModLoader ModLoader { get; }
 
     public void InitializeShaders()
     {
@@ -35,14 +38,20 @@ public class ModLoaderWrapper : IRenderer, IUpdatable
     }
 
     /// <summary>
-    /// Renders the mods by delegating to the underlying ModLoader.
+    ///     Renders the mods by delegating to the underlying ModLoader.
     /// </summary>
-    public void Render(ICamera camera) => ModLoader.Render();
+    public void Render(ICamera camera)
+    {
+        ModLoader.Render();
+    }
 
 
     /// <summary>
-    /// Updates the mods by delegating to the underlying ModLoader.
+    ///     Updates the mods by delegating to the underlying ModLoader.
     /// </summary>
     /// <param name="deltaTime">The time elapsed since the last update.</param>
-    public void Update(float deltaTime) => ModLoader.Update(deltaTime);
+    public void Update(float deltaTime)
+    {
+        ModLoader.Update(deltaTime);
+    }
 }

@@ -4,17 +4,6 @@ namespace VoxelSharp.Core.World;
 
 public class Chunk
 {
-    public int ChunkSize { get; }
-    public int ChunkArea { get; }
-    public int ChunkVolume { get; init; }
-
-    public bool IsDirty { get; set; }
-
-    public Voxel[] Voxels { get; }
-
-    public Position<int> Position { get; }
-
-
     // IDEA: Change the voxel array to a Memory<Voxel> to minimize heap allocations; Add a method to get a Memory<Voxel> slice for a specific chunk area
     // and update the ChunkMesh to use this method to get the voxel data for the mesh generation.
     // Further, allow methods to directly modify the Memory<Voxel> slice to update the voxel data.
@@ -34,12 +23,20 @@ public class Chunk
 
 
         // fill the Voxels array with empty voxels
-        for (int i = 0; i < ChunkVolume; i++)
-        {
+        for (var i = 0; i < ChunkVolume; i++)
             // fill the chunk with transparent voxels
             Voxels[i] = new Voxel(Color.Transparent);
-        }
     }
+
+    public int ChunkSize { get; }
+    public int ChunkArea { get; }
+    public int ChunkVolume { get; init; }
+
+    public bool IsDirty { get; set; }
+
+    public Voxel[] Voxels { get; }
+
+    public Position<int> Position { get; }
 
     public bool SetVoxel(Position<int> position, Voxel value)
     {

@@ -9,7 +9,6 @@ public class Main : IMod
 {
     public ModInfo ModInfo { get; } = new(
         "{ModName}",
-
         "{ModId}",
         new Version(1, 0, 0),
         "{Author}"

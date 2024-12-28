@@ -4,10 +4,6 @@ namespace VoxelSharp.Core.World;
 
 public class World
 {
-    public int WorldSize { get; }
-    public int ChunkSize { get; }
-
-
     public readonly Chunk[] ChunkArray;
 
 
@@ -28,13 +24,16 @@ public class World
         }
     }
 
+    public int WorldSize { get; }
+    public int ChunkSize { get; }
+
 
     public Voxel GetVoxel(Position<int> worldPos)
     {
         var chunkCoords = GetChunkCoordinates(worldPos);
         var localCoords = GetLocalCoordinates(worldPos);
 
-        Voxel voxel = ChunkArray[chunkCoords.ToIndex(WorldSize)].GetVoxel(localCoords);
+        var voxel = ChunkArray[chunkCoords.ToIndex(WorldSize)].GetVoxel(localCoords);
 
         return voxel;
     }
@@ -51,18 +50,18 @@ public class World
 
     private Position<int> GetChunkCoordinates(Position<int> worldCoords)
     {
-        int x = worldCoords.X / ChunkSize;
-        int y = worldCoords.Y / ChunkSize;
-        int z = worldCoords.Z / ChunkSize;
+        var x = worldCoords.X / ChunkSize;
+        var y = worldCoords.Y / ChunkSize;
+        var z = worldCoords.Z / ChunkSize;
 
         return new Position<int>(x, y, z);
     }
 
     private Position<int> GetLocalCoordinates(Position<int> worldCoords)
     {
-        int x = Math.EModulo(worldCoords.X, ChunkSize);
-        int y = Math.EModulo(worldCoords.Y, ChunkSize);
-        int z = Math.EModulo(worldCoords.Z, ChunkSize);
+        var x = Math.EModulo(worldCoords.X, ChunkSize);
+        var y = Math.EModulo(worldCoords.Y, ChunkSize);
+        var z = Math.EModulo(worldCoords.Z, ChunkSize);
 
         return new Position<int>(x, y, z);
     }

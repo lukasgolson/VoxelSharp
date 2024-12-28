@@ -17,14 +17,26 @@ public readonly struct Color(byte r, byte g, byte b, byte a) : IEquatable<Color>
         _ => throw new IndexOutOfRangeException("Invalid index")
     };
 
-    public override bool Equals(object? obj) => obj is Color other &&
-                                                R == other.R && G == other.G && B == other.B && A == other.A;
+    public override bool Equals(object? obj)
+    {
+        return obj is Color other &&
+               R == other.R && G == other.G && B == other.B && A == other.A;
+    }
 
-    public override int GetHashCode() => HashCode.Combine(R, G, B, A);
+    public override int GetHashCode()
+    {
+        return HashCode.Combine(R, G, B, A);
+    }
 
-    public static bool operator ==(Color left, Color right) => left.Equals(right);
+    public static bool operator ==(Color left, Color right)
+    {
+        return left.Equals(right);
+    }
 
-    public static bool operator !=(Color left, Color right) => !left.Equals(right);
+    public static bool operator !=(Color left, Color right)
+    {
+        return !left.Equals(right);
+    }
 
 
     public bool Equals(Color other)

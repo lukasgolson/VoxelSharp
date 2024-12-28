@@ -4,30 +4,30 @@ using System.Runtime.CompilerServices;
 namespace VoxelSharp.Core.Structs;
 
 /// <summary>
-/// Represents a 3D position with generic numeric type.
+///     Represents a 3D position with generic numeric type.
 /// </summary>
 /// <typeparam name="T">The numeric type of the position coordinates.</typeparam>
 public readonly struct Position<T> where T : INumber<T>
 {
     /// <summary>
-    /// Gets the X coordinate.
+    ///     Gets the X coordinate.
     /// </summary>
     public T X { get; }
 
     /// <summary>
-    /// Gets the Y coordinate.
+    ///     Gets the Y coordinate.
     /// </summary>
     public T Y { get; }
 
 
     /// <summary>
-    /// Gets the Z coordinate.
+    ///     Gets the Z coordinate.
     /// </summary>
     public T Z { get; }
 
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="Position{T}"/> struct.
+    ///     Initializes a new instance of the <see cref="Position{T}" /> struct.
     /// </summary>
     /// <param name="x">The X coordinate.</param>
     /// <param name="y">The Y coordinate.</param>
@@ -41,7 +41,7 @@ public readonly struct Position<T> where T : INumber<T>
 
 
     /// <summary>
-    /// Calculates the magnitude of the vector.
+    ///     Calculates the magnitude of the vector.
     /// </summary>
     /// <returns>The magnitude of the vector.</returns>
     public T Magnitude()
@@ -52,9 +52,9 @@ public readonly struct Position<T> where T : INumber<T>
     }
 
     /// <summary>
-    /// Normalizes the vector.
+    ///     Normalizes the vector.
     /// </summary>
-    /// <returns>A new <see cref="Position{T}"/> representing the normalized vector.</returns>
+    /// <returns>A new <see cref="Position{T}" /> representing the normalized vector.</returns>
     /// <exception cref="InvalidOperationException">Thrown when the vector is a zero vector.</exception>
     public Position<T> Normalize()
     {
@@ -66,7 +66,7 @@ public readonly struct Position<T> where T : INumber<T>
     }
 
     /// <summary>
-    /// Adds two vectors.
+    ///     Adds two vectors.
     /// </summary>
     /// <param name="a">The first vector.</param>
     /// <param name="b">The second vector.</param>
@@ -77,7 +77,7 @@ public readonly struct Position<T> where T : INumber<T>
     }
 
     /// <summary>
-    /// Subtracts two vectors.
+    ///     Subtracts two vectors.
     /// </summary>
     /// <param name="a">The first vector.</param>
     /// <param name="b">The second vector.</param>
@@ -89,7 +89,7 @@ public readonly struct Position<T> where T : INumber<T>
 
 
     /// <summary>
-    /// Negates a vector.
+    ///     Negates a vector.
     /// </summary>
     /// <param name="a">The vector to negate.</param>
     /// <returns>The negated vector.</returns>
@@ -100,7 +100,7 @@ public readonly struct Position<T> where T : INumber<T>
 
 
     /// <summary>
-    /// Multiplies a vector by a scalar.
+    ///     Multiplies a vector by a scalar.
     /// </summary>
     /// <param name="a">The vector.</param>
     /// <param name="scalar">The scalar value.</param>
@@ -112,7 +112,7 @@ public readonly struct Position<T> where T : INumber<T>
 
 
     /// <summary>
-    /// Divides a vector by a scalar.
+    ///     Divides a vector by a scalar.
     /// </summary>
     /// <param name="a">The vector.</param>
     /// <param name="scalar">The scalar value.</param>
@@ -126,7 +126,7 @@ public readonly struct Position<T> where T : INumber<T>
     }
 
     /// <summary>
-    /// Calculates the dot product of two vectors.
+    ///     Calculates the dot product of two vectors.
     /// </summary>
     /// <param name="a">The first vector.</param>
     /// <param name="b">The second vector.</param>
@@ -137,7 +137,7 @@ public readonly struct Position<T> where T : INumber<T>
     }
 
     /// <summary>
-    /// Calculates the cross product of two vectors.
+    ///     Calculates the cross product of two vectors.
     /// </summary>
     /// <param name="a">The first vector.</param>
     /// <param name="b">The second vector.</param>
@@ -152,7 +152,7 @@ public readonly struct Position<T> where T : INumber<T>
     }
 
     /// <summary>
-    /// Converts a 3D position to a 1D index. This is useful for storing 3D data in a 1D array.
+    ///     Converts a 3D position to a 1D index. This is useful for storing 3D data in a 1D array.
     /// </summary>
     /// <param name="width">The width of the 3D grid.</param>
     /// <param name="depth">The depth of the 3D grid.</param>
@@ -168,7 +168,7 @@ public readonly struct Position<T> where T : INumber<T>
     }
 
     /// <summary>
-    /// Converts a 3D position to a 1D index. This is useful for storing 3D data in a 1D array.
+    ///     Converts a 3D position to a 1D index. This is useful for storing 3D data in a 1D array.
     /// </summary>
     /// <param name="sideLength">The side length of the 3D grid.</param>
     /// <returns>The 1D index corresponding to the 3D position.</returns>
@@ -179,20 +179,20 @@ public readonly struct Position<T> where T : INumber<T>
     }
 
     /// <summary>
-    /// Converts a 1D index to a 3D position. This is useful for converting linear array indices back to 3D coordinates.
+    ///     Converts a 1D index to a 3D position. This is useful for converting linear array indices back to 3D coordinates.
     /// </summary>
     /// <param name="index">The 1D index to convert.</param>
     /// <param name="width">The width of the 3D grid.</param>
     /// <param name="depth">The depth of the 3D grid.</param>
-    /// <returns>A <see cref="Position{T}"/> representing the 3D coordinates corresponding to the given 1D index.</returns>
+    /// <returns>A <see cref="Position{T}" /> representing the 3D coordinates corresponding to the given 1D index.</returns>
     /// <exception cref="ArgumentException">Thrown when width or depth is less than or equal to zero.</exception>
     public static Position<T> FromIndex(int index, int width, int depth)
     {
-        int area = width * depth;
-        int y = index / area;
-        int remaining = index % area;
-        int z = remaining / width;
-        int x = remaining % width;
+        var area = width * depth;
+        var y = index / area;
+        var remaining = index % area;
+        var z = remaining / width;
+        var x = remaining % width;
 
         // Convert x, y, z to type T
         var convertedX = (T)Convert.ChangeType(x, typeof(T));
@@ -203,11 +203,11 @@ public readonly struct Position<T> where T : INumber<T>
     }
 
     /// <summary>
-    /// Converts a 1D index to a 3D position. This is useful for converting linear array indices back to 3D coordinates.
+    ///     Converts a 1D index to a 3D position. This is useful for converting linear array indices back to 3D coordinates.
     /// </summary>
     /// <param name="index">The 1D index to convert.</param>
     /// <param name="sideLength">The side length of the 3D grid.</param>
-    /// <returns>A <see cref="Position{T}"/> representing the 3D coordinates corresponding to the given 1D index.</returns>
+    /// <returns>A <see cref="Position{T}" /> representing the 3D coordinates corresponding to the given 1D index.</returns>
     /// <exception cref="ArgumentException">Thrown when side length is less than or equal to zero.</exception>
     public static Position<T> FromIndex(int index, int sideLength)
     {

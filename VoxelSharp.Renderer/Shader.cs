@@ -1,158 +1,137 @@
 ﻿using OpenTK.Graphics.OpenGL4;
 using OpenTK.Mathematics;
 
-namespace VoxelSharp.Core.Renderer
+namespace VoxelSharp.Renderer;
+
+public class Shader
 {
-    public class Shader
+    private readonly Dictionary<string, int> _attributeLocations;
+
+    private readonly Dictionary<string, int> _uniformLocations;
+    public readonly int Handle;
+
+    public Shader(string vertPath, string fragPath)
     {
-        public readonly int Handle;
+        if (!File.Exists(vertPath) || !File.Exists(fragPath)) throw new FileNotFoundException("Shader file not found.");
 
-        private readonly Dictionary<string, int> _uniformLocations;
-        private readonly Dictionary<string, int> _attributeLocations;
+        // Load and compile shaders
+        var vertexShader = LoadAndCompileShader(vertPath, ShaderType.VertexShader);
+        var fragmentShader = LoadAndCompileShader(fragPath, ShaderType.FragmentShader);
 
-        public Shader(string vertPath, string fragPath)
+        // Create shader program and link shaders
+        Handle = GL.CreateProgram();
+        GL.AttachShader(Handle, vertexShader);
+        GL.AttachShader(Handle, fragmentShader);
+        LinkProgram(Handle);
+
+        // Clean up individual shaders
+        GL.DetachShader(Handle, vertexShader);
+        GL.DetachShader(Handle, fragmentShader);
+        GL.DeleteShader(vertexShader);
+        GL.DeleteShader(fragmentShader);
+
+        // cache attribute locations
+        GL.GetProgram(Handle, GetProgramParameterName.ActiveAttributes, out var numberOfAttributes);
+        _attributeLocations = new Dictionary<string, int>();
+
+        for (var i = 0; i < numberOfAttributes; i++)
         {
-            if (!File.Exists(vertPath) || !File.Exists(fragPath))
-            {
-                throw new FileNotFoundException("Shader file not found.");
-            }
+            var key = GL.GetActiveAttrib(Handle, i, out _, out _);
+            var location = GL.GetAttribLocation(Handle, key);
 
-            // Load and compile shaders
-            var vertexShader = LoadAndCompileShader(vertPath, ShaderType.VertexShader);
-            var fragmentShader = LoadAndCompileShader(fragPath, ShaderType.FragmentShader);
+            if (location == -1) Console.WriteLine($"Warning: Attribute '{key}' is not active in the shader.");
 
-            // Create shader program and link shaders
-            Handle = GL.CreateProgram();
-            GL.AttachShader(Handle, vertexShader);
-            GL.AttachShader(Handle, fragmentShader);
-            LinkProgram(Handle);
-
-            // Clean up individual shaders
-            GL.DetachShader(Handle, vertexShader);
-            GL.DetachShader(Handle, fragmentShader);
-            GL.DeleteShader(vertexShader);
-            GL.DeleteShader(fragmentShader);
-
-            // cache attribute locations
-            GL.GetProgram(Handle, GetProgramParameterName.ActiveAttributes, out var numberOfAttributes);
-            _attributeLocations = new Dictionary<string, int>();
-
-            for (var i = 0; i < numberOfAttributes; i++)
-            {
-                var key = GL.GetActiveAttrib(Handle, i, out _, out _);
-                var location = GL.GetAttribLocation(Handle, key);
-
-                if (location == -1)
-                {
-                    Console.WriteLine($"Warning: Attribute '{key}' is not active in the shader.");
-                }
-
-                _attributeLocations[key] = location;
-            }
-
-            // Cache uniform locations
-            GL.GetProgram(Handle, GetProgramParameterName.ActiveUniforms, out var numberOfUniforms);
-            _uniformLocations = new Dictionary<string, int>();
-
-            for (var i = 0; i < numberOfUniforms; i++)
-            {
-                var key = GL.GetActiveUniform(Handle, i, out _, out _);
-                var location = GL.GetUniformLocation(Handle, key);
-
-                if (location == -1)
-                {
-                    Console.WriteLine($"Warning: Uniform '{key}' is not active in the shader.");
-                }
-
-                _uniformLocations[key] = location;
-            }
+            _attributeLocations[key] = location;
         }
 
-        private static int LoadAndCompileShader(string path, ShaderType type)
+        // Cache uniform locations
+        GL.GetProgram(Handle, GetProgramParameterName.ActiveUniforms, out var numberOfUniforms);
+        _uniformLocations = new Dictionary<string, int>();
+
+        for (var i = 0; i < numberOfUniforms; i++)
         {
-            var shaderSource = File.ReadAllText(path);
-            var shader = GL.CreateShader(type);
-            GL.ShaderSource(shader, shaderSource);
-            CompileShader(shader);
-            return shader;
+            var key = GL.GetActiveUniform(Handle, i, out _, out _);
+            var location = GL.GetUniformLocation(Handle, key);
+
+            if (location == -1) Console.WriteLine($"Warning: Uniform '{key}' is not active in the shader.");
+
+            _uniformLocations[key] = location;
         }
+    }
 
-        private static void CompileShader(int shader)
-        {
-            GL.CompileShader(shader);
-            GL.GetShader(shader, ShaderParameter.CompileStatus, out var code);
+    private static int LoadAndCompileShader(string path, ShaderType type)
+    {
+        var shaderSource = File.ReadAllText(path);
+        var shader = GL.CreateShader(type);
+        GL.ShaderSource(shader, shaderSource);
+        CompileShader(shader);
+        return shader;
+    }
 
-            if (code == (int)All.True) return;
+    private static void CompileShader(int shader)
+    {
+        GL.CompileShader(shader);
+        GL.GetShader(shader, ShaderParameter.CompileStatus, out var code);
 
-            var infoLog = GL.GetShaderInfoLog(shader);
-            throw new Exception($"Error occurred while compiling Shader({shader}):\n{infoLog}");
-        }
+        if (code == (int)All.True) return;
 
-        private static void LinkProgram(int program)
-        {
-            GL.LinkProgram(program);
-            GL.GetProgram(program, GetProgramParameterName.LinkStatus, out var code);
+        var infoLog = GL.GetShaderInfoLog(shader);
+        throw new Exception($"Error occurred while compiling Shader({shader}):\n{infoLog}");
+    }
 
-            if (code == (int)All.True) return;
+    private static void LinkProgram(int program)
+    {
+        GL.LinkProgram(program);
+        GL.GetProgram(program, GetProgramParameterName.LinkStatus, out var code);
 
-            var infoLog = GL.GetProgramInfoLog(program);
-            throw new Exception($"Error occurred whilst linking Program({program}):\n{infoLog}");
-        }
+        if (code == (int)All.True) return;
 
-        public void Use()
-        {
-            GL.UseProgram(Handle);
-        }
+        var infoLog = GL.GetProgramInfoLog(program);
+        throw new Exception($"Error occurred whilst linking Program({program}):\n{infoLog}");
+    }
 
-        public static void UnUse()
-        {
-            GL.UseProgram(0);
-        }
+    public void Use()
+    {
+        GL.UseProgram(Handle);
+    }
 
-        public int GetAttribLocation(string attribName)
-        {
-            if (_attributeLocations.TryGetValue(attribName, out var location) && location != -1) return location;
-            
-            Console.WriteLine($"Warning: Attribute '{attribName}' not found in shader.");
-            return -1;
-        }
+    public static void UnUse()
+    {
+        GL.UseProgram(0);
+    }
 
-        // Uniform setters
-        public void SetUniform(string name, int data)
-        {
-            if (_uniformLocations.TryGetValue(name, out var location) && location != -1)
-            {
-                GL.Uniform1(location, data);
-            }
-        }
+    public int GetAttribLocation(string attribName)
+    {
+        if (_attributeLocations.TryGetValue(attribName, out var location) && location != -1) return location;
 
-        public void SetUniform(string name, float data)
-        {
-            if (_uniformLocations.TryGetValue(name, out var location) && location != -1)
-            {
-                GL.Uniform1(location, data);
-            }
-        }
+        Console.WriteLine($"Warning: Attribute '{attribName}' not found in shader.");
+        return -1;
+    }
 
-        public void SetUniform(string name, Matrix4 data)
-        {
-            if (_uniformLocations.TryGetValue(name, out var location) && location != -1)
-            {
-                GL.UniformMatrix4(location, true, ref data);
-            }
-        }
+    // Uniform setters
+    public void SetUniform(string name, int data)
+    {
+        if (_uniformLocations.TryGetValue(name, out var location) && location != -1) GL.Uniform1(location, data);
+    }
 
-        public void SetUniform(string name, Vector3 data)
-        {
-            if (_uniformLocations.TryGetValue(name, out var location) && location != -1)
-            {
-                GL.Uniform3(location, ref data);
-            }
-        }
+    public void SetUniform(string name, float data)
+    {
+        if (_uniformLocations.TryGetValue(name, out var location) && location != -1) GL.Uniform1(location, data);
+    }
 
-        ~Shader()
-        {
-            GL.DeleteProgram(Handle);
-        }
+    public void SetUniform(string name, Matrix4 data)
+    {
+        if (_uniformLocations.TryGetValue(name, out var location) && location != -1)
+            GL.UniformMatrix4(location, true, ref data);
+    }
+
+    public void SetUniform(string name, Vector3 data)
+    {
+        if (_uniformLocations.TryGetValue(name, out var location) && location != -1) GL.Uniform3(location, ref data);
+    }
+
+    ~Shader()
+    {
+        GL.DeleteProgram(Handle);
     }
 }

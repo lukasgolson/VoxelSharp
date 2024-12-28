@@ -1,64 +1,55 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using VoxelSharp.Modding.Structs;
-using Version = VoxelSharp.Modding.Structs.Version;
 
-namespace VoxelSharp.Modding
+namespace VoxelSharp.Modding;
+
+public class DependencyResolver
 {
-    public class DependencyResolver
+    private readonly Dictionary<string, ModInfo> _mods = new();
+
+    public void AddMod(ModInfo mod)
     {
-        private readonly Dictionary<string, ModInfo> _mods = new();
+        if (!_mods.TryAdd(mod.Id, mod))
+            throw new Exception($"Duplicate mod ID detected: {mod.Id}");
+    }
 
-        public void AddMod(ModInfo mod)
+    public List<ModInfo> ResolveLoadOrder()
+    {
+        var resolved = new List<ModInfo>();
+        var seen = new HashSet<string>();
+
+        foreach (var mod in _mods.Values) Resolve(mod, resolved, seen, []);
+
+        return resolved;
+    }
+
+    private void Resolve(ModInfo mod, List<ModInfo> resolved, HashSet<string> seen, HashSet<string> visiting)
+    {
+        if (resolved.Any(m => m.Id == mod.Id))
+            return; // Already resolved
+
+        if (!visiting.Add(mod.Id))
+            throw new Exception($"Circular dependency detected for mod: {mod.Id}");
+
+
+        foreach (var dependency in mod.Dependencies)
         {
-            if (!_mods.TryAdd(mod.Id, mod))
-                throw new Exception($"Duplicate mod ID detected: {mod.Id}");
+            if (!_mods.TryGetValue(dependency.Id, out var dependencyMod))
+                throw new Exception($"Missing dependency: {dependency.Id} for mod: {mod.Id}");
+
+            // Compare versions for compatibility
+            var requiredVersion = dependency.Version;
+            var availableVersion = dependencyMod.Version;
+
+            if (availableVersion < requiredVersion)
+                throw new Exception(
+                    $"Dependency {dependency.Id} requires version {requiredVersion} or higher, but found {availableVersion}.");
+
+            Resolve(dependencyMod, resolved, seen, visiting);
         }
 
-        public List<ModInfo> ResolveLoadOrder()
-        {
-            var resolved = new List<ModInfo>();
-            var seen = new HashSet<string>();
 
-            foreach (var mod in _mods.Values)
-            {
-                Resolve(mod, resolved, seen, []);
-            }
-
-            return resolved;
-        }
-
-        private void Resolve(ModInfo mod, List<ModInfo> resolved, HashSet<string> seen, HashSet<string> visiting)
-        {
-            if (resolved.Any(m => m.Id == mod.Id))
-                return; // Already resolved
-
-            if (!visiting.Add(mod.Id))
-                throw new Exception($"Circular dependency detected for mod: {mod.Id}");
-
-            if (mod.Dependencies != null)
-            {
-                foreach (var dependency in mod.Dependencies)
-                {
-                    if (!_mods.TryGetValue(dependency.Id, out var dependencyMod))
-                        throw new Exception($"Missing dependency: {dependency.Id} for mod: {mod.Id}");
-
-                    // Compare versions for compatibility
-                    var requiredVersion = (dependency.Version);
-                    var availableVersion = (dependencyMod.Version);
-
-                    if (availableVersion < requiredVersion)
-                        throw new Exception(
-                            $"Dependency {dependency.Id} requires version {requiredVersion} or higher, but found {availableVersion}.");
-
-                    Resolve(dependencyMod, resolved, seen, visiting);
-                }
-            }
-
-            visiting.Remove(mod.Id);
-            seen.Add(mod.Id);
-            resolved.Add(mod);
-        }
+        visiting.Remove(mod.Id);
+        seen.Add(mod.Id);
+        resolved.Add(mod);
     }
 }

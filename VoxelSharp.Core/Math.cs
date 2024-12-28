@@ -3,7 +3,7 @@
 public static class Math
 {
     /// <summary>
-    /// Computes the Euclidean modulo operation, ensuring a non-negative result.
+    ///     Computes the Euclidean modulo operation, ensuring a non-negative result.
     /// </summary>
     /// <param name="value">The value to be divided.</param>
     /// <param name="mod">The divisor.</param>

@@ -7,18 +7,15 @@ namespace VoxelSharp.Modding;
 
 public class ModLoader(string modsPath)
 {
-    private readonly DependencyResolver _resolver = new DependencyResolver();
+    private readonly DependencyResolver _resolver = new();
 
-    private bool _initialized = false;
+    private bool _initialized;
     private List<IMod> _mods = [];
 
 
     public void LoadMods()
     {
-        if (_initialized)
-        {
-            throw new InvalidOperationException("ModLoader has already been initialized.");
-        }
+        if (_initialized) throw new InvalidOperationException("ModLoader has already been initialized.");
 
         var assemblyPaths = DiscoverAssemblies();
         var modTypes = LoadAssemblies(assemblyPaths);
@@ -28,10 +25,7 @@ public class ModLoader(string modsPath)
         // create a dictionary of mod info to Mods
         var orderedMods = ResolveLoadingOrder(mods);
 
-        foreach (var mod in orderedMods)
-        {
-            mod.PreInitialize();
-        }
+        foreach (var mod in orderedMods) mod.PreInitialize();
 
         foreach (var mod in orderedMods)
         {
@@ -45,18 +39,12 @@ public class ModLoader(string modsPath)
 
     public void Update(float deltaTime)
     {
-        foreach (var mod in _mods)
-        {
-            mod.Update(deltaTime);
-        }
+        foreach (var mod in _mods) mod.Update(deltaTime);
     }
 
     public void Render()
     {
-        foreach (var mod in _mods)
-        {
-            mod.Render();
-        }
+        foreach (var mod in _mods) mod.Render();
     }
 
     private List<IMod> ResolveLoadingOrder(List<IMod> mods)
@@ -78,10 +66,7 @@ public class ModLoader(string modsPath)
 
     private List<string> DiscoverAssemblies()
     {
-        if (!Directory.Exists(modsPath))
-        {
-            throw new DirectoryNotFoundException($"Directory not found: {modsPath}");
-        }
+        if (!Directory.Exists(modsPath)) throw new DirectoryNotFoundException($"Directory not found: {modsPath}");
 
         return Directory.GetFiles(modsPath, "*.dll").ToList();
     }
@@ -91,7 +76,6 @@ public class ModLoader(string modsPath)
         var modTypes = new List<Type>();
 
         foreach (var path in assemblyPaths)
-        {
             try
             {
                 var assembly = Assembly.LoadFrom(path);
@@ -118,7 +102,6 @@ public class ModLoader(string modsPath)
             {
                 Console.WriteLine($"Failed to load assembly {path}: {ex.Message}");
             }
-        }
 
         return modTypes;
     }
@@ -128,7 +111,6 @@ public class ModLoader(string modsPath)
         var mods = new List<IMod>();
 
         foreach (var type in modTypes)
-        {
             try
             {
                 var mod = Activator.CreateInstance(type);
@@ -149,16 +131,12 @@ public class ModLoader(string modsPath)
             {
                 Console.WriteLine($"Failed to create mod instance {type.Name}: {ex.Message}");
             }
-        }
 
         return mods;
     }
 
     public void InitializeShaders()
     {
-        foreach (var mod in _mods)
-        {
-            mod.InitializeShaders();
-        }
+        foreach (var mod in _mods) mod.InitializeShaders();
     }
 }

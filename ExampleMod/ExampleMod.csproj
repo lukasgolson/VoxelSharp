@@ -9,15 +9,15 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\VoxelSharp.Modding\VoxelSharp.Modding.csproj" />
+        <ProjectReference Include="..\VoxelSharp.Modding\VoxelSharp.Modding.csproj"/>
     </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Include="HarmonyX" Version="2.13.0" />
+        <PackageReference Include="HarmonyX" Version="2.13.0"/>
     </ItemGroup>
 
     <ItemGroup>
-      <Content Include=".template.config\template.json" />
+        <Content Include=".template.config\template.json"/>
     </ItemGroup>
 
 </Project>

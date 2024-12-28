@@ -1,6 +1,3 @@
-using OpenTK.Mathematics;
-using VoxelSharp.Core.Renderer;
-
 namespace VoxelSharp.Renderer.Interfaces;
 
 public interface IRenderable
