@@ -1,6 +1,4 @@
-﻿using System;
-using System.Buffers;
-using System.Collections.Generic;
+﻿using System.Buffers;
 using OpenTK.Graphics.OpenGL4;
 using OpenTK.Mathematics;
 using VoxelSharp.Core.Structs;
@@ -8,23 +6,16 @@ using VoxelSharp.Core.World;
 
 namespace VoxelSharp.Renderer.Mesh.World
 {
-    public class ChunkMesh : BaseMesh
+    public class ChunkMesh(Chunk chunk) : BaseMesh
     {
-        private readonly Chunk _chunk;
-
-        public ChunkMesh(Chunk chunk)
-        {
-            _chunk = chunk;
-        }
-
         public override void Render(Shader shaderProgram)
         {
             // Check if the chunk is dirty or uninitialized
-            if (_chunk.IsDirty || !IsInitialized)
+            if (chunk.IsDirty || !IsInitialized)
             {
                 // Rebuild the mesh (8 elements per vertex)
                 SetupMesh(8, shaderProgram);
-                _chunk.IsDirty = false;
+                chunk.IsDirty = false;
             }
 
             // After setup, skip rendering if there are no vertices
@@ -48,7 +39,7 @@ namespace VoxelSharp.Renderer.Mesh.World
         {
             // Estimate the required size for the vertex buffer:
             //   ChunkVolume * 6 faces * 6 vertices/face * 8 float elements/vertex
-            int estimatedVertexCount = _chunk.ChunkVolume * 6 * 6 * 8;
+            int estimatedVertexCount = chunk.ChunkVolume * 6 * 6 * 8;
             IMemoryOwner<float> memoryOwner = MemoryPool<float>.Shared.Rent(estimatedVertexCount);
 
             // Get a span from the rented memory
@@ -57,15 +48,15 @@ namespace VoxelSharp.Renderer.Mesh.World
             var index = 0;
 
             // Retrieve a span of the chunk's voxel data
-            Span<Voxel> chunkVoxelSpan = _chunk.VoxelBuffer.Span;
+            Span<Voxel> chunkVoxelSpan = chunk.VoxelBuffer.Span;
 
-            for (int x = 0; x < _chunk.ChunkSize; x++)
-            for (int z = 0; z < _chunk.ChunkSize; z++)
-            for (int y = 0; y < _chunk.ChunkSize; y++)
+            for (var x = 0; x < chunk.ChunkSize; x++)
+            for (var z = 0; z < chunk.ChunkSize; z++)
+            for (var y = 0; y < chunk.ChunkSize; y++)
             {
                 // Compute this voxel's index
-                int voxelIndex = _chunk.GetVoxelIndex(new Position<int>(x, y, z));
-                Voxel voxel = chunkVoxelSpan[voxelIndex];
+                var voxelIndex = chunk.GetVoxelIndex(new Position<int>(x, y, z));
+                var voxel = chunkVoxelSpan[voxelIndex];
 
                 // Skip transparent voxels
                 if (voxel.Color.A == 0) continue;
@@ -85,7 +76,7 @@ namespace VoxelSharp.Renderer.Mesh.World
         protected override void SetVertexAttributes(Shader shaderProgram)
         {
             // Position attribute
-            int posIndex = shaderProgram.GetAttribLocation("in_position");
+            var posIndex = shaderProgram.GetAttribLocation("in_position");
             if (posIndex != -1)
             {
                 GL.EnableVertexAttribArray(posIndex);
@@ -94,7 +85,7 @@ namespace VoxelSharp.Renderer.Mesh.World
             }
 
             // Color attribute
-            int colorIndex = shaderProgram.GetAttribLocation("in_color");
+            var colorIndex = shaderProgram.GetAttribLocation("in_color");
             if (colorIndex != -1)
             {
                 GL.EnableVertexAttribArray(colorIndex);
@@ -103,13 +94,11 @@ namespace VoxelSharp.Renderer.Mesh.World
             }
 
             // Face ID attribute
-            int faceIndex = shaderProgram.GetAttribLocation("face_id");
-            if (faceIndex != -1)
-            {
-                GL.EnableVertexAttribArray(faceIndex);
-                GL.VertexAttribPointer(faceIndex, 1, VertexAttribPointerType.Float, false, 8 * sizeof(float),
-                    (IntPtr)(7 * sizeof(float)));
-            }
+            var faceIndex = shaderProgram.GetAttribLocation("face_id");
+            if (faceIndex == -1) return;
+            GL.EnableVertexAttribArray(faceIndex);
+            GL.VertexAttribPointer(faceIndex, 1, VertexAttribPointerType.Float, false, 8 * sizeof(float),
+                (IntPtr)(7 * sizeof(float)));
         }
 
         /// <summary>
@@ -120,9 +109,9 @@ namespace VoxelSharp.Renderer.Mesh.World
         {
             // Calculate the translation for this chunk
             return Matrix4.CreateTranslation(
-                _chunk.Position.X * _chunk.ChunkSize,
-                _chunk.Position.Y * _chunk.ChunkSize,
-                _chunk.Position.Z * _chunk.ChunkSize
+                chunk.Position.X * chunk.ChunkSize,
+                chunk.Position.Y * chunk.ChunkSize,
+                chunk.Position.Z * chunk.ChunkSize
             );
         }
 
@@ -144,15 +133,15 @@ namespace VoxelSharp.Renderer.Mesh.World
             if (!IsWithinBounds(x, y, z)) return true;
 
             // Otherwise, check if the adjacent voxel is transparent
-            int idx = _chunk.GetVoxelIndex(new Position<int>(x, y, z));
+            int idx = chunk.GetVoxelIndex(new Position<int>(x, y, z));
             return voxelSpan[idx].Color.A != currentAlpha;
         }
 
         private bool IsWithinBounds(int x, int y, int z)
         {
-            return (x >= 0 && x < _chunk.ChunkSize) &&
-                   (y >= 0 && y < _chunk.ChunkSize) &&
-                   (z >= 0 && z < _chunk.ChunkSize);
+            return (x >= 0 && x < chunk.ChunkSize) &&
+                   (y >= 0 && y < chunk.ChunkSize) &&
+                   (z >= 0 && z < chunk.ChunkSize);
         }
 
         /// <summary>
@@ -170,7 +159,7 @@ namespace VoxelSharp.Renderer.Mesh.World
             int x, int y, int z, Voxel voxel)
         {
             int alpha = voxel.Color.A;
-            
+
             // Top face
             if (IsVoid(x, y + 1, z, alpha, voxelSpan))
             {
@@ -214,7 +203,7 @@ namespace VoxelSharp.Renderer.Mesh.World
         /// <param name="span">The float span for our vertex data.</param>
         /// <param name="index">A reference to the current write position in the span.</param>
         /// <param name="vertices">A collection of VoxelVertex structs that will be written into the span.</param>
-        private void AddVerticesToSpan(Span<float> span, ref int index, IEnumerable<VoxelVertex> vertices)
+        private static void AddVerticesToSpan(Span<float> span, ref int index, IEnumerable<VoxelVertex> vertices)
         {
             foreach (var vertex in vertices)
             {

@@ -26,7 +26,7 @@ public abstract class Camera : ICamera, IUpdatable
     ///     Initializes a new instance of the Camera class.
     /// </summary>
     /// <param name="aspectRatio">The aspect ratio of the camera's view.</param>
-    public Camera(float aspectRatio)
+    protected Camera(float aspectRatio)
     {
         SetProjectionMatrix(45, aspectRatio);
     }

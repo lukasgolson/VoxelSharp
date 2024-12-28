@@ -6,7 +6,7 @@ namespace VoxelSharp.Core.World
     public class Chunk
     {
         /// <summary>
-        /// Creates a chunk at the given position and initializes a Memory<Voxel> buffer
+        /// Creates a chunk at the given position and initializes a Memory buffer
         /// for voxel data. The buffer is initialized with transparent voxels.
         /// </summary>
         /// <param name="position">World position of the chunk.</param>

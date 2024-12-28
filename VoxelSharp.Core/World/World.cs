@@ -38,14 +38,12 @@ public class World
         return voxel;
     }
 
-    public bool SetVoxel(Position<int> worldPos, Voxel voxel)
+    public void SetVoxel(Position<int> worldPos, Voxel voxel)
     {
         var chunkCoords = GetChunkCoordinates(worldPos);
         var localCoords = GetLocalCoordinates(worldPos);
 
         var success = ChunkArray[chunkCoords.ToIndex(WorldSize)].SetVoxel(localCoords, voxel);
-
-        return success;
     }
 
     private Position<int> GetChunkCoordinates(Position<int> worldCoords)

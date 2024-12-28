@@ -29,6 +29,11 @@ public class WorldRenderer : IRenderer
 
     public void Render(ICamera camera)
     {
+        if (_chunkShader == null)
+        {
+            throw new InvalidOperationException("Shaders not initialized. Call InitializeShaders before rendering.");
+        };
+        
         _chunkShader.Use();
 
         _chunkShader.SetUniform("m_view", camera.GetViewMatrix());

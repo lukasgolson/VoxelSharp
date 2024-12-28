@@ -8,15 +8,6 @@ public readonly struct Color(byte r, byte g, byte b, byte a) : IEquatable<Color>
     public byte A { get; } = a;
 
 
-    public byte this[int index] => index switch
-    {
-        0 => R,
-        1 => G,
-        2 => B,
-        3 => A,
-        _ => throw new IndexOutOfRangeException("Invalid index")
-    };
-
     public override bool Equals(object? obj)
     {
         return obj is Color other &&
