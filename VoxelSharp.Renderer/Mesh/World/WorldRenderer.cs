@@ -3,9 +3,10 @@ using VoxelSharp.Renderer.Interfaces;
 
 namespace VoxelSharp.Renderer.Mesh.World;
 
-public class WorldRenderer : IRenderable
+public class WorldRenderer : IRenderer
 {
     private readonly ChunkMesh[] _chunkMeshArray;
+    private Shader _chunkShader;
 
 
     public WorldRenderer(Core.World.World world)
@@ -19,14 +20,27 @@ public class WorldRenderer : IRenderable
 
             _chunkMeshArray[chunk.Position.ToIndex(world.WorldSize)] = chunkMesh;
         }
+
+    }
+
+    public void InitializeShaders()
+    {
+        _chunkShader = new Shader("Shaders/chunk.vert", "Shaders/chunk.frag");
     }
 
 
-    public void Render(Shader shaderProgram)
+    public void Render(ICamera camera)
     {
+        _chunkShader.Use();
+
+        _chunkShader.SetUniform("m_view", camera.GetViewMatrix());
+        _chunkShader.SetUniform("m_projection", camera.GetProjectionMatrix());
+
         foreach (var chunkMesh in _chunkMeshArray)
         {
-            chunkMesh.Render(shaderProgram);
+            chunkMesh.Render(_chunkShader);
         }
+
+        Shader.UnUse();
     }
 }

@@ -3,6 +3,8 @@ using OpenTK.Windowing.Common;
 using OpenTK.Windowing.Desktop;
 using VoxelSharp.Core;
 using VoxelSharp.Core.Interfaces;
+using VoxelSharp.Core.Structs;
+using VoxelSharp.Core.World;
 using VoxelSharp.Core.Wrappers;
 using VoxelSharp.Renderer;
 using VoxelSharp.Renderer.Interfaces;
@@ -44,12 +46,14 @@ class Program
         modLoader.ModLoader.LoadMods();
 
 
-        Core.World.World _world = new Core.World.World(2, 16);
+        World _world = new World(2, 16);
+        
+        _world.SetVoxel(new Position<int>(0,0,0), new Voxel(Color.Red));
 
         var worldRenderer = new WorldRenderer(_world);
         
         var updatables = new List<IUpdatable> { modLoader };
-        var renderables = new List<IRenderable> { modLoader, worldRenderer };
+        var renderables = new List<IRenderer> { modLoader, worldRenderer };
 
         using var window = new Window(GameWindowSettings.Default, nativeWindowSettings, updatables, renderables);
 

@@ -10,7 +10,7 @@ using VoxelSharp.Renderer.Interfaces;
 
 namespace VoxelSharp.Renderer.Mesh.World
 {
-    public class ChunkMesh : BaseMesh, IRenderable
+    public class ChunkMesh : BaseMesh
     {
         private readonly Chunk _chunk;
 

@@ -1,10 +1,11 @@
 ﻿using OpenTK.Graphics.OpenGL4;
 using OpenTK.Mathematics;
 using System.Buffers;
+using VoxelSharp.Renderer.Interfaces;
 
 namespace VoxelSharp.Core.Renderer.Mesh
 {
-    public abstract class BaseMesh : IDisposable
+    public abstract class BaseMesh : IDisposable, IRenderable
     {
         protected int Vao = 0;
         protected int Vbo = 0;

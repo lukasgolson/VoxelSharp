@@ -153,4 +153,12 @@ public class ModLoader(string modsPath)
 
         return mods;
     }
+
+    public void InitializeShaders()
+    {
+        foreach (var mod in _mods)
+        {
+            mod.InitializeShaders();
+        }
+    }
 }

@@ -56,4 +56,9 @@ public interface IMod
     /// Returns <c>true</c> if rendering was successful; otherwise, <c>false</c>.
     /// </returns>
     bool Render();
+
+    /// <summary>
+    /// Called when it is time to initialize shaders for the mod.
+    /// </summary>
+    void InitializeShaders();
 }

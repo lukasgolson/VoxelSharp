@@ -8,7 +8,7 @@ namespace VoxelSharp.Core.Wrappers;
 /// <summary>
 /// A wrapper around the ModLoader class, enabling rendering and updating through IRenderable and IUpdatable.
 /// </summary>
-public class ModLoaderWrapper : IRenderable, IUpdatable
+public class ModLoaderWrapper : IRenderer, IUpdatable
 {
     /// <summary>
     /// Gets the underlying ModLoader instance.
@@ -29,10 +29,15 @@ public class ModLoaderWrapper : IRenderable, IUpdatable
     public ModLoaderWrapper(ModLoader modLoader)
         => ModLoader = modLoader;
 
+    public void InitializeShaders()
+    {
+        ModLoader.InitializeShaders();
+    }
+
     /// <summary>
     /// Renders the mods by delegating to the underlying ModLoader.
     /// </summary>
-    public void Render(Shader shaderProgram) => ModLoader.Render();
+    public void Render(ICamera camera) => ModLoader.Render();
 
 
     /// <summary>

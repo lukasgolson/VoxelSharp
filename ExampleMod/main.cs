@@ -42,4 +42,9 @@ public class Main : IMod
 
         return true;
     }
+
+    public void InitializeShaders()
+    {
+        Console.WriteLine("InitializeShaders Called");
+    }
 }

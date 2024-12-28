@@ -11,27 +11,24 @@ namespace VoxelSharp.Renderer
 {
     public class Window : GameWindow, IWindow
     {
-        private readonly Shader _chunkShader;
 
 
 
         private readonly FlyingCamera _camera;
 
         private readonly List<IUpdatable> _updatables;
-        private readonly List<IRenderable> _renderables;
+        private readonly List<IRenderer> _renderers;
 
         public Window(GameWindowSettings gameWindowSettings, NativeWindowSettings nativeWindowSettings,
-            List<IUpdatable>? updatables = null, List<IRenderable>? renderables = null) :
+            List<IUpdatable>? updatables = null, List<IRenderer>? renderers = null) :
             base(gameWindowSettings, nativeWindowSettings)
         {
-            _chunkShader = new Shader("Shaders/chunk.vert", "Shaders/chunk.frag");
-
 
             _camera = new FlyingCamera((float)Size.X / Size.Y);
             
 
             _updatables = updatables ?? [];
-            _renderables = renderables ?? [];
+            _renderers = renderers ?? [];
         }
 
 
@@ -52,6 +49,11 @@ namespace VoxelSharp.Renderer
 
 
             GL.ClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+            
+            foreach (var renderer in _renderers)
+            {
+                renderer.InitializeShaders();
+            }
         }
 
 
@@ -62,19 +64,13 @@ namespace VoxelSharp.Renderer
             
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
-            _chunkShader.Use();
-
-            _chunkShader.SetUniform("m_view", _camera.GetViewMatrix());
-            _chunkShader.SetUniform("m_projection", _camera.GetProjectionMatrix());
-
-
+            foreach (var renderer in _renderers)
+            {
+                renderer.Render(_camera);
+            }
 
             Shader.UnUse();
 
-            foreach (var renderable in _renderables)
-            {
-                renderable.Render(_chunkShader);
-            }
 
             SwapBuffers();
         }
@@ -90,7 +86,10 @@ namespace VoxelSharp.Renderer
             }
 
             // Handle movement inputs
-            if (KeyboardState.IsKeyDown(Keys.W)) _camera.MoveForward();
+            if (KeyboardState.IsKeyDown(Keys.W))
+            {
+                _camera.MoveForward();
+            }
             if (KeyboardState.IsKeyDown(Keys.S)) _camera.MoveBackward();
             if (KeyboardState.IsKeyDown(Keys.A)) _camera.MoveLeft();
             if (KeyboardState.IsKeyDown(Keys.D)) _camera.MoveRight();
@@ -103,7 +102,7 @@ namespace VoxelSharp.Renderer
 
             // Update camera state
             _camera.Update((float)e.Time);
-
+            
             foreach (var updatable in _updatables)
             {
                 updatable.Update((float)e.Time);
