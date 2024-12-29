@@ -3,7 +3,7 @@ using OpenTK.Mathematics;
 using OpenTK.Windowing.Common;
 using OpenTK.Windowing.Desktop;
 using OpenTK.Windowing.GraphicsLibraryFramework;
-using VoxelSharp.Core.Interfaces;
+using VoxelSharp.Abstractions.Renderer;
 using VoxelSharp.Renderer.Camera;
 using VoxelSharp.Renderer.Interfaces;
 

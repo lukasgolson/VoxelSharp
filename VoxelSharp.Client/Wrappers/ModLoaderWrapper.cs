@@ -1,4 +1,4 @@
-using VoxelSharp.Core.Interfaces;
+using VoxelSharp.Abstractions.Renderer;
 using VoxelSharp.Modding;
 using VoxelSharp.Renderer.Interfaces;
 
@@ -31,7 +31,7 @@ public class ModLoaderWrapper : IRenderer, IUpdatable
     /// <summary>
     ///     Renders the mods by delegating to the underlying ModLoader.
     /// </summary>
-    public void Render(ICamera camera)
+    public void Render(ICameraMatrices camera)
     {
         ModLoader.Render();
     }

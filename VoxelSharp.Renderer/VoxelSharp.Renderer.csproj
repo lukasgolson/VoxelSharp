@@ -11,6 +11,7 @@
     </ItemGroup>
 
     <ItemGroup>
+        <ProjectReference Include="..\VoxelSharp.Abstractions\VoxelSharp.Abstractions.csproj" />
         <ProjectReference Include="..\VoxelSharp.Core\VoxelSharp.Core.csproj"/>
     </ItemGroup>
 

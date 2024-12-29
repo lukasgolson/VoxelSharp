@@ -1,4 +1,4 @@
-﻿namespace VoxelSharp.Core.Interfaces;
+﻿namespace VoxelSharp.Abstractions.Renderer;
 
 public interface IUpdatable
 {

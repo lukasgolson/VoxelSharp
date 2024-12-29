@@ -1,20 +1,24 @@
-﻿using OpenTK.Mathematics;
-using VoxelSharp.Core.Interfaces;
+﻿using System.Numerics;
+using OpenTK.Mathematics;
+using VoxelSharp.Abstractions.Renderer;
+using VoxelSharp.Core.Helpers;
+using VoxelSharp.Renderer.Helpers;
 using VoxelSharp.Renderer.Interfaces;
+using Vector3 = System.Numerics.Vector3;
 
 namespace VoxelSharp.Renderer.Camera;
 
-public abstract class Camera : ICamera, IUpdatable
+public abstract class Camera : IUpdatable, ICameraMatrices
 {
     private const float MouseSensitivity = 0.5f;
     private float _pitch; // Vertical rotation
 
     // Camera position and directions
     private Vector3 _position = Vector3.Zero;
-    private Matrix4 _projectionMatrix;
+    private Matrix4x4 _projectionMatrix;
 
     // Matrices
-    private Matrix4 _viewMatrix = Matrix4.Identity;
+    private Matrix4x4 _viewMatrix = Matrix4x4.Identity;
 
     // Rotation
     private float _yaw; // Horizontal rotation
@@ -34,7 +38,7 @@ public abstract class Camera : ICamera, IUpdatable
     /// <summary>
     ///     Gets the camera's view matrix.
     /// </summary>
-    public Matrix4 GetViewMatrix()
+    public Matrix4x4 GetViewMatrix()
     {
         return _viewMatrix;
     }
@@ -42,7 +46,7 @@ public abstract class Camera : ICamera, IUpdatable
     /// <summary>
     ///     Gets the camera's projection matrix.
     /// </summary>
-    public Matrix4 GetProjectionMatrix()
+    public Matrix4x4 GetProjectionMatrix()
     {
         return _projectionMatrix;
     }
@@ -66,7 +70,9 @@ public abstract class Camera : ICamera, IUpdatable
 
         var verticalFovRadians = MathHelper.DegreesToRadians(verticalFov);
 
-        _projectionMatrix = Matrix4.CreatePerspectiveFieldOfView(verticalFovRadians, aspectRatio, nearPlane, farPlane);
+        
+        _projectionMatrix = Matrix4x4.CreatePerspectiveFieldOfView(verticalFovRadians, aspectRatio, nearPlane, farPlane);
+        
     }
 
     /// <summary>
@@ -74,7 +80,7 @@ public abstract class Camera : ICamera, IUpdatable
     /// </summary>
     private void UpdateViewMatrix()
     {
-        _viewMatrix = Matrix4.LookAt(_position, _position + Forward, Up);
+        _viewMatrix = Matrix4x4.CreateLookAt(_position, _position + Forward, Up);
     }
 
     /// <summary>
@@ -85,14 +91,15 @@ public abstract class Camera : ICamera, IUpdatable
         var pitchRadians = MathHelper.DegreesToRadians(_pitch);
         var yawRadians = MathHelper.DegreesToRadians(_yaw);
 
+        
         Forward = new Vector3(
             MathF.Cos(yawRadians) * MathF.Cos(pitchRadians),
             MathF.Sin(pitchRadians),
             MathF.Sin(yawRadians) * MathF.Cos(pitchRadians)
-        ).Normalized();
+        ).Normalize();
 
-        Right = Vector3.Cross(Forward, Vector3.UnitY).Normalized();
-        Up = Vector3.Cross(Right, Forward).Normalized();
+        Right = Vector3.Cross(Forward, Vector3.UnitY).Normalize();
+        Up = Vector3.Cross(Right, Forward).Normalize();
     }
 
     /// <summary>

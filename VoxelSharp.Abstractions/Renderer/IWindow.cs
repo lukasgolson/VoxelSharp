@@ -1,4 +1,4 @@
-﻿namespace VoxelSharp.Renderer.Interfaces;
+﻿namespace VoxelSharp.Abstractions.Renderer;
 
 public interface IWindow
 {

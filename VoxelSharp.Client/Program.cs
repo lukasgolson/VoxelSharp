@@ -1,5 +1,5 @@
-﻿using VoxelSharp.Client.Wrappers;
-using VoxelSharp.Core.Interfaces;
+﻿using VoxelSharp.Abstractions.Renderer;
+using VoxelSharp.Client.Wrappers;
 using VoxelSharp.Core.Structs;
 using VoxelSharp.Core.World;
 using VoxelSharp.Renderer;
