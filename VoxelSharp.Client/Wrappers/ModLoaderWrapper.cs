@@ -19,15 +19,6 @@ public class ModLoaderWrapper : IRenderer, IUpdatable
     }
 
     /// <summary>
-    ///     Initializes a new instance of the ModLoaderWrapper with an existing ModLoader instance.
-    /// </summary>
-    /// <param name="modLoader">An existing ModLoader instance.</param>
-    public ModLoaderWrapper(ModLoader modLoader)
-    {
-        ModLoader = modLoader;
-    }
-
-    /// <summary>
     ///     Gets the underlying ModLoader instance.
     /// </summary>
     public ModLoader ModLoader { get; }

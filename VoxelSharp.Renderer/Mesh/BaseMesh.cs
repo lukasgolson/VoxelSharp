@@ -86,19 +86,17 @@ public abstract class BaseMesh : IDisposable, IRenderable
     // Proper disposal to avoid resource leaks
     protected virtual void Dispose(bool disposing)
     {
-        if (disposing)
+        if (!disposing) return;
+        if (_vao != 0)
         {
-            if (_vao != 0)
-            {
-                GL.DeleteVertexArray(_vao);
-                _vao = 0;
-            }
+            GL.DeleteVertexArray(_vao);
+            _vao = 0;
+        }
 
-            if (_vbo != 0)
-            {
-                GL.DeleteBuffer(_vbo);
-                _vbo = 0;
-            }
+        if (_vbo != 0)
+        {
+            GL.DeleteBuffer(_vbo);
+            _vbo = 0;
         }
     }
 

@@ -16,17 +16,17 @@ public class Window : GameWindow, IWindow
 
     private readonly List<IUpdatable> _updatables;
 
-    static NativeWindowSettings nativeWindowSettings = new NativeWindowSettings
+    private static readonly NativeWindowSettings NativeWindowSettings = new()
     {
         ClientSize = new Vector2i(800, 600),
         Title = "VoxelSharp Client",
         Flags = ContextFlags.ForwardCompatible
     };
 
-    static GameWindowSettings gameWindowSettings = GameWindowSettings.Default;
+    private static readonly GameWindowSettings GameWindowSettings = GameWindowSettings.Default;
 
     public Window(List<IUpdatable>? updatables = null, List<IRenderer>? renderers = null) :
-        base(gameWindowSettings, nativeWindowSettings)
+        base(GameWindowSettings, NativeWindowSettings)
     {
         _camera = new FlyingCamera((float)Size.X / Size.Y);
 

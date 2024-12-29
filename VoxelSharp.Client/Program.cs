@@ -8,7 +8,7 @@ using VoxelSharp.Renderer.Mesh.World;
 
 namespace VoxelSharp.Client;
 
-internal class Program
+internal static class Program
 {
     private static void Main(string[] args)
     {
@@ -33,7 +33,7 @@ internal class Program
 
         var world = new World(2, 16);
 
-        world.SetVoxel(new Position<int>(0, 0, 0), new Voxel(Color.Red));
+        world.SetVoxel(worldPos: new Position<int>(0, 0, 0), voxel: new Voxel(Color.Red));
 
         var worldRenderer = new WorldRenderer(world);
 

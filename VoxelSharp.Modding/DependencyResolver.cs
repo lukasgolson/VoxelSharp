@@ -28,13 +28,13 @@ public class DependencyResolver
             return; // Already resolved
 
         if (!visiting.Add(mod.Id))
-            throw new Exception($"Circular dependency detected for mod: {mod.Id}");
+            throw new Exception($"Circular dependency detected for mod: {mod.Id}-{mod.Name}");
 
 
         foreach (var dependency in mod.Dependencies)
         {
             if (!_mods.TryGetValue(dependency.Id, out var dependencyMod))
-                throw new Exception($"Missing dependency: {dependency.Id} for mod: {mod.Id}");
+                throw new Exception($"Missing dependency: {dependency.Id} >= {dependency.Version} for mod: {mod.Name}");
 
             // Compare versions for compatibility
             var requiredVersion = dependency.Version;

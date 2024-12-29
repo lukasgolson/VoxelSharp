@@ -71,7 +71,7 @@ public class ModLoader(string modsPath)
         return Directory.GetFiles(modsPath, "*.dll").ToList();
     }
 
-    private List<Type> LoadAssemblies(IEnumerable<string> assemblyPaths)
+    private static List<Type> LoadAssemblies(IEnumerable<string> assemblyPaths)
     {
         var modTypes = new List<Type>();
 
@@ -80,7 +80,8 @@ public class ModLoader(string modsPath)
             {
                 var assembly = Assembly.LoadFrom(path);
                 var typesImplementingIMod = assembly.GetTypes()
-                    .Where(type => typeof(IMod).IsAssignableFrom(type) && !type.IsInterface && !type.IsAbstract)
+                    .Where(type =>
+                        typeof(IMod).IsAssignableFrom(type) && type is { IsInterface: false, IsAbstract: false })
                     .ToList();
 
                 switch (typesImplementingIMod.Count)
@@ -106,7 +107,7 @@ public class ModLoader(string modsPath)
         return modTypes;
     }
 
-    private List<IMod> CreateModInstances(IEnumerable<Type> modTypes)
+    private static List<IMod> CreateModInstances(IEnumerable<Type> modTypes)
     {
         var mods = new List<IMod>();
 

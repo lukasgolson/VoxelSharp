@@ -10,7 +10,7 @@ public readonly struct VoxelVertex
     public readonly float R; // Color components (Red)
     public readonly float G; // Color components (Green)
     public readonly float B; // Color components (Blue)
-    public readonly float A = 1.0f; // Alpha (fully opaque)
+    public readonly float A; // Alpha (fully opaque)
     public readonly int FaceId; // Identifier for the face
 
     public VoxelVertex(int x, int y, int z, Voxel voxel, FaceId faceId, bool debug = false)
@@ -34,7 +34,7 @@ public readonly struct VoxelVertex
             };
         else
             // Assign the color of the voxel to the vertex
-            (R, G, B) = (voxel.Color.R, voxel.Color.G, voxel.Color.B);
+            (R, G, B, A) = (voxel.Color.R, voxel.Color.G, voxel.Color.B, voxel.Color.A);
     }
 
 

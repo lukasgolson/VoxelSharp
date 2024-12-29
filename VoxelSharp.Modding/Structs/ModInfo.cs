@@ -8,6 +8,8 @@ public readonly struct ModInfo(
     Dependency[]? dependencies = null)
     : IEquatable<ModInfo>
 {
+    
+    public string Name { get; } = name;
     public string Id { get; } = id;
     public Version Version { get; } = version;
 
