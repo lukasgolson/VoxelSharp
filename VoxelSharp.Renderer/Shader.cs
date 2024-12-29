@@ -8,7 +8,7 @@ public class Shader
     private readonly Dictionary<string, int> _attributeLocations;
 
     private readonly Dictionary<string, int> _uniformLocations;
-    public readonly int Handle;
+    private readonly int _handle;
 
     public Shader(string vertPath, string fragPath)
     {
@@ -19,25 +19,25 @@ public class Shader
         var fragmentShader = LoadAndCompileShader(fragPath, ShaderType.FragmentShader);
 
         // Create shader program and link shaders
-        Handle = GL.CreateProgram();
-        GL.AttachShader(Handle, vertexShader);
-        GL.AttachShader(Handle, fragmentShader);
-        LinkProgram(Handle);
+        _handle = GL.CreateProgram();
+        GL.AttachShader(_handle, vertexShader);
+        GL.AttachShader(_handle, fragmentShader);
+        LinkProgram(_handle);
 
         // Clean up individual shaders
-        GL.DetachShader(Handle, vertexShader);
-        GL.DetachShader(Handle, fragmentShader);
+        GL.DetachShader(_handle, vertexShader);
+        GL.DetachShader(_handle, fragmentShader);
         GL.DeleteShader(vertexShader);
         GL.DeleteShader(fragmentShader);
 
         // cache attribute locations
-        GL.GetProgram(Handle, GetProgramParameterName.ActiveAttributes, out var numberOfAttributes);
+        GL.GetProgram(_handle, GetProgramParameterName.ActiveAttributes, out var numberOfAttributes);
         _attributeLocations = new Dictionary<string, int>();
 
         for (var i = 0; i < numberOfAttributes; i++)
         {
-            var key = GL.GetActiveAttrib(Handle, i, out _, out _);
-            var location = GL.GetAttribLocation(Handle, key);
+            var key = GL.GetActiveAttrib(_handle, i, out _, out _);
+            var location = GL.GetAttribLocation(_handle, key);
 
             if (location == -1) Console.WriteLine($"Warning: Attribute '{key}' is not active in the shader.");
 
@@ -45,13 +45,13 @@ public class Shader
         }
 
         // Cache uniform locations
-        GL.GetProgram(Handle, GetProgramParameterName.ActiveUniforms, out var numberOfUniforms);
+        GL.GetProgram(_handle, GetProgramParameterName.ActiveUniforms, out var numberOfUniforms);
         _uniformLocations = new Dictionary<string, int>();
 
         for (var i = 0; i < numberOfUniforms; i++)
         {
-            var key = GL.GetActiveUniform(Handle, i, out _, out _);
-            var location = GL.GetUniformLocation(Handle, key);
+            var key = GL.GetActiveUniform(_handle, i, out _, out _);
+            var location = GL.GetUniformLocation(_handle, key);
 
             if (location == -1) Console.WriteLine($"Warning: Uniform '{key}' is not active in the shader.");
 
@@ -92,7 +92,7 @@ public class Shader
 
     public void Use()
     {
-        GL.UseProgram(Handle);
+        GL.UseProgram(_handle);
     }
 
     public static void UnUse()
@@ -132,6 +132,6 @@ public class Shader
 
     ~Shader()
     {
-        GL.DeleteProgram(Handle);
+        GL.DeleteProgram(_handle);
     }
 }

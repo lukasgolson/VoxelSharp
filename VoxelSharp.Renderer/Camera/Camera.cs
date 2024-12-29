@@ -6,7 +6,7 @@ namespace VoxelSharp.Renderer.Camera;
 
 public abstract class Camera : ICamera, IUpdatable
 {
-    private readonly float _mouseSensitivity = 0.5f;
+    private const float MouseSensitivity = 0.5f;
     private float _pitch; // Vertical rotation
 
     // Camera position and directions
@@ -108,10 +108,10 @@ public abstract class Camera : ICamera, IUpdatable
     /// </summary>
     public void UpdateRotation(float deltaYaw, float deltaPitch)
     {
-        _yaw = (_yaw + deltaYaw * _mouseSensitivity) % 360f; // Normalize yaw to the range [0, 360)
+        _yaw = (_yaw + deltaYaw * MouseSensitivity) % 360f; // Normalize yaw to the range [0, 360)
         if (_yaw < 0f) _yaw += 360f; // Ensure positive yaw
 
-        _pitch = MathHelper.Clamp(_pitch + deltaPitch * _mouseSensitivity, -89f,
+        _pitch = MathHelper.Clamp(_pitch + deltaPitch * MouseSensitivity, -89f,
             89f); // Clamp pitch to avoid gimbal lock
     }
 

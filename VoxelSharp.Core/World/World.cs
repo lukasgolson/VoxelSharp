@@ -43,7 +43,7 @@ public class World
         var chunkCoords = GetChunkCoordinates(worldPos);
         var localCoords = GetLocalCoordinates(worldPos);
 
-        var success = ChunkArray[chunkCoords.ToIndex(WorldSize)].SetVoxel(localCoords, voxel);
+        ChunkArray[chunkCoords.ToIndex(WorldSize)].SetVoxel(localCoords, voxel);
     }
 
     private Position<int> GetChunkCoordinates(Position<int> worldCoords)

@@ -5,7 +5,7 @@ namespace VoxelSharp.Renderer.Mesh.World;
 public class WorldRenderer : IRenderer
 {
     private readonly ChunkMesh[] _chunkMeshArray;
-    private Shader _chunkShader;
+    private Shader? _chunkShader;
 
 
     public WorldRenderer(Core.World.World world)
@@ -32,8 +32,8 @@ public class WorldRenderer : IRenderer
         if (_chunkShader == null)
         {
             throw new InvalidOperationException("Shaders not initialized. Call InitializeShaders before rendering.");
-        };
-        
+        }
+
         _chunkShader.Use();
 
         _chunkShader.SetUniform("m_view", camera.GetViewMatrix());

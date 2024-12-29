@@ -4,3 +4,16 @@ profile:
   name: qodana.recommended
 include:
   - name: CheckDependencyLicenses
+exclude:
+  - name: MemberCanBePrivate.Global
+    paths:
+      - VoxelSharp.Core\Structs\Position.cs
+      - VoxelSharp.Core\World\Chunk.cs
+      - VoxelSharp.Core\World\World.cs
+  - name: All
+    paths:
+      - ExampleMod
+  - name: UnusedMember.Global
+    paths:
+      - VoxelSharp.Core\Structs\Color.cs
+      - VoxelSharp.Core\Structs\Position.cs
