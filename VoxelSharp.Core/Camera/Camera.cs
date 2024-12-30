@@ -1,11 +1,9 @@
 ﻿using System.Numerics;
-using OpenTK.Mathematics;
 using VoxelSharp.Abstractions.Renderer;
-using VoxelSharp.Core;
 using VoxelSharp.Core.Helpers;
 using Vector3 = System.Numerics.Vector3;
 
-namespace VoxelSharp.Renderer.Camera;
+namespace VoxelSharp.Core.Camera;
 
 public abstract class Camera : IUpdatable, ICameraMatrices
 {
@@ -119,8 +117,10 @@ public abstract class Camera : IUpdatable, ICameraMatrices
         _yaw = (_yaw + deltaYaw * MouseSensitivity) % 360f; // Normalize yaw to the range [0, 360)
         if (_yaw < 0f) _yaw += 360f; // Ensure positive yaw
 
-        _pitch = MathHelper.Clamp(_pitch + deltaPitch * MouseSensitivity, -89f,
-            89f); // Clamp pitch to avoid gimbal lock
+
+        _pitch = Math.Clamp(_pitch + deltaPitch * MouseSensitivity, -89f, 89f);
+        
+
     }
 
     /// <summary>

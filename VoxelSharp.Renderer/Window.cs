@@ -4,7 +4,6 @@ using OpenTK.Windowing.Common;
 using OpenTK.Windowing.Desktop;
 using OpenTK.Windowing.GraphicsLibraryFramework;
 using VoxelSharp.Abstractions.Renderer;
-using VoxelSharp.Renderer.Camera;
 using VoxelSharp.Renderer.Interfaces;
 
 namespace VoxelSharp.Renderer;
@@ -55,8 +54,12 @@ public class Window : GameWindow, IWindow
 
         GL.ClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 
+        OnWindowResize?.Invoke(this, (float)Size.X / Size.Y); // Invoke resize event to set the aspect ratio for any components that need it
+
+
 
         OnLoadEvent?.Invoke(this, EventArgs.Empty);
+        
     }
 
 
@@ -79,19 +82,6 @@ public class Window : GameWindow, IWindow
         base.OnUpdateFrame(e);
 
         if (KeyboardState.IsKeyDown(Keys.Escape)) Close();
-
-        // Handle movement inputs
-        if (KeyboardState.IsKeyDown(Keys.W)) _camera.MoveForward();
-        if (KeyboardState.IsKeyDown(Keys.S)) _camera.MoveBackward();
-        if (KeyboardState.IsKeyDown(Keys.A)) _camera.MoveLeft();
-        if (KeyboardState.IsKeyDown(Keys.D)) _camera.MoveRight();
-        if (KeyboardState.IsKeyDown(Keys.Space)) _camera.MoveUp();
-        if (KeyboardState.IsKeyDown(Keys.LeftShift)) _camera.MoveDown();
-
-        // Handle mouse inputs for camera rotation
-        var (deltaX, deltaY) = MouseState.Delta;
-        _camera.UpdateRotation(deltaX, -deltaY);
-
 
         OnUpdateEvent?.Invoke(this, e.Time);
     }

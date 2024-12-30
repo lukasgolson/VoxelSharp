@@ -1,9 +1,10 @@
-﻿using VoxelSharp.Abstractions.Renderer;
+﻿using DeftSharp.Windows.Input.Keyboard;
+using VoxelSharp.Abstractions.Renderer;
 using VoxelSharp.Client.Wrappers;
+using VoxelSharp.Core.Camera;
 using VoxelSharp.Core.Structs;
 using VoxelSharp.Core.World;
 using VoxelSharp.Renderer;
-using VoxelSharp.Renderer.Camera;
 using VoxelSharp.Renderer.Mesh.World;
 
 namespace VoxelSharp.Client;
@@ -36,8 +37,11 @@ internal static class Program
         world.SetVoxel(worldPos: new Position<int>(0, 0, 0), voxel: new Voxel(Color.Red));
 
         var worldRenderer = new WorldRenderer(world);
+
         
-        var camera = new FlyingCamera(800f / 600f);
+        
+        
+        var camera = new FlyingCamera(1920 / 1080); 
 
         var updatables = new List<IUpdatable> { modLoader, camera };
         var renderables = new List<IRenderer> { modLoader, worldRenderer };

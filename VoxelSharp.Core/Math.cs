@@ -22,6 +22,11 @@ public static class Math
             _ => (value % mod + mod) % mod
         };
     }
+    
+    public static T Clamp<T>(T value, T min, T max) where T : INumber<T>
+    {
+        return value < min ? min : value > max ? max : value;
+    }
 
     /// <summary>
     ///  Converts an angle in degrees to radians.
@@ -33,4 +38,5 @@ public static class Math
         var oneEighty = T.CreateChecked(180.0);
         return degrees * pi / oneEighty;
     }
+    
 }
