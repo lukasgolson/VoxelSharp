@@ -8,4 +8,9 @@ public static class Vector3Extensions
     {
         return Vector3.Normalize(vector);
     }
+    
+    public static float Magnitude(this Vector3 vector)
+    {
+        return vector.Length();
+    }
 }

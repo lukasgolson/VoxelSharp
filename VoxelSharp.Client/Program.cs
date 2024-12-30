@@ -41,7 +41,7 @@ internal static class Program
         
         
         
-        var camera = new FlyingCamera(1920 / 1080); 
+        var camera = new FlyingCamera(16f/9f); 
 
         var updatables = new List<IUpdatable> { modLoader, camera };
         var renderables = new List<IRenderer> { modLoader, worldRenderer };
@@ -67,7 +67,11 @@ internal static class Program
             }
         };
 
-        window.OnWindowResize += (_, d) => { };
+        window.OnWindowResize += (_, d) =>
+        {
+            camera.UpdateAspectRatio((float)d);
+            
+        };
 
         window.Run();
     }

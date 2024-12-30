@@ -11,23 +11,17 @@ namespace VoxelSharp.Renderer;
 public class Window : GameWindow, IWindow
 {
     private readonly ICameraMatrices _cameraMatrices;
-  
+
 
     private static readonly NativeWindowSettings NativeWindowSettings = new()
     {
-        ClientSize = new Vector2i(1920, 1080),
+        ClientSize = new Vector2i(1920 / 2, 1080 / 2),
         Title = "VoxelSharp Client",
-        Flags = ContextFlags.ForwardCompatible,
-        StartFocused = true,
-        WindowState = WindowState.Fullscreen
+        Flags = ContextFlags.ForwardCompatible
     };
 
     private static readonly GameWindowSettings GameWindowSettings = GameWindowSettings.Default;
-    
-    
-    
-    
-    
+
 
     public Window(ICameraMatrices cameraMatrices) :
         base(GameWindowSettings, NativeWindowSettings)
@@ -61,12 +55,11 @@ public class Window : GameWindow, IWindow
 
         GL.ClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 
-        OnWindowResize?.Invoke(this, (float)Size.X / Size.Y); // Invoke resize event to set the aspect ratio for any components that need it
-
+        OnWindowResize?.Invoke(this,
+            (float)Size.X / Size.Y); // Invoke resize event to set the aspect ratio for any components that need it
 
 
         OnLoadEvent?.Invoke(this, EventArgs.Empty);
-        
     }
 
 
@@ -84,11 +77,25 @@ public class Window : GameWindow, IWindow
     }
 
 
+    bool _isF11Pressed = false;
     protected override void OnUpdateFrame(FrameEventArgs e)
     {
         base.OnUpdateFrame(e);
 
         if (KeyboardState.IsKeyDown(Keys.Escape)) Close();
+
+        if (KeyboardState.IsKeyDown(Keys.F11))
+        {
+            if (!_isF11Pressed)
+            {
+                _isF11Pressed = true;
+                WindowState = WindowState == WindowState.Fullscreen ? WindowState.Normal : WindowState.Fullscreen;
+            }
+        }
+        else
+        {
+            _isF11Pressed = false;
+        }
 
         OnUpdateEvent?.Invoke(this, e.Time);
     }
@@ -98,9 +105,7 @@ public class Window : GameWindow, IWindow
         base.OnResize(e);
 
         GL.Viewport(0, 0, Size.X, Size.Y);
-        
-        OnWindowResize?.Invoke(this, (float)Size.X / Size.Y);
 
-      
+        OnWindowResize?.Invoke(this, (float)Size.X / Size.Y);
     }
 }
