@@ -9,6 +9,7 @@ public partial class MouseInput : IUpdatable
 {
     private Point _lastMousePosition;
     private bool _isTracking;
+    private IntPtr _windowHandle;
 
     public double X { get; private set; }
     public double Y { get; private set; }
@@ -18,13 +19,16 @@ public partial class MouseInput : IUpdatable
         if (_isTracking) return;
 
         _isTracking = true;
-        GetCursorPos(out _lastMousePosition);
+        _windowHandle = windowHandle;
 
         // Lock the cursor to the client area of the window
         ClipCursorToWindow(windowHandle);
-        
+
         // Hide the cursor
         SetCursorVisibility(false);
+
+        // Reset cursor position to the centre
+        ResetCursorToCenter();
     }
 
     public void StopTracking()
@@ -33,6 +37,9 @@ public partial class MouseInput : IUpdatable
 
         // Unlock the cursor
         ClipCursor(IntPtr.Zero);
+
+        // Show the cursor
+        SetCursorVisibility(true);
     }
 
     public void Update(double deltaTime)
@@ -46,10 +53,31 @@ public partial class MouseInput : IUpdatable
         var deltaY = currentMousePosition.Y - _lastMousePosition.Y;
 
         // Trigger relative movement updates
-        (X, Y) = deltaX != 0 || deltaY != 0 ? (deltaX, deltaY) : (0, 0);
+        (X, Y) = (deltaX, deltaY);
 
-        // Update last mouse position
-        _lastMousePosition = currentMousePosition;
+        // Reset the cursor position to the centre of the window
+        ResetCursorToCenter();
+    }
+
+    private void ResetCursorToCenter()
+    {
+        if (_windowHandle == IntPtr.Zero) return;
+
+        if (GetClientRect(_windowHandle, out var rect))
+        {
+            var screenPoint = new Point();
+            ClientToScreen(_windowHandle, ref screenPoint);
+
+            // Calculate the centre of the window
+            int centreX = screenPoint.X + (rect.Right - rect.Left) / 2;
+            int centreY = screenPoint.Y + (rect.Bottom - rect.Top) / 2;
+
+            // Set the cursor to the centre
+            SetCursorPos(centreX, centreY);
+
+            // Update the last mouse position to the new centre
+            _lastMousePosition = new Point { X = centreX, Y = centreY };
+        }
     }
 
     public static void SetCursorVisibility(bool visible)
@@ -83,6 +111,11 @@ public partial class MouseInput : IUpdatable
     [LibraryImport("user32.dll")]
     [return: MarshalAs(UnmanagedType.Bool)]
     private static partial bool GetCursorPos(out Point lpPoint);
+
+    // Import SetCursorPos from User32.dll
+    [LibraryImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static partial bool SetCursorPos(int X, int Y);
 
     // Import ClipCursor from User32.dll
     [LibraryImport("user32.dll")]
