@@ -38,15 +38,16 @@ internal static class Program
 
         var worldRenderer = new WorldRenderer(world);
 
-        
-        
-        
-        var camera = new FlyingCamera(16f/9f); 
+
+        var camera = new FlyingCamera(16f / 9f);
 
         var updatables = new List<IUpdatable> { modLoader, camera };
         var renderables = new List<IRenderer> { modLoader, worldRenderer };
 
         using var window = new Window(camera);
+
+        camera.StartTrackingMouse(window.WindowHandle);
+
 
         window.OnLoadEvent += (_, _) =>
         {
@@ -67,11 +68,7 @@ internal static class Program
             }
         };
 
-        window.OnWindowResize += (_, d) =>
-        {
-            camera.UpdateAspectRatio((float)d);
-            
-        };
+        window.OnWindowResize += (_, d) => { camera.UpdateAspectRatio((float)d); };
 
         window.Run();
     }

@@ -1,4 +1,5 @@
-﻿using System.Numerics;
+﻿using System.Diagnostics;
+using System.Numerics;
 using System.Windows.Input;
 using DeftSharp.Windows.Input.Keyboard;
 using VoxelSharp.Client.Input;
@@ -23,7 +24,7 @@ namespace VoxelSharp.Client
 
         public FlyingCamera(float aspectRatio) : base(aspectRatio)
         {
-            _mouseInput.StartTracking();
+        
 
 
             _keyboardListener.Subscribe(Key.W, forward_start, null, KeyboardEvent.KeyDown);
@@ -42,6 +43,13 @@ namespace VoxelSharp.Client
             
             _keyboardListener.Subscribe(Key.LeftShift, down_start, null, KeyboardEvent.KeyDown);
             _keyboardListener.Subscribe(Key.LeftShift, down_stop, null, KeyboardEvent.KeyUp);
+        }
+        
+        public void StartTrackingMouse(long windowHandle)
+        {
+            Console.WriteLine(windowHandle);
+            
+            _mouseInput.StartTracking(new IntPtr(windowHandle));
         }
 
         private void forward_start()

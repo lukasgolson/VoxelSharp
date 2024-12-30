@@ -4,7 +4,6 @@ using OpenTK.Windowing.Common;
 using OpenTK.Windowing.Desktop;
 using OpenTK.Windowing.GraphicsLibraryFramework;
 using VoxelSharp.Abstractions.Renderer;
-using VoxelSharp.Renderer.Interfaces;
 
 namespace VoxelSharp.Renderer;
 
@@ -27,10 +26,23 @@ public class Window : GameWindow, IWindow
         base(GameWindowSettings, NativeWindowSettings)
     {
         _cameraMatrices = cameraMatrices;
+        
+        this.CenterWindow();
+        
     }
 
 
     public (int Width, int Height) ScreenSize => (Size.X, Size.Y);
+
+    public unsafe long WindowHandle
+    {
+        get
+        {
+            var windowHandle = GLFW.GetWin32Window(WindowPtr);
+            return windowHandle.ToInt64();
+        }
+    }
+
     public event EventHandler? OnLoadEvent;
     public event EventHandler<double>? OnUpdateEvent;
     public event EventHandler<(ICameraMatrices cameraMatrices, double dTime)>? OnRenderEvent;
@@ -77,7 +89,7 @@ public class Window : GameWindow, IWindow
     }
 
 
-    bool _isF11Pressed = false;
+    private bool _isF11Pressed;
     protected override void OnUpdateFrame(FrameEventArgs e)
     {
         base.OnUpdateFrame(e);
