@@ -15,12 +15,19 @@ public class Window : GameWindow, IWindow
 
     private static readonly NativeWindowSettings NativeWindowSettings = new()
     {
-        ClientSize = new Vector2i(800, 600),
+        ClientSize = new Vector2i(1920, 1080),
         Title = "VoxelSharp Client",
-        Flags = ContextFlags.ForwardCompatible
+        Flags = ContextFlags.ForwardCompatible,
+        StartFocused = true,
+        WindowState = WindowState.Fullscreen
     };
 
     private static readonly GameWindowSettings GameWindowSettings = GameWindowSettings.Default;
+    
+    
+    
+    
+    
 
     public Window(ICameraMatrices cameraMatrices) :
         base(GameWindowSettings, NativeWindowSettings)
