@@ -34,7 +34,13 @@ internal static class Program
 
         var world = new World(2, 16);
 
-        world.SetVoxel(worldPos: new Position<int>(0, 0, 0), voxel: new Voxel(Color.Red));
+        
+        // Create a cursor at origin
+        world.SetVoxel(worldPos: new Position<int>(0, 0, 0), voxel: new Voxel(Color.Red)); // Origin in red
+        world.SetVoxel(worldPos: new Position<int>(1, 0, 0), voxel: new Voxel(Color.Green)); // X-axis in green
+        world.SetVoxel(worldPos: new Position<int>(0, 1, 0), voxel: new Voxel(Color.Blue)); // Y-axis in blue
+        world.SetVoxel(worldPos: new Position<int>(0, 0, 1), voxel: new Voxel(Color.Yellow)); // Z-axis in yellow
+
 
         var worldRenderer = new WorldRenderer(world);
 
