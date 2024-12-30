@@ -1,4 +1,4 @@
-﻿namespace VoxelSharp.Abstractions.Renderer;
+﻿namespace VoxelSharp.Abstractions.Loop;
 
 public interface IUpdatable
 {

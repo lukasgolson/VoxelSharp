@@ -2,6 +2,7 @@
 using System.Numerics;
 using System.Windows.Input;
 using DeftSharp.Windows.Input.Keyboard;
+using VoxelSharp.Abstractions.Input;
 using VoxelSharp.Client.Input;
 using VoxelSharp.Core.Camera;
 using VoxelSharp.Core.Helpers;
@@ -20,11 +21,12 @@ namespace VoxelSharp.Client
         private readonly KeyboardListener _keyboardListener = new();
 
 
-        private readonly MouseInput _mouseInput = new();
+        private readonly IMouseRelative _mouseInput;
 
-        public FlyingCamera(float aspectRatio) : base(aspectRatio)
+        public FlyingCamera(float aspectRatio, IMouseRelative mouseInput) : base(aspectRatio)
         {
         
+            _mouseInput = mouseInput;
 
 
             _keyboardListener.Subscribe(Key.W, forward_start, null, KeyboardEvent.KeyDown);
@@ -43,13 +45,6 @@ namespace VoxelSharp.Client
             
             _keyboardListener.Subscribe(Key.LeftShift, down_start, null, KeyboardEvent.KeyDown);
             _keyboardListener.Subscribe(Key.LeftShift, down_stop, null, KeyboardEvent.KeyUp);
-        }
-        
-        public void StartTrackingMouse(long windowHandle)
-        {
-            Console.WriteLine(windowHandle);
-            
-            _mouseInput.StartTracking(new IntPtr(windowHandle));
         }
 
         private void forward_start()
@@ -139,10 +134,7 @@ namespace VoxelSharp.Client
 
 
             UpdatePosition(worldMovement);
-
-            _mouseInput.Update(deltaTime);
-
-            UpdateRotation((float)_mouseInput.X, (float)-_mouseInput.Y);
+            UpdateRotation((float)_mouseInput.RelativeX, (float)-_mouseInput.RelativeY);
         }
     }
 }

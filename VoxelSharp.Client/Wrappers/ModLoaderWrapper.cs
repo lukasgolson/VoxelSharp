@@ -1,3 +1,4 @@
+using VoxelSharp.Abstractions.Loop;
 using VoxelSharp.Abstractions.Renderer;
 using VoxelSharp.Modding;
 using VoxelSharp.Renderer.Interfaces;

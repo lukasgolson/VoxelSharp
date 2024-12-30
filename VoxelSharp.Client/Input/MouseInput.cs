@@ -1,18 +1,21 @@
-﻿using VoxelSharp.Abstractions.Renderer;
+﻿using VoxelSharp.Abstractions.Input;
+using VoxelSharp.Abstractions.Loop;
 
 namespace VoxelSharp.Client.Input;
 
 using System;
 using System.Runtime.InteropServices;
 
-public partial class MouseInput : IUpdatable
+public partial class MouseInput : IUpdatable, IMouseRelative
 {
     private Point _lastMousePosition;
     private bool _isTracking;
     private IntPtr _windowHandle;
 
-    public double X { get; private set; }
-    public double Y { get; private set; }
+
+
+    public double RelativeX { get; private set; }
+    public double RelativeY { get; private set; }
 
     public void StartTracking(IntPtr windowHandle)
     {
@@ -53,7 +56,7 @@ public partial class MouseInput : IUpdatable
         var deltaY = currentMousePosition.Y - _lastMousePosition.Y;
 
         // Trigger relative movement updates
-        (X, Y) = (deltaX, deltaY);
+        (RelativeX, RelativeY) = (deltaX, deltaY);
 
         // Reset the cursor position to the centre of the window
         ResetCursorToCenter();
@@ -156,4 +159,6 @@ public partial class MouseInput : IUpdatable
         public int X;
         public int Y;
     }
+
+ 
 }

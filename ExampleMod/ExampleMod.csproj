@@ -1,14 +1,17 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>net8.0</TargetFramework>
+        <TargetFramework>net8.0-windows</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
-        <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+        <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
         <Authors>Lukas Olson</Authors>
+        <IsPackable>false</IsPackable>
     </PropertyGroup>
 
     <ItemGroup>
+        <ProjectReference Include="..\VoxelSharp.Client\VoxelSharp.Client.csproj" />
+        <ProjectReference Include="..\VoxelSharp.Core\VoxelSharp.Core.csproj" />
         <ProjectReference Include="..\VoxelSharp.Modding\VoxelSharp.Modding.csproj"/>
     </ItemGroup>
 
@@ -16,8 +19,9 @@
         <PackageReference Include="HarmonyX" Version="2.13.0"/>
     </ItemGroup>
 
-    <ItemGroup>
-        <Content Include=".template.config\template.json"/>
-    </ItemGroup>
+
+    <Target Name="PostBuild" AfterTargets="Build">
+        <Copy SourceFiles="$(OutputPath)\$(AssemblyName).dll" DestinationFolder="..\.mods\"/>
+    </Target>
 
 </Project>
