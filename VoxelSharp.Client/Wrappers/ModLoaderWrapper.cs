@@ -1,4 +1,5 @@
-using VoxelSharp.Core.Interfaces;
+using VoxelSharp.Abstractions.Loop;
+using VoxelSharp.Abstractions.Renderer;
 using VoxelSharp.Modding;
 using VoxelSharp.Renderer.Interfaces;
 
@@ -31,7 +32,7 @@ public class ModLoaderWrapper : IRenderer, IUpdatable
     /// <summary>
     ///     Renders the mods by delegating to the underlying ModLoader.
     /// </summary>
-    public void Render(ICamera camera)
+    public void Render(ICameraMatrices camera)
     {
         ModLoader.Render();
     }
@@ -41,7 +42,7 @@ public class ModLoaderWrapper : IRenderer, IUpdatable
     ///     Updates the mods by delegating to the underlying ModLoader.
     /// </summary>
     /// <param name="deltaTime">The time elapsed since the last update.</param>
-    public void Update(float deltaTime)
+    public void Update(double deltaTime)
     {
         ModLoader.Update(deltaTime);
     }

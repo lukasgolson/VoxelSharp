@@ -2,15 +2,20 @@
 
     <PropertyGroup>
         <OutputType>Exe</OutputType>
-        <TargetFramework>net8.0</TargetFramework>
+        <TargetFramework>net8.0-windows</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     </PropertyGroup>
 
     <ItemGroup>
         <ProjectReference Include="..\VoxelSharp.Core\VoxelSharp.Core.csproj"/>
         <ProjectReference Include="..\VoxelSharp.Modding\VoxelSharp.Modding.csproj"/>
         <ProjectReference Include="..\VoxelSharp.Renderer\VoxelSharp.Renderer.csproj"/>
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="DeftSharp.Windows.Input" Version="0.10.0" />
     </ItemGroup>
 
 </Project>

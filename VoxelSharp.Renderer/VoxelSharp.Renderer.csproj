@@ -4,6 +4,7 @@
         <TargetFramework>net8.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     </PropertyGroup>
 
     <ItemGroup>
@@ -11,6 +12,7 @@
     </ItemGroup>
 
     <ItemGroup>
+        <ProjectReference Include="..\VoxelSharp.Abstractions\VoxelSharp.Abstractions.csproj" />
         <ProjectReference Include="..\VoxelSharp.Core\VoxelSharp.Core.csproj"/>
     </ItemGroup>
 

@@ -7,4 +7,12 @@
         <RootNamespace>VoxelSharp.Core</RootNamespace>
     </PropertyGroup>
 
+    <ItemGroup>
+      <Folder Include="Math\" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\VoxelSharp.Abstractions\VoxelSharp.Abstractions.csproj" />
+    </ItemGroup>
+
 </Project>

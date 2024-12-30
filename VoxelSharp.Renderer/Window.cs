@@ -3,40 +3,50 @@ using OpenTK.Mathematics;
 using OpenTK.Windowing.Common;
 using OpenTK.Windowing.Desktop;
 using OpenTK.Windowing.GraphicsLibraryFramework;
-using VoxelSharp.Core.Interfaces;
-using VoxelSharp.Renderer.Camera;
-using VoxelSharp.Renderer.Interfaces;
+using VoxelSharp.Abstractions.Renderer;
 
 namespace VoxelSharp.Renderer;
 
 public class Window : GameWindow, IWindow
 {
-    private readonly FlyingCamera _camera;
-    private readonly List<IRenderer> _renderers;
+    private readonly ICameraMatrices _cameraMatrices;
 
-    private readonly List<IUpdatable> _updatables;
 
     private static readonly NativeWindowSettings NativeWindowSettings = new()
     {
-        ClientSize = new Vector2i(800, 600),
+        ClientSize = new Vector2i(1920 / 2, 1080 / 2),
         Title = "VoxelSharp Client",
         Flags = ContextFlags.ForwardCompatible
     };
 
     private static readonly GameWindowSettings GameWindowSettings = GameWindowSettings.Default;
 
-    public Window(List<IUpdatable>? updatables = null, List<IRenderer>? renderers = null) :
+
+    public Window(ICameraMatrices cameraMatrices) :
         base(GameWindowSettings, NativeWindowSettings)
     {
-        _camera = new FlyingCamera((float)Size.X / Size.Y);
-
-
-        _updatables = updatables ?? [];
-        _renderers = renderers ?? [];
+        _cameraMatrices = cameraMatrices;
+        
+        this.CenterWindow();
+        
     }
 
 
     public (int Width, int Height) ScreenSize => (Size.X, Size.Y);
+
+    public unsafe long WindowHandle
+    {
+        get
+        {
+            var windowHandle = GLFW.GetWin32Window(WindowPtr);
+            return windowHandle.ToInt64();
+        }
+    }
+
+    public event EventHandler? OnLoadEvent;
+    public event EventHandler<double>? OnUpdateEvent;
+    public event EventHandler<(ICameraMatrices cameraMatrices, double dTime)>? OnRenderEvent;
+    public event EventHandler<double>? OnWindowResize;
 
 
     protected override void OnLoad()
@@ -57,7 +67,11 @@ public class Window : GameWindow, IWindow
 
         GL.ClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 
-        foreach (var renderer in _renderers) renderer.InitializeShaders();
+        OnWindowResize?.Invoke(this,
+            (float)Size.X / Size.Y); // Invoke resize event to set the aspect ratio for any components that need it
+
+
+        OnLoadEvent?.Invoke(this, EventArgs.Empty);
     }
 
 
@@ -67,37 +81,35 @@ public class Window : GameWindow, IWindow
 
         GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
-        foreach (var renderer in _renderers) renderer.Render(_camera);
+
+        OnRenderEvent?.Invoke(this, (_cameraMatrices, e.Time));
 
         Shader.UnUse();
-
-
         SwapBuffers();
     }
 
 
+    private bool _isF11Pressed;
     protected override void OnUpdateFrame(FrameEventArgs e)
     {
         base.OnUpdateFrame(e);
 
         if (KeyboardState.IsKeyDown(Keys.Escape)) Close();
 
-        // Handle movement inputs
-        if (KeyboardState.IsKeyDown(Keys.W)) _camera.MoveForward();
-        if (KeyboardState.IsKeyDown(Keys.S)) _camera.MoveBackward();
-        if (KeyboardState.IsKeyDown(Keys.A)) _camera.MoveLeft();
-        if (KeyboardState.IsKeyDown(Keys.D)) _camera.MoveRight();
-        if (KeyboardState.IsKeyDown(Keys.Space)) _camera.MoveUp();
-        if (KeyboardState.IsKeyDown(Keys.LeftShift)) _camera.MoveDown();
+        if (KeyboardState.IsKeyDown(Keys.F11))
+        {
+            if (!_isF11Pressed)
+            {
+                _isF11Pressed = true;
+                WindowState = WindowState == WindowState.Fullscreen ? WindowState.Normal : WindowState.Fullscreen;
+            }
+        }
+        else
+        {
+            _isF11Pressed = false;
+        }
 
-        // Handle mouse inputs for camera rotation
-        var (deltaX, deltaY) = MouseState.Delta;
-        _camera.UpdateRotation(deltaX, -deltaY);
-
-        // Update camera state
-        _camera.Update((float)e.Time);
-
-        foreach (var updatable in _updatables) updatable.Update((float)e.Time);
+        OnUpdateEvent?.Invoke(this, e.Time);
     }
 
     protected override void OnResize(ResizeEventArgs e)
@@ -106,7 +118,6 @@ public class Window : GameWindow, IWindow
 
         GL.Viewport(0, 0, Size.X, Size.Y);
 
-        // Update projection matrix for the new aspect ratio
-        _camera.UpdateAspectRatio((float)Size.X / Size.Y);
+        OnWindowResize?.Invoke(this, (float)Size.X / Size.Y);
     }
 }

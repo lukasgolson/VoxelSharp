@@ -46,7 +46,7 @@ public interface IMod
     /// <returns>
     ///     Returns <c>true</c> if the update was successful; otherwise, <c>false</c>.
     /// </returns>
-    bool Update(float deltaTime);
+    bool Update(double deltaTime);
 
     /// <summary>
     ///     Called once per frame to render the mod.
