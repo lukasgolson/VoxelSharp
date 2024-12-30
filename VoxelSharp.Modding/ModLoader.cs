@@ -37,7 +37,7 @@ public class ModLoader(string modsPath)
         _initialized = true;
     }
 
-    public void Update(float deltaTime)
+    public void Update(double deltaTime)
     {
         foreach (var mod in _mods) mod.Update(deltaTime);
     }

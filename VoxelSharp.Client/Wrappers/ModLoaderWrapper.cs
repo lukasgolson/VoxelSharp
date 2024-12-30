@@ -41,7 +41,7 @@ public class ModLoaderWrapper : IRenderer, IUpdatable
     ///     Updates the mods by delegating to the underlying ModLoader.
     /// </summary>
     /// <param name="deltaTime">The time elapsed since the last update.</param>
-    public void Update(float deltaTime)
+    public void Update(double deltaTime)
     {
         ModLoader.Update(deltaTime);
     }

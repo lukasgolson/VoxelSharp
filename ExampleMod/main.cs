@@ -28,7 +28,7 @@ public class Main : IMod
         return true;
     }
 
-    public bool Update(float deltaTime)
+    public bool Update(double deltaTime)
     {
         Console.WriteLine("Update Called");
 

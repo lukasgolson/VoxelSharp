@@ -3,7 +3,7 @@ using VoxelSharp.Client.Wrappers;
 using VoxelSharp.Core.Structs;
 using VoxelSharp.Core.World;
 using VoxelSharp.Renderer;
-using VoxelSharp.Renderer.Interfaces;
+using VoxelSharp.Renderer.Camera;
 using VoxelSharp.Renderer.Mesh.World;
 
 namespace VoxelSharp.Client;
@@ -27,7 +27,7 @@ internal static class Program
         // Initialize ModLoader with the specified directory
         var modLoader = new ModLoaderWrapper(modsDirectory);
 
-        
+
         modLoader.ModLoader.LoadMods();
 
 
@@ -36,11 +36,34 @@ internal static class Program
         world.SetVoxel(worldPos: new Position<int>(0, 0, 0), voxel: new Voxel(Color.Red));
 
         var worldRenderer = new WorldRenderer(world);
+        
+        var camera = new FlyingCamera(800f / 600f);
 
-        var updatables = new List<IUpdatable> { modLoader };
+        var updatables = new List<IUpdatable> { modLoader, camera };
         var renderables = new List<IRenderer> { modLoader, worldRenderer };
 
-        using var window = new Window(updatables, renderables);
+        using var window = new Window(camera);
+
+        window.OnLoadEvent += (_, _) =>
+        {
+            modLoader.InitializeShaders();
+            worldRenderer.InitializeShaders();
+        };
+
+        window.OnUpdateEvent += (_, deltaTime) =>
+        {
+            foreach (var updatable in updatables) updatable.Update((float)deltaTime);
+        };
+
+        window.OnRenderEvent += (_, param) =>
+        {
+            foreach (var renderable in renderables)
+            {
+                renderable.Render(param.cameraMatrices);
+            }
+        };
+
+        window.OnWindowResize += (_, d) => { };
 
         window.Run();
     }

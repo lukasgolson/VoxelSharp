@@ -1,20 +1,18 @@
-﻿namespace VoxelSharp.Abstractions.Renderer;
+﻿using System.Numerics;
+
+namespace VoxelSharp.Abstractions.Renderer;
 
 public interface ICameraParameters
 {
-    float PositionX { get; }
-    float PositionY { get; }
-    float PositionZ { get; }
+    Vector3 Position { get; }
 
-    float RotationPitch { get; }
-    float RotationYaw { get; }
-    float RotationRoll { get; }
-
+    Vector3 Rotation { get; }
+    
     float FieldOfView { get; }
     float NearClip { get; }
     float FarClip { get; }
     float AspectRatio { get; }
-    
+
     CameraType Camera { get; }
 
 

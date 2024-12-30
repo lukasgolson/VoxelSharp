@@ -1,9 +1,8 @@
 ﻿using System.Numerics;
 using OpenTK.Mathematics;
 using VoxelSharp.Abstractions.Renderer;
+using VoxelSharp.Core;
 using VoxelSharp.Core.Helpers;
-using VoxelSharp.Renderer.Helpers;
-using VoxelSharp.Renderer.Interfaces;
 using Vector3 = System.Numerics.Vector3;
 
 namespace VoxelSharp.Renderer.Camera;
@@ -54,7 +53,7 @@ public abstract class Camera : IUpdatable, ICameraMatrices
     /// <summary>
     ///     Updates the camera's view matrix and relative vectors.
     /// </summary>
-    public virtual void Update(float deltaTime)
+    public virtual void Update(double deltaTime)
     {
         UpdateRelativeVectors();
         UpdateViewMatrix();
@@ -68,7 +67,9 @@ public abstract class Camera : IUpdatable, ICameraMatrices
         const float nearPlane = 0.01f;
         const float farPlane = 2000f;
 
-        var verticalFovRadians = MathHelper.DegreesToRadians(verticalFov);
+
+
+        var verticalFovRadians = verticalFov.ToRadians();
 
         
         _projectionMatrix = Matrix4x4.CreatePerspectiveFieldOfView(verticalFovRadians, aspectRatio, nearPlane, farPlane);
@@ -88,8 +89,8 @@ public abstract class Camera : IUpdatable, ICameraMatrices
     /// </summary>
     private void UpdateRelativeVectors()
     {
-        var pitchRadians = MathHelper.DegreesToRadians(_pitch);
-        var yawRadians = MathHelper.DegreesToRadians(_yaw);
+        var pitchRadians = _pitch.ToRadians();
+        var yawRadians = _yaw.ToRadians();
 
         
         Forward = new Vector3(

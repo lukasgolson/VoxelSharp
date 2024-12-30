@@ -11,10 +11,8 @@ namespace VoxelSharp.Renderer;
 
 public class Window : GameWindow, IWindow
 {
-    private readonly FlyingCamera _camera;
-    private readonly List<IRenderer> _renderers;
-
-    private readonly List<IUpdatable> _updatables;
+    private readonly ICameraMatrices _cameraMatrices;
+  
 
     private static readonly NativeWindowSettings NativeWindowSettings = new()
     {
@@ -25,18 +23,18 @@ public class Window : GameWindow, IWindow
 
     private static readonly GameWindowSettings GameWindowSettings = GameWindowSettings.Default;
 
-    public Window(List<IUpdatable>? updatables = null, List<IRenderer>? renderers = null) :
+    public Window(ICameraMatrices cameraMatrices) :
         base(GameWindowSettings, NativeWindowSettings)
     {
-        _camera = new FlyingCamera((float)Size.X / Size.Y);
-
-
-        _updatables = updatables ?? [];
-        _renderers = renderers ?? [];
+        _cameraMatrices = cameraMatrices;
     }
 
 
     public (int Width, int Height) ScreenSize => (Size.X, Size.Y);
+    public event EventHandler? OnLoadEvent;
+    public event EventHandler<double>? OnUpdateEvent;
+    public event EventHandler<(ICameraMatrices cameraMatrices, double dTime)>? OnRenderEvent;
+    public event EventHandler<double>? OnWindowResize;
 
 
     protected override void OnLoad()
@@ -57,7 +55,8 @@ public class Window : GameWindow, IWindow
 
         GL.ClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 
-        foreach (var renderer in _renderers) renderer.InitializeShaders();
+
+        OnLoadEvent?.Invoke(this, EventArgs.Empty);
     }
 
 
@@ -67,11 +66,10 @@ public class Window : GameWindow, IWindow
 
         GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
-        foreach (var renderer in _renderers) renderer.Render(_camera);
+
+        OnRenderEvent?.Invoke(this, (_cameraMatrices, e.Time));
 
         Shader.UnUse();
-
-
         SwapBuffers();
     }
 
@@ -94,10 +92,8 @@ public class Window : GameWindow, IWindow
         var (deltaX, deltaY) = MouseState.Delta;
         _camera.UpdateRotation(deltaX, -deltaY);
 
-        // Update camera state
-        _camera.Update((float)e.Time);
 
-        foreach (var updatable in _updatables) updatable.Update((float)e.Time);
+        OnUpdateEvent?.Invoke(this, e.Time);
     }
 
     protected override void OnResize(ResizeEventArgs e)
@@ -105,8 +101,9 @@ public class Window : GameWindow, IWindow
         base.OnResize(e);
 
         GL.Viewport(0, 0, Size.X, Size.Y);
+        
+        OnWindowResize?.Invoke(this, (float)Size.X / Size.Y);
 
-        // Update projection matrix for the new aspect ratio
-        _camera.UpdateAspectRatio((float)Size.X / Size.Y);
+      
     }
 }
