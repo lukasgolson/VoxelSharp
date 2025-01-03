@@ -11,7 +11,7 @@ public interface IWindow
     // OnLoad event
     public event EventHandler OnLoadEvent;
     public event EventHandler<double> OnUpdateEvent;
-    public event EventHandler<(ICameraMatricesProvider cameraMatrices, double dTime)> OnRenderEvent;
+    public event EventHandler<(ICameraMatricesProvider cameraMatrices, double interpolation)> OnRenderEvent;
 
     public event EventHandler<double> OnWindowResize;
 

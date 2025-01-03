@@ -139,9 +139,6 @@ public class Client
             }
         };
 
-        if (window is Window windowImpl)
-        {
-            windowImpl.Run();
-        }
+      
     }
 }

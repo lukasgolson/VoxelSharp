@@ -3,14 +3,21 @@ using OpenTK.Mathematics;
 using OpenTK.Windowing.Common;
 using OpenTK.Windowing.Desktop;
 using OpenTK.Windowing.GraphicsLibraryFramework;
+using VoxelSharp.Abstractions.Loop;
 using VoxelSharp.Abstractions.Renderer;
 using VoxelSharp.Abstractions.Window;
+using VoxelSharp.Renderer.Interfaces;
 
 namespace VoxelSharp.Renderer;
 
-public class Window : GameWindow, IWindow
+public class Window : NativeWindow, IWindow, IRenderer
 {
     private readonly ICameraMatricesProvider _cameraMatricesProvider;
+
+    public event EventHandler? OnLoadEvent;
+    public event EventHandler<double>? OnUpdateEvent;
+    public event EventHandler<(ICameraMatricesProvider cameraMatrices, double interpolation)>? OnRenderEvent;
+    public event EventHandler<double>? OnWindowResize;
 
 
     private static readonly NativeWindowSettings NativeWindowSettings = new()
@@ -20,13 +27,18 @@ public class Window : GameWindow, IWindow
         Flags = ContextFlags.ForwardCompatible
     };
 
-    private static readonly GameWindowSettings GameWindowSettings = GameWindowSettings.Default;
-
 
     public Window(ICameraMatricesProvider cameraMatricesProvider) :
-        base(GameWindowSettings, NativeWindowSettings)
+        base(NativeWindowSettings)
     {
         _cameraMatricesProvider = cameraMatricesProvider;
+
+        Context.MakeCurrent();
+
+
+        Load();
+
+
         CenterWindow();
     }
 
@@ -42,17 +54,11 @@ public class Window : GameWindow, IWindow
         }
     }
 
-    public event EventHandler? OnLoadEvent;
-    public event EventHandler<double>? OnUpdateEvent;
-    public event EventHandler<(ICameraMatricesProvider cameraMatrices, double dTime)>? OnRenderEvent;
-    public event EventHandler<double>? OnWindowResize;
+  
 
 
-    protected override void OnLoad()
+    protected void Load()
     {
-        base.OnLoad();
-
-
         GL.Enable(EnableCap.DepthTest);
         GL.DepthFunc(DepthFunction.Less);
         GL.Disable(EnableCap.CullFace);
@@ -66,50 +72,25 @@ public class Window : GameWindow, IWindow
 
         GL.ClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 
-        OnWindowResize?.Invoke(this,
-            (float)Size.X / Size.Y); // Invoke resize event to set the aspect ratio for any components that need it
-
-
         OnLoadEvent?.Invoke(this, EventArgs.Empty);
     }
 
 
-    protected override void OnRenderFrame(FrameEventArgs e)
+    public void InitializeShaders()
     {
-        base.OnRenderFrame(e);
+    }
 
+    void IRenderer.Render(double interpolationFactor)
+    {
         GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
 
-        OnRenderEvent?.Invoke(this, (_cameraMatricesProvider, e.Time));
+        OnRenderEvent?.Invoke(this, (_cameraMatricesProvider, interpolationFactor));
 
         Shader.UnUse();
-        SwapBuffers();
+        Context.SwapBuffers();
     }
 
-
-    private bool _isF11Pressed;
-    protected override void OnUpdateFrame(FrameEventArgs e)
-    {
-        base.OnUpdateFrame(e);
-
-        if (KeyboardState.IsKeyDown(Keys.Escape)) Close();
-
-        if (KeyboardState.IsKeyDown(Keys.F11))
-        {
-            if (!_isF11Pressed)
-            {
-                _isF11Pressed = true;
-                WindowState = WindowState == WindowState.Fullscreen ? WindowState.Normal : WindowState.Fullscreen;
-            }
-        }
-        else
-        {
-            _isF11Pressed = false;
-        }
-
-        OnUpdateEvent?.Invoke(this, e.Time);
-    }
 
     protected override void OnResize(ResizeEventArgs e)
     {
