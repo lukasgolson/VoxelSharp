@@ -10,7 +10,7 @@ namespace VoxelSharp.Renderer;
 
 public class Window : GameWindow, IWindow
 {
-    private readonly ICameraMatrices _cameraMatrices;
+    private readonly ICameraMatricesProvider _cameraMatricesProvider;
 
 
     private static readonly NativeWindowSettings NativeWindowSettings = new()
@@ -23,10 +23,10 @@ public class Window : GameWindow, IWindow
     private static readonly GameWindowSettings GameWindowSettings = GameWindowSettings.Default;
 
 
-    public Window(ICameraMatrices cameraMatrices) :
+    public Window(ICameraMatricesProvider cameraMatricesProvider) :
         base(GameWindowSettings, NativeWindowSettings)
     {
-        _cameraMatrices = cameraMatrices;
+        _cameraMatricesProvider = cameraMatricesProvider;
         CenterWindow();
     }
 
@@ -44,7 +44,7 @@ public class Window : GameWindow, IWindow
 
     public event EventHandler? OnLoadEvent;
     public event EventHandler<double>? OnUpdateEvent;
-    public event EventHandler<(ICameraMatrices cameraMatrices, double dTime)>? OnRenderEvent;
+    public event EventHandler<(ICameraMatricesProvider cameraMatrices, double dTime)>? OnRenderEvent;
     public event EventHandler<double>? OnWindowResize;
 
 
@@ -81,7 +81,7 @@ public class Window : GameWindow, IWindow
         GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
 
-        OnRenderEvent?.Invoke(this, (_cameraMatrices, e.Time));
+        OnRenderEvent?.Invoke(this, (_cameraMatricesProvider, e.Time));
 
         Shader.UnUse();
         SwapBuffers();

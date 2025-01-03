@@ -1,10 +1,8 @@
-﻿using System.Diagnostics;
-using System.Numerics;
+﻿using System.Numerics;
 using System.Windows.Input;
 using DeftSharp.Windows.Input.Keyboard;
 using VoxelSharp.Abstractions.Input;
-using VoxelSharp.Abstractions.Renderer;
-using VoxelSharp.Client.Input;
+using VoxelSharp.Abstractions.Loop;
 using VoxelSharp.Core.Camera;
 using VoxelSharp.Core.Helpers;
 
@@ -21,8 +19,8 @@ namespace VoxelSharp.Client
 
         private readonly IMouseRelative _mouseInput;
 
-        public FlyingCamera(IMouseRelative mouseInput, IKeyboardListener keyboardListener)
-            : base(16f / 9f)
+        public FlyingCamera(IGameLoop gameLoop, IMouseRelative mouseInput, IKeyboardListener keyboardListener)
+            : base(gameLoop)
         {
             _mouseInput = mouseInput;
 

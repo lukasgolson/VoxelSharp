@@ -10,6 +10,7 @@ namespace VoxelSharp.Client.Wrappers;
 /// </summary>
 public class ModLoaderWrapper : IRenderer, IUpdatable
 {
+    
     /// <summary>
     ///     Initializes a new instance of the ModLoaderWrapper.
     /// </summary>
@@ -32,10 +33,11 @@ public class ModLoaderWrapper : IRenderer, IUpdatable
     /// <summary>
     ///     Renders the mods by delegating to the underlying ModLoader.
     /// </summary>
-    public void Render(ICameraMatrices camera)
+    public void Render(double interpolationFactor)
     {
         ModLoader.Render();
     }
+  
 
 
     /// <summary>

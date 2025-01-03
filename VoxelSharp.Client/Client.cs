@@ -6,10 +6,10 @@ using VoxelSharp.Abstractions.Renderer;
 using VoxelSharp.Abstractions.Window;
 using VoxelSharp.Client.Input;
 using VoxelSharp.Client.Wrappers;
+using VoxelSharp.Core.GameLoop;
 using VoxelSharp.Core.Structs;
 using VoxelSharp.Core.World;
 using VoxelSharp.Renderer;
-using VoxelSharp.Renderer.Interfaces;
 using VoxelSharp.Renderer.Mesh.World;
 
 namespace VoxelSharp.Client;
@@ -31,20 +31,25 @@ public class Client
         // Parse CLI arguments
         ModLoader = LoadMods(GetModsDirectory(args), Container);
 
+        Container.RegisterSingleton<IGameLoop, GameLoop>();
+
         Container.RegisterSingleton<IMouseRelative, MouseInput>();
         Container.RegisterSingleton<IKeyboardListener, KeyboardListener>();
-        Container.RegisterSingleton<ICameraMatrices, FlyingCamera>();
+        Container.RegisterSingleton<ICameraMatricesProvider, FlyingCamera>();
         Container.RegisterSingleton<IWindow, Window>();
 
 
         Container.Verify();
 
 
+        var cameraMatricesProvider = Container.GetInstance<ICameraMatricesProvider>();
+
+
         World = new World(2, 16);
-        
-        World.SetVoxel(new Position<int>(0,0,0), new Voxel(Color.Red));
-        
-        _worldRenderer = new WorldRenderer(World);
+        _worldRenderer = new WorldRenderer(World, cameraMatricesProvider);
+
+
+        World.SetVoxel(new Position<int>(0, 0, 0), new Voxel(Color.Red));
     }
 
     private static ModLoaderWrapper LoadMods(string modsDirectory, Container container)
@@ -77,7 +82,7 @@ public class Client
 
     public void Run()
     {
-        var camera = Container.GetInstance<ICameraMatrices>();
+        var camera = Container.GetInstance<ICameraMatricesProvider>();
         var mouseRelative = Container.GetInstance<IMouseRelative>();
         var window = Container.GetInstance<IWindow>();
 
@@ -122,7 +127,7 @@ public class Client
         {
             foreach (var renderable in renderables)
             {
-                renderable.Render(param.cameraMatrices);
+                renderable.Render(0);
             }
         };
 

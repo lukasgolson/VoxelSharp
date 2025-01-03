@@ -1,6 +1,79 @@
-﻿namespace VoxelSharp.Abstractions.Loop;
+﻿using VoxelSharp.Abstractions.Renderer;
 
-public interface IGameLoop
+namespace VoxelSharp.Abstractions.Loop
 {
-    
+    /// <summary>
+    /// Interface for a tick-based game loop manager with support for dynamic tick rate, rendering, and interpolation.
+    /// </summary>
+    public interface IGameLoop
+    {
+        /// <summary>
+        /// Initializes the game loop manager.
+        /// </summary>
+        void Initialize();
+
+        /// <summary>
+        /// Starts the game loop.
+        /// </summary>
+        void Start();
+
+        /// <summary>
+        /// Stops the game loop.
+        /// </summary>
+        void Stop();
+
+        /// <summary>
+        /// Sets the target number of ticks per second.
+        /// </summary>
+        /// <param name="ticksPerSecond">The desired ticks per second.</param>
+        void SetTargetTicksPerSecond(int ticksPerSecond);
+
+        /// <summary>
+        /// Pauses the game loop.
+        /// </summary>
+        void Pause();
+
+        /// <summary>
+        /// Resumes the game loop if paused.
+        /// </summary>
+        void Resume();
+
+        /// <summary>
+        /// Determines whether the game loop is currently running.
+        /// </summary>
+        /// <returns>True if the game loop is running; otherwise, false.</returns>
+        bool IsRunning();
+
+        /// <summary>
+        /// Registers a tick action, which is called during each tick with a delta time.
+        /// </summary>
+        /// <param name="tickAction">The action to execute during each tick.</param>
+        void RegisterTickAction(Action<double> tickAction);
+        
+        void RegisterTickAction(IUpdatable updatable);
+
+        /// <summary>
+        /// Unregisters a previously registered tick action.
+        /// </summary>
+        /// <param name="tickAction">The action to remove.</param>
+        void UnregisterTickAction(Action<double> tickAction);
+        
+        void UnregisterTickAction(IUpdatable updatable);
+
+        /// <summary>
+        /// Registers a render action, which is called as often as possible with an interpolation factor.
+        /// </summary>
+        /// <param name="renderAction">The action to execute during rendering.</param>
+        void RegisterRenderAction(Action<double> renderAction);
+        
+        void RegisterRenderAction(IRenderer renderer);
+
+        /// <summary>
+        /// Unregisters a previously registered render action.
+        /// </summary>
+        /// <param name="renderAction">The action to remove.</param>
+        void UnregisterRenderAction(Action<double> renderAction);
+        
+        void UnregisterRenderAction(IRenderer renderer);
+    }
 }

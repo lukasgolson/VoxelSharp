@@ -8,9 +8,12 @@ public class WorldRenderer : IRenderer
     private readonly ChunkMesh[] _chunkMeshArray;
     private Shader? _chunkShader;
 
+    private readonly ICameraMatricesProvider _cameraMatricesProvider;
 
-    public WorldRenderer(Core.World.World world)
+    public WorldRenderer(Core.World.World world, ICameraMatricesProvider cameraMatricesProvider)
     {
+        _cameraMatricesProvider = cameraMatricesProvider;
+
         var worldVolume = world.WorldSize * world.WorldSize * world.WorldSize;
         _chunkMeshArray = new ChunkMesh[worldVolume];
 
@@ -28,7 +31,7 @@ public class WorldRenderer : IRenderer
     }
 
 
-    public void Render(ICameraMatrices cameraMatrices)
+    public void Render(double interpolationFactor)
     {
         if (_chunkShader == null)
         {
@@ -37,8 +40,8 @@ public class WorldRenderer : IRenderer
 
         _chunkShader.Use();
 
-        _chunkShader.SetUniform("m_view", cameraMatrices.GetViewMatrix());
-        _chunkShader.SetUniform("m_projection", cameraMatrices.GetProjectionMatrix());
+        _chunkShader.SetUniform("m_view", _cameraMatricesProvider.GetViewMatrix());
+        _chunkShader.SetUniform("m_projection", _cameraMatricesProvider.GetProjectionMatrix());
 
         foreach (var chunkMesh in _chunkMeshArray) chunkMesh.Render(_chunkShader);
 

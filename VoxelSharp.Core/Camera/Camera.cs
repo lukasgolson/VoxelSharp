@@ -6,7 +6,7 @@ using Vector3 = System.Numerics.Vector3;
 
 namespace VoxelSharp.Core.Camera;
 
-public abstract class Camera : IUpdatable, ICameraMatrices, IAspectRatioEventSubscriber
+public abstract class Camera : IUpdatable, ICameraMatricesProvider, IAspectRatioEventSubscriber
 {
     private const float MouseSensitivity = 0.5f;
     private float _pitch; // Vertical rotation
@@ -28,8 +28,9 @@ public abstract class Camera : IUpdatable, ICameraMatrices, IAspectRatioEventSub
     ///     Initializes a new instance of the Camera class.
     /// </summary>
     /// <param name="aspectRatio">The aspect ratio of the camera's view.</param>
-    protected Camera(float aspectRatio)
+    protected Camera(IGameLoop gameLoop, float aspectRatio = 16f / 9f)
     {
+        gameLoop.RegisterTickAction(this);
         SetProjectionMatrix(45, aspectRatio);
     }
 
@@ -67,12 +68,11 @@ public abstract class Camera : IUpdatable, ICameraMatrices, IAspectRatioEventSub
         const float farPlane = 2000f;
 
 
-
         var verticalFovRadians = verticalFov.ToRadians();
 
-        
-        _projectionMatrix = Matrix4x4.CreatePerspectiveFieldOfView(verticalFovRadians, aspectRatio, nearPlane, farPlane);
-        
+
+        _projectionMatrix =
+            Matrix4x4.CreatePerspectiveFieldOfView(verticalFovRadians, aspectRatio, nearPlane, farPlane);
     }
 
     /// <summary>
@@ -91,7 +91,7 @@ public abstract class Camera : IUpdatable, ICameraMatrices, IAspectRatioEventSub
         var pitchRadians = _pitch.ToRadians();
         var yawRadians = _yaw.ToRadians();
 
-        
+
         Forward = new Vector3(
             MathF.Cos(yawRadians) * MathF.Cos(pitchRadians),
             MathF.Sin(pitchRadians),
@@ -120,8 +120,6 @@ public abstract class Camera : IUpdatable, ICameraMatrices, IAspectRatioEventSub
 
 
         _pitch = Math.Clamp(_pitch + deltaPitch * MouseSensitivity, -89f, 89f);
-        
-
     }
 
     /// <summary>

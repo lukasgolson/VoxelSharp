@@ -14,6 +14,12 @@ public partial class MouseInput : IUpdatable, IMouseRelative, IWindowTracker
 
     public double RelativeX { get; private set; }
     public double RelativeY { get; private set; }
+    
+    public MouseInput(IGameLoop gameLoop)
+    {
+        gameLoop.RegisterTickAction(this);
+    }
+   
 
     public void StartTracking(IntPtr windowHandle)
     {
@@ -116,7 +122,7 @@ public partial class MouseInput : IUpdatable, IMouseRelative, IWindowTracker
     // Import SetCursorPos from User32.dll
     [LibraryImport("user32.dll")]
     [return: MarshalAs(UnmanagedType.Bool)]
-    private static partial bool SetCursorPos(int X, int Y);
+    private static partial bool SetCursorPos(int x, int y);
 
     // Import ClipCursor from User32.dll
     [LibraryImport("user32.dll")]
