@@ -1,5 +1,6 @@
 using System.Reflection;
 using HarmonyLib;
+using SimpleInjector;
 using VoxelSharp.Modding.Interfaces;
 using VoxelSharp.Modding.Structs;
 
@@ -9,7 +10,7 @@ public class ModLoader
 {
     private readonly DependencyResolver _resolver = new();
 
-    private bool _initialized;
+    private bool _loaded;
     private List<IMod> _mods = [];
     private readonly string _modsPath;
 
@@ -18,14 +19,13 @@ public class ModLoader
         // resolve the mods path to the absolute path
         _modsPath = Path.GetFullPath(modsPath);
         Console.WriteLine($"Resolved mods path to {_modsPath}");
-        
     }
 
 
     public void LoadMods()
     {
-        if (_initialized) throw new InvalidOperationException("ModLoader has already been initialized.");
-        
+        if (_loaded) throw new InvalidOperationException("Mods have already been loaded.");
+
 
         var assemblyPaths = DiscoverAssemblies();
 
@@ -45,21 +45,28 @@ public class ModLoader
 
         Console.WriteLine($"Resolved loading order for {orderedMods.Count} mods");
 
-        foreach (var mod in orderedMods)
+
+        _mods = orderedMods;
+        _loaded = true;
+    }
+
+    public void InitializeMods(Container container)
+    {
+        if (!_loaded)
+            throw new InvalidOperationException("Mods have not been loaded yet. Call " + nameof(LoadMods) + " first.");
+
+        foreach (var mod in _mods)
         {
-            mod.PreInitialize();
+            mod.PreInitialize(container);
             Console.WriteLine($"Pre-initialized mod {mod.ModInfo.Name} v{mod.ModInfo.Version}");
         }
 
-        foreach (var mod in orderedMods)
+        foreach (var mod in _mods)
         {
             var harmony = new Harmony(mod.ModInfo.Id);
-            mod.Initialize(harmony);
+            mod.Initialize(harmony, container);
             Console.WriteLine($"Initialized mod {mod.ModInfo.Name} v{mod.ModInfo.Version}");
         }
-
-        _mods = orderedMods;
-        _initialized = true;
     }
 
     public void Update(double deltaTime)
@@ -134,9 +141,9 @@ public class ModLoader
                 {
                     continue;
                 }
-                
+
                 mods.Add(mod);
-                
+
                 Console.WriteLine($"Created mod instance {mod.ModInfo.Name} v{mod.ModInfo.Version}");
             }
             catch (Exception ex)

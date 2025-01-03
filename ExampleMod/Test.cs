@@ -1,4 +1,5 @@
 using HarmonyLib;
+using SimpleInjector;
 using VoxelSharp.Client;
 using VoxelSharp.Core.Structs;
 using VoxelSharp.Core.World;
@@ -17,14 +18,14 @@ public class Test : IMod
         "VoxelSharp"
     );
 
-    public bool PreInitialize()
+    public bool PreInitialize(Container container)
     {
         Console.WriteLine("PreInitialize Called");
 
         return true;
     }
 
-    public bool Initialize(Harmony harmony)
+    public bool Initialize(Harmony harmony, Container container)
     {
         Console.WriteLine("Initialize Called");
         

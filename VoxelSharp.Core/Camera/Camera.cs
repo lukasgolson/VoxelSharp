@@ -6,7 +6,7 @@ using Vector3 = System.Numerics.Vector3;
 
 namespace VoxelSharp.Core.Camera;
 
-public abstract class Camera : IUpdatable, ICameraMatrices
+public abstract class Camera : IUpdatable, ICameraMatrices, IAspectRatioEventSubscriber
 {
     private const float MouseSensitivity = 0.5f;
     private float _pitch; // Vertical rotation

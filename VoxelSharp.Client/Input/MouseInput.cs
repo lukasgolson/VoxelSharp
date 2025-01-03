@@ -1,17 +1,15 @@
 ﻿using VoxelSharp.Abstractions.Input;
 using VoxelSharp.Abstractions.Loop;
+using System.Runtime.InteropServices;
+using VoxelSharp.Abstractions.Window;
 
 namespace VoxelSharp.Client.Input;
 
-using System;
-using System.Runtime.InteropServices;
-
-public partial class MouseInput : IUpdatable, IMouseRelative
+public partial class MouseInput : IUpdatable, IMouseRelative, IWindowTracker
 {
     private Point _lastMousePosition;
     private bool _isTracking;
     private IntPtr _windowHandle;
-
 
 
     public double RelativeX { get; private set; }
@@ -159,6 +157,5 @@ public partial class MouseInput : IUpdatable, IMouseRelative
         public int X;
         public int Y;
     }
-
- 
 }
+

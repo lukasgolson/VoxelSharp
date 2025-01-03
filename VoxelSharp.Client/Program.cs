@@ -1,4 +1,6 @@
-﻿namespace VoxelSharp.Client;
+﻿using SimpleInjector;
+
+namespace VoxelSharp.Client;
 
 public static class Program
 {

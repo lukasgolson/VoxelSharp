@@ -8,6 +8,8 @@
     </PropertyGroup>
 
     <ItemGroup>
+      <Folder Include="ApplicationBuilding\" />
+      <Folder Include="GameLoop\" />
       <Folder Include="Math\" />
     </ItemGroup>
 

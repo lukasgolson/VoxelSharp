@@ -1,39 +1,54 @@
-﻿using VoxelSharp.Abstractions.Loop;
+﻿using DeftSharp.Windows.Input.Keyboard;
+using SimpleInjector;
+using VoxelSharp.Abstractions.Input;
+using VoxelSharp.Abstractions.Loop;
 using VoxelSharp.Abstractions.Renderer;
+using VoxelSharp.Abstractions.Window;
 using VoxelSharp.Client.Input;
 using VoxelSharp.Client.Wrappers;
+using VoxelSharp.Core.Structs;
 using VoxelSharp.Core.World;
-using VoxelSharp.Modding;
 using VoxelSharp.Renderer;
+using VoxelSharp.Renderer.Interfaces;
 using VoxelSharp.Renderer.Mesh.World;
 
 namespace VoxelSharp.Client;
 
 public class Client
 {
-    private readonly MouseInput _mouseInput;
+    public Container Container { get; }
+
     private readonly WorldRenderer _worldRenderer;
     private ModLoaderWrapper ModLoader { get; init; }
 
     public World World { get; }
 
-    public List<IUpdatable> Updatables { get; } = [];
-    public List<IRenderer> Renderables { get; } = [];
 
     public Client(string[] args)
     {
+        Container = new Container();
+
         // Parse CLI arguments
-        ModLoader = LoadMods(args);
+        ModLoader = LoadMods(GetModsDirectory(args), Container);
+
+        Container.RegisterSingleton<IMouseRelative, MouseInput>();
+        Container.RegisterSingleton<IKeyboardListener, KeyboardListener>();
+        Container.RegisterSingleton<ICameraMatrices, FlyingCamera>();
+        Container.RegisterSingleton<IWindow, Window>();
+
+
+        Container.Verify();
+
 
         World = new World(2, 16);
-        _mouseInput = new MouseInput();
+        
+        World.SetVoxel(new Position<int>(0,0,0), new Voxel(Color.Red));
+        
         _worldRenderer = new WorldRenderer(World);
     }
 
-    private ModLoaderWrapper LoadMods(string[] args)
+    private static ModLoaderWrapper LoadMods(string modsDirectory, Container container)
     {
-        var modsDirectory = GetModsDirectory(args);
-
         // Ensure the mods directory exists
         if (!Directory.Exists(modsDirectory)) Directory.CreateDirectory(modsDirectory);
 
@@ -41,6 +56,8 @@ public class Client
         var loader = new ModLoaderWrapper(modsDirectory);
 
         loader.ModLoader.LoadMods();
+
+        loader.ModLoader.InitializeMods(container);
 
         return loader;
     }
@@ -60,16 +77,34 @@ public class Client
 
     public void Run()
     {
-        var camera = new FlyingCamera(16f / 9f, _mouseInput);
+        var camera = Container.GetInstance<ICameraMatrices>();
+        var mouseRelative = Container.GetInstance<IMouseRelative>();
+        var window = Container.GetInstance<IWindow>();
+
+        if (mouseRelative is MouseInput mouseInput)
+        {
+            mouseInput.StartTracking(new IntPtr(window.WindowHandle));
+        }
+
+        // get all IUpdatable and IRenderer instances from the container
 
 
-        using var window = new Window(camera);
+        var updatables = new List<IUpdatable>();
+        var renderables = new List<IRenderer>();
+        var aspectRatioUpdatables = new List<IAspectRatioEventSubscriber>();
 
-        _mouseInput.StartTracking(new IntPtr(window.WindowHandle));
+        if (camera is IAspectRatioEventSubscriber aspectRatioSubscriber)
+            aspectRatioUpdatables.Add(aspectRatioSubscriber);
 
 
-        Updatables.AddRange([ModLoader, camera, _mouseInput]);
-        Renderables.AddRange([ModLoader, _worldRenderer]);
+        updatables.Add(ModLoader);
+
+        if (camera is IUpdatable cameraUpdatable) updatables.Add(cameraUpdatable);
+
+        if (mouseRelative is IUpdatable mouseUpdatable) updatables.Add(mouseUpdatable);
+
+
+        renderables.AddRange([ModLoader, _worldRenderer]);
 
 
         window.OnLoadEvent += (_, _) =>
@@ -80,19 +115,28 @@ public class Client
 
         window.OnUpdateEvent += (_, deltaTime) =>
         {
-            foreach (var updatable in Updatables) updatable.Update((float)deltaTime);
+            foreach (var updatable in updatables) updatable.Update((float)deltaTime);
         };
 
         window.OnRenderEvent += (_, param) =>
         {
-            foreach (var renderable in Renderables)
+            foreach (var renderable in renderables)
             {
                 renderable.Render(param.cameraMatrices);
             }
         };
 
-        window.OnWindowResize += (_, d) => { camera.UpdateAspectRatio((float)d); };
+        window.OnWindowResize += (_, d) =>
+        {
+            foreach (var subscriber in aspectRatioUpdatables)
+            {
+                subscriber.UpdateAspectRatio((float)d);
+            }
+        };
 
-        window.Run();
+        if (window is Window windowImpl)
+        {
+            windowImpl.Run();
+        }
     }
 }

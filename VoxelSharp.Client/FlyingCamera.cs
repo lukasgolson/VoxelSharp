@@ -3,6 +3,7 @@ using System.Numerics;
 using System.Windows.Input;
 using DeftSharp.Windows.Input.Keyboard;
 using VoxelSharp.Abstractions.Input;
+using VoxelSharp.Abstractions.Renderer;
 using VoxelSharp.Client.Input;
 using VoxelSharp.Core.Camera;
 using VoxelSharp.Core.Helpers;
@@ -18,33 +19,30 @@ namespace VoxelSharp.Client
         private Vector3 _input = Vector3.Zero;
 
 
-        private readonly KeyboardListener _keyboardListener = new();
-
-
         private readonly IMouseRelative _mouseInput;
 
-        public FlyingCamera(float aspectRatio, IMouseRelative mouseInput) : base(aspectRatio)
+        public FlyingCamera(IMouseRelative mouseInput, IKeyboardListener keyboardListener)
+            : base(16f / 9f)
         {
-        
             _mouseInput = mouseInput;
 
 
-            _keyboardListener.Subscribe(Key.W, forward_start, null, KeyboardEvent.KeyDown);
-            _keyboardListener.Subscribe(Key.W, forward_stop, null, KeyboardEvent.KeyUp);
-            _keyboardListener.Subscribe(Key.S, backward_start, null, KeyboardEvent.KeyDown);
-            _keyboardListener.Subscribe(Key.S, backward_stop, null, KeyboardEvent.KeyUp);
-            
-            _keyboardListener.Subscribe(Key.A, left_start, null, KeyboardEvent.KeyDown);
-            _keyboardListener.Subscribe(Key.A, left_stop, null, KeyboardEvent.KeyUp);
-            
-            _keyboardListener.Subscribe(Key.D, right_start, null, KeyboardEvent.KeyDown);
-            _keyboardListener.Subscribe(Key.D, right_stop, null, KeyboardEvent.KeyUp);
-            
-            _keyboardListener.Subscribe(Key.Space, up_start, null, KeyboardEvent.KeyDown);
-            _keyboardListener.Subscribe(Key.Space, up_stop, null, KeyboardEvent.KeyUp);
-            
-            _keyboardListener.Subscribe(Key.LeftShift, down_start, null, KeyboardEvent.KeyDown);
-            _keyboardListener.Subscribe(Key.LeftShift, down_stop, null, KeyboardEvent.KeyUp);
+            keyboardListener.Subscribe(Key.W, forward_start, null, KeyboardEvent.KeyDown);
+            keyboardListener.Subscribe(Key.W, forward_stop, null, KeyboardEvent.KeyUp);
+            keyboardListener.Subscribe(Key.S, backward_start, null, KeyboardEvent.KeyDown);
+            keyboardListener.Subscribe(Key.S, backward_stop, null, KeyboardEvent.KeyUp);
+
+            keyboardListener.Subscribe(Key.A, left_start, null, KeyboardEvent.KeyDown);
+            keyboardListener.Subscribe(Key.A, left_stop, null, KeyboardEvent.KeyUp);
+
+            keyboardListener.Subscribe(Key.D, right_start, null, KeyboardEvent.KeyDown);
+            keyboardListener.Subscribe(Key.D, right_stop, null, KeyboardEvent.KeyUp);
+
+            keyboardListener.Subscribe(Key.Space, up_start, null, KeyboardEvent.KeyDown);
+            keyboardListener.Subscribe(Key.Space, up_stop, null, KeyboardEvent.KeyUp);
+
+            keyboardListener.Subscribe(Key.LeftShift, down_start, null, KeyboardEvent.KeyDown);
+            keyboardListener.Subscribe(Key.LeftShift, down_stop, null, KeyboardEvent.KeyUp);
         }
 
         private void forward_start()
@@ -76,31 +74,32 @@ namespace VoxelSharp.Client
         {
             _input.X = 0;
         }
-        
+
         private void left_start()
         {
             _input.X = Math.Abs(_input.X - -1) < 0.01 ? 0 : -1;
         }
-        
+
         private void left_stop()
         {
             _input.X = 0;
         }
+
         private void up_start()
         {
             _input.Y = Math.Abs(_input.Y - 1) < 0.01 ? 0 : 1;
         }
-        
+
         private void up_stop()
         {
             _input.Y = 0;
         }
-        
+
         private void down_start()
         {
             _input.Y = Math.Abs(_input.Y - -1) < 0.01 ? 0 : -1;
         }
-        
+
         private void down_stop()
         {
             _input.Y = 0;

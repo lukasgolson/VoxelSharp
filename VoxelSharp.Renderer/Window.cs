@@ -4,6 +4,7 @@ using OpenTK.Windowing.Common;
 using OpenTK.Windowing.Desktop;
 using OpenTK.Windowing.GraphicsLibraryFramework;
 using VoxelSharp.Abstractions.Renderer;
+using VoxelSharp.Abstractions.Window;
 
 namespace VoxelSharp.Renderer;
 
@@ -26,9 +27,7 @@ public class Window : GameWindow, IWindow
         base(GameWindowSettings, NativeWindowSettings)
     {
         _cameraMatrices = cameraMatrices;
-        
-        this.CenterWindow();
-        
+        CenterWindow();
     }
 
 
