@@ -97,7 +97,7 @@ public class Shader
         GL.UseProgram(_handle);
     }
 
-    public static void UnUse()
+    public static void Unuse()
     {
         GL.UseProgram(0);
     }

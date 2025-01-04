@@ -19,7 +19,7 @@ public partial class MouseInput : IUpdatable, IMouseRelative, IWindowTracker
     {
         gameLoop.RegisterUpdateAction(this);
 
-        window.OnLoadEvent += (_, _) => { StartTracking(new IntPtr(window.WindowHandle)); };
+        StartTracking(new IntPtr(window.WindowHandle));
     }
 
 

@@ -7,24 +7,39 @@ namespace VoxelSharp.Core.GameLoop
     public class GameLoop : IGameLoop
     {
         private readonly List<Action<double>> _tickActions = [];
-
         private readonly List<Action<double>> _renderActions = [];
         private readonly List<Action> _preRenderActions = [];
         private readonly List<Action> _postRenderActions = [];
 
         private bool _isRunning;
         private bool _isPaused;
-        private int _targetTicksPerSecond = 20;
-        private double _tickDuration; // Time per tick in seconds
+        private int _targetTicksPerSecond = 60;
+        private int _targetFramesPerSecond = 60;
+
+        private double _tickDuration; 
+        private double _frameDuration; 
+
+        private readonly long _ticksPerSecond;
+
         private readonly Stopwatch _stopwatch = new();
-        private const double MaxCatchUpTime = 0.25; // Maximum allowable catch-up time (e.g., 250ms)
+        private const double MaxCatchUpTime = 2.0; // Maximum allowable catch-up time in seconds
 
+       
 
-        public void Initialize()
+        private int _ticksProcessed;
+        private int _framesRendered;
+        private double _tickTimeAccumulator;
+        private double _frameTimeAccumulator;
+
+        public double CurrentUpdateFrequency { get; private set; }
+        public double CurrentRenderFrequency { get; private set; }
+        public GameLoop()
         {
             _isRunning = false;
             _isPaused = false;
             SetTargetTicksPerSecond(_targetTicksPerSecond);
+            SetTargetFramesPerSecond(_targetFramesPerSecond);
+            _ticksPerSecond = Stopwatch.Frequency;
         }
 
         public void Start()
@@ -32,42 +47,71 @@ namespace VoxelSharp.Core.GameLoop
             _isRunning = true;
             _stopwatch.Start();
 
+            long previousTime = _stopwatch.ElapsedTicks;
             double accumulatedTime = 0.0;
-            long previousTime = _stopwatch.ElapsedMilliseconds;
+
+            double tickAccumulator = 0.0;
+            double frameAccumulator = 0.0;
 
             while (_isRunning)
             {
-                if (_isPaused)
-                {
-                    previousTime = _stopwatch.ElapsedMilliseconds;
-                    continue;
-                }
-
-                long currentTime = _stopwatch.ElapsedMilliseconds;
-                double deltaTime = (currentTime - previousTime) / 1000.0; // Convert to seconds
+                long currentTime = _stopwatch.ElapsedTicks;
+                double deltaTime = (currentTime - previousTime) / (double)_ticksPerSecond;
                 previousTime = currentTime;
 
-                accumulatedTime += deltaTime;
-
-                // Cap accumulated time to prevent cascading lag
-                if (accumulatedTime > MaxCatchUpTime)
+                if (!_isPaused)
                 {
-                    accumulatedTime = MaxCatchUpTime; // Discard excess time
-                }
+                    accumulatedTime += deltaTime;
 
-                // Perform ticks while accumulated time allows
-                while (accumulatedTime >= _tickDuration)
-                {
-                    RunTick(_tickDuration); // Fixed tick duration
-                    accumulatedTime -= _tickDuration;
-                }
+                    if (accumulatedTime > MaxCatchUpTime)
+                    {
+                        accumulatedTime = MaxCatchUpTime; // Prevent spiral of death
+                    }
 
-                // Render with interpolation
-                double interpolationFactor = accumulatedTime / _tickDuration;
-                RunRender(interpolationFactor);
+                    tickAccumulator += deltaTime;
+                    frameAccumulator += deltaTime;
+
+                    // Interlace updates and frames
+                    while (tickAccumulator >= _tickDuration || frameAccumulator >= _frameDuration)
+                    {
+                        if (tickAccumulator >= _tickDuration)
+                        {
+                            RunTick(_tickDuration);
+                            tickAccumulator -= _tickDuration;
+                        }
+
+                        if (frameAccumulator >= _frameDuration)
+                        {
+                            RunRender(frameAccumulator /
+                                      _frameDuration); // Use interpolation factor for smooth rendering
+                            frameAccumulator -= _frameDuration;
+                        }
+                    }
+
+                    UpdatePerformanceMetrics();
+                }
             }
 
             _stopwatch.Stop();
+        }
+
+        private void UpdatePerformanceMetrics()
+        {
+            const double updateInterval = 1.0; // Update metrics every second
+
+            if (_tickTimeAccumulator >= updateInterval)
+            {
+                CurrentUpdateFrequency = _ticksProcessed / _tickTimeAccumulator;
+                _ticksProcessed = 0;
+                _tickTimeAccumulator = 0.0;
+            }
+
+            if (_frameTimeAccumulator >= updateInterval)
+            {
+                CurrentRenderFrequency = _framesRendered / _frameTimeAccumulator;
+                _framesRendered = 0;
+                _frameTimeAccumulator = 0.0;
+            }
         }
 
         public void Stop() => _isRunning = false;
@@ -84,6 +128,12 @@ namespace VoxelSharp.Core.GameLoop
             _tickDuration = 1.0 / ticksPerSecond;
         }
 
+        public void SetTargetFramesPerSecond(int framesPerSecond)
+        {
+            _targetFramesPerSecond = framesPerSecond;
+            _frameDuration = 1.0 / framesPerSecond;
+        }
+
         public void RegisterUpdateAction(Action<double> tickAction)
         {
             if (!_tickActions.Contains(tickAction))
@@ -94,7 +144,7 @@ namespace VoxelSharp.Core.GameLoop
 
         public void RegisterUpdateAction(IUpdatable updatable)
         {
-            _tickActions.Add(updatable.Update);
+            RegisterUpdateAction(updatable.Update);
         }
 
         public void UnregisterUpdateAction(Action<double> tickAction)
@@ -104,7 +154,7 @@ namespace VoxelSharp.Core.GameLoop
 
         public void UnregisterUpdateAction(IUpdatable updatable)
         {
-            _tickActions.Remove(updatable.Update);
+            UnregisterUpdateAction(updatable.Update);
         }
 
         public void RegisterRenderAction(Action<double> renderAction)
@@ -117,13 +167,20 @@ namespace VoxelSharp.Core.GameLoop
 
         public void RegisterRenderAction(IRenderer renderer)
         {
-            _renderActions.Add(renderer.Render);
+            RegisterRenderAction(renderer.Render);
         }
 
         public void RegisterRenderProcessingAction(IRendererProcessing rendererProcessing)
         {
-            _preRenderActions.Add(rendererProcessing.PreRender);
-            _postRenderActions.Add(rendererProcessing.PostRender);
+            if (!_preRenderActions.Contains(rendererProcessing.PreRender))
+            {
+                _preRenderActions.Add(rendererProcessing.PreRender);
+            }
+
+            if (!_postRenderActions.Contains(rendererProcessing.PostRender))
+            {
+                _postRenderActions.Add(rendererProcessing.PostRender);
+            }
         }
 
         public void UnregisterRenderAction(Action<double> renderAction)
@@ -133,7 +190,7 @@ namespace VoxelSharp.Core.GameLoop
 
         public void UnregisterRenderAction(IRenderer renderer)
         {
-            _renderActions.Remove(renderer.Render);
+            UnregisterRenderAction(renderer.Render);
         }
 
         public void UnregisterRenderProcessingAction(IRendererProcessing rendererProcessing)
@@ -142,14 +199,18 @@ namespace VoxelSharp.Core.GameLoop
             _postRenderActions.Remove(rendererProcessing.PostRender);
         }
 
-        
-
         private void RunTick(double deltaTime)
         {
             foreach (var action in _tickActions)
             {
                 action(deltaTime);
             }
+
+            _ticksProcessed++;
+            _tickTimeAccumulator += deltaTime;
+            
+            Console.WriteLine("Update Frequency: " + CurrentUpdateFrequency);
+            Console.WriteLine("Render Frequency: " + CurrentRenderFrequency);
         }
 
         private void RunRender(double interpolationFactor)
@@ -168,6 +229,9 @@ namespace VoxelSharp.Core.GameLoop
             {
                 postRenderAction();
             }
+
+            _framesRendered++;
+            _frameTimeAccumulator += interpolationFactor * _tickDuration;
         }
     }
 }

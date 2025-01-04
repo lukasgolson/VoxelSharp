@@ -6,13 +6,13 @@ using OpenTK.Windowing.GraphicsLibraryFramework;
 using VoxelSharp.Abstractions.Loop;
 using VoxelSharp.Abstractions.Renderer;
 using VoxelSharp.Abstractions.Window;
+using VoxelSharp.Core.GameLoop;
 using VoxelSharp.Renderer.Interfaces;
 
 namespace VoxelSharp.Renderer;
 
-public class Window : NativeWindow, IWindow, IRendererProcessing
+public class Window : NativeWindow, IWindow, IRendererProcessing, IUpdatable
 {
-    public event EventHandler? OnLoadEvent;
     public event EventHandler<double>? OnWindowResize;
 
 
@@ -33,6 +33,7 @@ public class Window : NativeWindow, IWindow, IRendererProcessing
         CenterWindow();
 
         gameLoop.RegisterRenderProcessingAction(this);
+        gameLoop.RegisterUpdateAction(this);
     }
 
 
@@ -61,8 +62,6 @@ public class Window : NativeWindow, IWindow, IRendererProcessing
 
 
         GL.ClearColor(0.1f, 0.1f, 0.1f, 1.0f);
-
-        OnLoadEvent?.Invoke(this, EventArgs.Empty);
     }
 
     protected override void OnResize(ResizeEventArgs e)
@@ -81,7 +80,12 @@ public class Window : NativeWindow, IWindow, IRendererProcessing
 
     public void PostRender()
     {
-        Shader.UnUse();
+        Shader.Unuse();
         Context.SwapBuffers();
+    }
+
+    public void Update(double deltaTime)
+    {
+        ProcessWindowEvents(IsEventDriven);
     }
 }

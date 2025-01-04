@@ -7,10 +7,7 @@ namespace VoxelSharp.Abstractions.Loop
     /// </summary>
     public interface IGameLoop
     {
-        /// <summary>
-        /// Initializes the game loop manager.
-        /// </summary>
-        void Initialize();
+      
 
         /// <summary>
         /// Starts the game loop.

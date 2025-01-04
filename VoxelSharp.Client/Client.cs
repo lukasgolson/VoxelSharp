@@ -1,4 +1,5 @@
-﻿using DeftSharp.Windows.Input.Keyboard;
+﻿using System.Windows.Input;
+using DeftSharp.Windows.Input.Keyboard;
 using SimpleInjector;
 using VoxelSharp.Abstractions.Input;
 using VoxelSharp.Abstractions.Loop;
@@ -82,50 +83,22 @@ public class Client
 
     public void Run()
     {
-        var camera = Container.GetInstance<ICameraMatricesProvider>();
-        var mouseRelative = Container.GetInstance<IMouseRelative>();
-        var window = Container.GetInstance<IWindow>();
-
-        if (mouseRelative is MouseInput mouseInput)
-        {
-            mouseInput.StartTracking(new IntPtr(window.WindowHandle));
-        }
-
-        // get all IUpdatable and IRenderer instances from the container
-
-   
-        
-        
-        var GameLoop = Container.GetInstance<IGameLoop>();
+        var keyboardListener = Container.GetInstance<IKeyboardListener>();
 
 
+        var gameLoop = Container.GetInstance<IGameLoop>();
 
-        if (camera is IUpdatable cameraUpdatable)
-        {
-            GameLoop.RegisterUpdateAction(cameraUpdatable);
-        };
+        keyboardListener.Subscribe(Key.Escape, gameLoop.Stop);
 
-        if (mouseRelative is IUpdatable mouseUpdatable)
-        {
-            GameLoop.RegisterUpdateAction(mouseUpdatable);
-        }
-
-        
-        GameLoop.RegisterUpdateAction(ModLoader);
-        
-        GameLoop.RegisterRenderAction(ModLoader);
-        GameLoop.RegisterRenderAction(_worldRenderer);
+        gameLoop.RegisterUpdateAction(ModLoader);
+        gameLoop.RegisterRenderAction(ModLoader);
+        gameLoop.RegisterRenderAction(_worldRenderer);
 
 
+        ModLoader.InitializeShaders();
+        _worldRenderer.InitializeShaders();
 
-        window.OnLoadEvent += (_, _) =>
-        {
-            ModLoader.InitializeShaders();
-            _worldRenderer.InitializeShaders();
-        };
 
-        
-        GameLoop.Start();
-      
+        gameLoop.Start();
     }
 }

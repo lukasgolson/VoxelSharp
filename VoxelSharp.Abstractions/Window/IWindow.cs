@@ -1,6 +1,4 @@
-﻿using VoxelSharp.Abstractions.Renderer;
-
-namespace VoxelSharp.Abstractions.Window;
+﻿namespace VoxelSharp.Abstractions.Window;
 
 public interface IWindow
 {
@@ -8,9 +6,6 @@ public interface IWindow
     
     public long WindowHandle { get; }
     
-    // OnLoad event
-    public event EventHandler OnLoadEvent;
-
     public event EventHandler<double> OnWindowResize;
 
 
