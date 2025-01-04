@@ -30,7 +30,7 @@ public abstract class Camera : IUpdatable, ICameraMatricesProvider, IAspectRatio
     /// <param name="aspectRatio">The aspect ratio of the camera's view.</param>
     protected Camera(IGameLoop gameLoop, float aspectRatio = 16f / 9f)
     {
-        gameLoop.RegisterTickAction(this);
+        gameLoop.RegisterUpdateAction(this);
         SetProjectionMatrix(45, aspectRatio);
     }
 

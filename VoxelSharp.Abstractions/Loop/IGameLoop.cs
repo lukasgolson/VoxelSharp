@@ -48,17 +48,18 @@ namespace VoxelSharp.Abstractions.Loop
         /// Registers a tick action, which is called during each tick with a delta time.
         /// </summary>
         /// <param name="tickAction">The action to execute during each tick.</param>
-        void RegisterTickAction(Action<double> tickAction);
+        void RegisterUpdateAction(Action<double> tickAction);
         
-        void RegisterTickAction(IUpdatable updatable);
+        void RegisterUpdateAction(IUpdatable updatable);
+        
 
         /// <summary>
         /// Unregisters a previously registered tick action.
         /// </summary>
         /// <param name="tickAction">The action to remove.</param>
-        void UnregisterTickAction(Action<double> tickAction);
+        void UnregisterUpdateAction(Action<double> tickAction);
         
-        void UnregisterTickAction(IUpdatable updatable);
+        void UnregisterUpdateAction(IUpdatable updatable);
 
         /// <summary>
         /// Registers a render action, which is called as often as possible with an interpolation factor.
@@ -67,6 +68,8 @@ namespace VoxelSharp.Abstractions.Loop
         void RegisterRenderAction(Action<double> renderAction);
         
         void RegisterRenderAction(IRenderer renderer);
+        
+        void RegisterRenderProcessingAction(IRendererProcessing rendererProcessing);
 
         /// <summary>
         /// Unregisters a previously registered render action.
@@ -75,5 +78,7 @@ namespace VoxelSharp.Abstractions.Loop
         void UnregisterRenderAction(Action<double> renderAction);
         
         void UnregisterRenderAction(IRenderer renderer);
+        
+        void UnregisterRenderProcessingAction(IRendererProcessing rendererProcessing);
     }
 }

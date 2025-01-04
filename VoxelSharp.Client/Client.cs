@@ -93,23 +93,29 @@ public class Client
 
         // get all IUpdatable and IRenderer instances from the container
 
-
-        var updatables = new List<IUpdatable>();
-        var renderables = new List<IRenderer>();
-        var aspectRatioUpdatables = new List<IAspectRatioEventSubscriber>();
-
-        if (camera is IAspectRatioEventSubscriber aspectRatioSubscriber)
-            aspectRatioUpdatables.Add(aspectRatioSubscriber);
+   
+        
+        
+        var GameLoop = Container.GetInstance<IGameLoop>();
 
 
-        updatables.Add(ModLoader);
 
-        if (camera is IUpdatable cameraUpdatable) updatables.Add(cameraUpdatable);
+        if (camera is IUpdatable cameraUpdatable)
+        {
+            GameLoop.RegisterUpdateAction(cameraUpdatable);
+        };
 
-        if (mouseRelative is IUpdatable mouseUpdatable) updatables.Add(mouseUpdatable);
+        if (mouseRelative is IUpdatable mouseUpdatable)
+        {
+            GameLoop.RegisterUpdateAction(mouseUpdatable);
+        }
 
+        
+        GameLoop.RegisterUpdateAction(ModLoader);
+        
+        GameLoop.RegisterRenderAction(ModLoader);
+        GameLoop.RegisterRenderAction(_worldRenderer);
 
-        renderables.AddRange([ModLoader, _worldRenderer]);
 
 
         window.OnLoadEvent += (_, _) =>
@@ -118,27 +124,8 @@ public class Client
             _worldRenderer.InitializeShaders();
         };
 
-        window.OnUpdateEvent += (_, deltaTime) =>
-        {
-            foreach (var updatable in updatables) updatable.Update((float)deltaTime);
-        };
-
-        window.OnRenderEvent += (_, param) =>
-        {
-            foreach (var renderable in renderables)
-            {
-                renderable.Render(0);
-            }
-        };
-
-        window.OnWindowResize += (_, d) =>
-        {
-            foreach (var subscriber in aspectRatioUpdatables)
-            {
-                subscriber.UpdateAspectRatio((float)d);
-            }
-        };
-
+        
+        GameLoop.Start();
       
     }
 }

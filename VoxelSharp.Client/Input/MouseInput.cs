@@ -14,12 +14,14 @@ public partial class MouseInput : IUpdatable, IMouseRelative, IWindowTracker
 
     public double RelativeX { get; private set; }
     public double RelativeY { get; private set; }
-    
-    public MouseInput(IGameLoop gameLoop)
+
+    public MouseInput(IGameLoop gameLoop, IWindow window)
     {
-        gameLoop.RegisterTickAction(this);
+        gameLoop.RegisterUpdateAction(this);
+
+        window.OnLoadEvent += (_, _) => { StartTracking(new IntPtr(window.WindowHandle)); };
     }
-   
+
 
     public void StartTracking(IntPtr windowHandle)
     {
@@ -164,4 +166,3 @@ public partial class MouseInput : IUpdatable, IMouseRelative, IWindowTracker
         public int Y;
     }
 }
-

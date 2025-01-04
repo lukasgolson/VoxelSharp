@@ -3,6 +3,7 @@ using System.Windows.Input;
 using DeftSharp.Windows.Input.Keyboard;
 using VoxelSharp.Abstractions.Input;
 using VoxelSharp.Abstractions.Loop;
+using VoxelSharp.Abstractions.Window;
 using VoxelSharp.Core.Camera;
 using VoxelSharp.Core.Helpers;
 
@@ -19,10 +20,13 @@ namespace VoxelSharp.Client
 
         private readonly IMouseRelative _mouseInput;
 
-        public FlyingCamera(IGameLoop gameLoop, IMouseRelative mouseInput, IKeyboardListener keyboardListener)
+        public FlyingCamera(IGameLoop gameLoop, IMouseRelative mouseInput, IKeyboardListener keyboardListener,
+            IWindow window)
             : base(gameLoop)
         {
             _mouseInput = mouseInput;
+
+            window.OnWindowResize += (_, aspectRatio) => UpdateAspectRatio((float)aspectRatio);
 
 
             keyboardListener.Subscribe(Key.W, forward_start, null, KeyboardEvent.KeyDown);

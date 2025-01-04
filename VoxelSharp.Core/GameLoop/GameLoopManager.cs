@@ -7,14 +7,18 @@ namespace VoxelSharp.Core.GameLoop
     public class GameLoop : IGameLoop
     {
         private readonly List<Action<double>> _tickActions = [];
+
         private readonly List<Action<double>> _renderActions = [];
+        private readonly List<Action> _preRenderActions = [];
+        private readonly List<Action> _postRenderActions = [];
+
         private bool _isRunning;
         private bool _isPaused;
         private int _targetTicksPerSecond = 20;
         private double _tickDuration; // Time per tick in seconds
         private readonly Stopwatch _stopwatch = new();
-
         private const double MaxCatchUpTime = 0.25; // Maximum allowable catch-up time (e.g., 250ms)
+
 
         public void Initialize()
         {
@@ -80,7 +84,7 @@ namespace VoxelSharp.Core.GameLoop
             _tickDuration = 1.0 / ticksPerSecond;
         }
 
-        public void RegisterTickAction(Action<double> tickAction)
+        public void RegisterUpdateAction(Action<double> tickAction)
         {
             if (!_tickActions.Contains(tickAction))
             {
@@ -88,17 +92,17 @@ namespace VoxelSharp.Core.GameLoop
             }
         }
 
-        public void RegisterTickAction(IUpdatable updatable)
+        public void RegisterUpdateAction(IUpdatable updatable)
         {
             _tickActions.Add(updatable.Update);
         }
 
-        public void UnregisterTickAction(Action<double> tickAction)
+        public void UnregisterUpdateAction(Action<double> tickAction)
         {
             _tickActions.Remove(tickAction);
         }
 
-        public void UnregisterTickAction(IUpdatable updatable)
+        public void UnregisterUpdateAction(IUpdatable updatable)
         {
             _tickActions.Remove(updatable.Update);
         }
@@ -116,6 +120,12 @@ namespace VoxelSharp.Core.GameLoop
             _renderActions.Add(renderer.Render);
         }
 
+        public void RegisterRenderProcessingAction(IRendererProcessing rendererProcessing)
+        {
+            _preRenderActions.Add(rendererProcessing.PreRender);
+            _postRenderActions.Add(rendererProcessing.PostRender);
+        }
+
         public void UnregisterRenderAction(Action<double> renderAction)
         {
             _renderActions.Remove(renderAction);
@@ -125,6 +135,14 @@ namespace VoxelSharp.Core.GameLoop
         {
             _renderActions.Remove(renderer.Render);
         }
+
+        public void UnregisterRenderProcessingAction(IRendererProcessing rendererProcessing)
+        {
+            _preRenderActions.Remove(rendererProcessing.PreRender);
+            _postRenderActions.Remove(rendererProcessing.PostRender);
+        }
+
+        
 
         private void RunTick(double deltaTime)
         {
@@ -136,9 +154,19 @@ namespace VoxelSharp.Core.GameLoop
 
         private void RunRender(double interpolationFactor)
         {
+            foreach (var preRenderAction in _preRenderActions)
+            {
+                preRenderAction();
+            }
+
             foreach (var action in _renderActions)
             {
                 action(interpolationFactor);
+            }
+
+            foreach (var postRenderAction in _postRenderActions)
+            {
+                postRenderAction();
             }
         }
     }

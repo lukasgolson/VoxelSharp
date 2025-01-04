@@ -4,7 +4,7 @@ namespace VoxelSharp.Client;
 
 public static class Program
 {
-    public static Client Client { get; private set; }
+    public static Client? Client { get; private set; }
     
     public static void Main(string[] args)
     {

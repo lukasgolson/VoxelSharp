@@ -10,13 +10,9 @@ using VoxelSharp.Renderer.Interfaces;
 
 namespace VoxelSharp.Renderer;
 
-public class Window : NativeWindow, IWindow, IRenderer
+public class Window : NativeWindow, IWindow, IRendererProcessing
 {
-    private readonly ICameraMatricesProvider _cameraMatricesProvider;
-
     public event EventHandler? OnLoadEvent;
-    public event EventHandler<double>? OnUpdateEvent;
-    public event EventHandler<(ICameraMatricesProvider cameraMatrices, double interpolation)>? OnRenderEvent;
     public event EventHandler<double>? OnWindowResize;
 
 
@@ -28,18 +24,15 @@ public class Window : NativeWindow, IWindow, IRenderer
     };
 
 
-    public Window(ICameraMatricesProvider cameraMatricesProvider) :
-        base(NativeWindowSettings)
+    public Window(IGameLoop gameLoop) : base(NativeWindowSettings)
     {
-        _cameraMatricesProvider = cameraMatricesProvider;
-
         Context.MakeCurrent();
-
 
         Load();
 
-
         CenterWindow();
+
+        gameLoop.RegisterRenderProcessingAction(this);
     }
 
 
@@ -53,9 +46,6 @@ public class Window : NativeWindow, IWindow, IRenderer
             return windowHandle.ToInt64();
         }
     }
-
-  
-
 
     protected void Load()
     {
@@ -75,23 +65,6 @@ public class Window : NativeWindow, IWindow, IRenderer
         OnLoadEvent?.Invoke(this, EventArgs.Empty);
     }
 
-
-    public void InitializeShaders()
-    {
-    }
-
-    void IRenderer.Render(double interpolationFactor)
-    {
-        GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
-
-
-        OnRenderEvent?.Invoke(this, (_cameraMatricesProvider, interpolationFactor));
-
-        Shader.UnUse();
-        Context.SwapBuffers();
-    }
-
-
     protected override void OnResize(ResizeEventArgs e)
     {
         base.OnResize(e);
@@ -99,5 +72,16 @@ public class Window : NativeWindow, IWindow, IRenderer
         GL.Viewport(0, 0, Size.X, Size.Y);
 
         OnWindowResize?.Invoke(this, (float)Size.X / Size.Y);
+    }
+
+    public void PreRender()
+    {
+        GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
+    }
+
+    public void PostRender()
+    {
+        Shader.UnUse();
+        Context.SwapBuffers();
     }
 }
