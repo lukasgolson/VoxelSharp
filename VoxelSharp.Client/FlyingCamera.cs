@@ -110,7 +110,6 @@ namespace VoxelSharp.Client
 
         public override void Update(double deltaTime)
         {
-            base.Update(deltaTime);
 
             _velocity += _input * Speed * (float)deltaTime;
 
@@ -136,6 +135,9 @@ namespace VoxelSharp.Client
 
             UpdatePosition(worldMovement);
             UpdateRotation((float)_mouseInput.RelativeX, (float)-_mouseInput.RelativeY);
+
+            base.Update(deltaTime);
+
         }
     }
 }

@@ -42,6 +42,8 @@ namespace VoxelSharp.Core.GameLoop
             _ticksPerSecond = Stopwatch.Frequency;
         }
 
+      
+
         public void Start()
         {
             _isRunning = true;
@@ -208,9 +210,6 @@ namespace VoxelSharp.Core.GameLoop
 
             _ticksProcessed++;
             _tickTimeAccumulator += deltaTime;
-            
-            Console.WriteLine("Update Frequency: " + CurrentUpdateFrequency);
-            Console.WriteLine("Render Frequency: " + CurrentRenderFrequency);
         }
 
         private void RunRender(double interpolationFactor)
