@@ -65,6 +65,5 @@ public interface IMod
     /// <summary>
     ///     Called when it is time to initialize shaders for the mod.
     /// </summary>
-
     void InitializeShaders();
 }

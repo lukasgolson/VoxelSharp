@@ -10,8 +10,8 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\VoxelSharp.Client\VoxelSharp.Client.csproj" />
-        <ProjectReference Include="..\VoxelSharp.Core\VoxelSharp.Core.csproj" />
+        <ProjectReference Include="..\VoxelSharp.Client\VoxelSharp.Client.csproj"/>
+        <ProjectReference Include="..\VoxelSharp.Core\VoxelSharp.Core.csproj"/>
         <ProjectReference Include="..\VoxelSharp.Modding\VoxelSharp.Modding.csproj"/>
     </ItemGroup>
 

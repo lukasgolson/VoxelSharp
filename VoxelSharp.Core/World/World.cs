@@ -6,9 +6,6 @@ public class World
 {
     public readonly Chunk[] ChunkArray;
 
-    public int WorldSize { get; }
-    public int ChunkSize { get; }
-
 
     public World(int worldSize, int chunkSize)
     {
@@ -26,6 +23,9 @@ public class World
             ChunkArray[i] = chunk;
         }
     }
+
+    public int WorldSize { get; }
+    public int ChunkSize { get; }
 
 
     public Voxel GetVoxel(Position<int> worldPos)

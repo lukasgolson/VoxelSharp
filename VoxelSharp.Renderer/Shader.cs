@@ -1,4 +1,5 @@
-﻿using OpenTK.Graphics.OpenGL4;
+﻿using System.Numerics;
+using OpenTK.Graphics.OpenGL4;
 using OpenTK.Mathematics;
 using VoxelSharp.Renderer.Helpers;
 using Vector3 = OpenTK.Mathematics.Vector3;
@@ -8,9 +9,9 @@ namespace VoxelSharp.Renderer;
 public class Shader
 {
     private readonly Dictionary<string, int> _attributeLocations;
+    private readonly int _handle;
 
     private readonly Dictionary<string, int> _uniformLocations;
-    private readonly int _handle;
 
     public Shader(string vertPath, string fragPath)
     {
@@ -127,10 +128,10 @@ public class Shader
             GL.UniformMatrix4(location, true, ref data);
     }
 
-    public void SetUniform(string name, System.Numerics.Matrix4x4 data)
+    public void SetUniform(string name, Matrix4x4 data)
     {
         if (!_uniformLocations.TryGetValue(name, out var location) || location == -1) return;
-        
+
         var openTkMatrix = data.ToMatrix4();
 
         GL.UniformMatrix4(location, true, ref openTkMatrix);

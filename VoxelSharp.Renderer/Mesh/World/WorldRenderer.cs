@@ -4,10 +4,9 @@ namespace VoxelSharp.Renderer.Mesh.World;
 
 public class WorldRenderer : IRenderer
 {
+    private readonly ICameraMatricesProvider _cameraMatricesProvider;
     private readonly ChunkMesh[] _chunkMeshArray;
     private Shader? _chunkShader;
-
-    private readonly ICameraMatricesProvider _cameraMatricesProvider;
 
     public WorldRenderer(Core.World.World world, ICameraMatricesProvider cameraMatricesProvider)
     {
@@ -34,19 +33,14 @@ public class WorldRenderer : IRenderer
     public void Render(double interpolationFactor)
     {
         if (_chunkShader == null)
-        {
             throw new InvalidOperationException("Shaders not initialized. Call InitializeShaders before rendering.");
-        }
 
         _chunkShader.Use();
 
         _chunkShader.SetUniform("m_view", _cameraMatricesProvider.GetViewMatrix());
         _chunkShader.SetUniform("m_projection", _cameraMatricesProvider.GetProjectionMatrix());
 
-        foreach (var chunkMesh in _chunkMeshArray)
-        {
-            chunkMesh.Render(_chunkShader);
-        }
+        foreach (var chunkMesh in _chunkMeshArray) chunkMesh.Render(_chunkShader);
 
         Shader.Unuse();
     }

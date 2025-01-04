@@ -6,8 +6,8 @@ namespace VoxelSharp.Core.World;
 public class Chunk
 {
     /// <summary>
-    /// Creates a chunk at the given position and initializes a Memory buffer
-    /// for voxel data. The buffer is initialized with transparent voxels.
+    ///     Creates a chunk at the given position and initializes a Memory buffer
+    ///     for voxel data. The buffer is initialized with transparent voxels.
     /// </summary>
     /// <param name="position">World position of the chunk.</param>
     /// <param name="chunkSize">Size of the chunk along one dimension (default: 16).</param>
@@ -24,47 +24,44 @@ public class Chunk
 
         // Fill the Memory<Voxel> with transparent voxels
         var span = VoxelBuffer.Span;
-            
+
         var transparentVoxel = new Voxel(Color.Transparent);
-            
-        for (var i = 0; i < span.Length; i++)
-        {
-            span[i] = transparentVoxel;
-        }
+
+        for (var i = 0; i < span.Length; i++) span[i] = transparentVoxel;
     }
 
     /// <summary>
-    /// Gets the size of the chunk along one dimension.
+    ///     Gets the size of the chunk along one dimension.
     /// </summary>
     public int ChunkSize { get; }
 
     /// <summary>
-    /// Gets the 2D area of the chunk (ChunkSize * ChunkSize).
+    ///     Gets the 2D area of the chunk (ChunkSize * ChunkSize).
     /// </summary>
     public int ChunkArea { get; }
 
     /// <summary>
-    /// Gets the total volume of the chunk (ChunkSize^3).
+    ///     Gets the total volume of the chunk (ChunkSize^3).
     /// </summary>
     public int ChunkVolume { get; }
 
     /// <summary>
-    /// Indicates whether the chunk requires remeshing or other updates.
+    ///     Indicates whether the chunk requires remeshing or other updates.
     /// </summary>
     public bool IsDirty { get; set; }
 
     /// <summary>
-    /// Holds the chunk's voxel data in a Memory buffer to minimize heap allocations.
+    ///     Holds the chunk's voxel data in a Memory buffer to minimize heap allocations.
     /// </summary>
     private Memory<Voxel> VoxelBuffer { get; }
 
     /// <summary>
-    /// The world position of this chunk.
+    ///     The world position of this chunk.
     /// </summary>
     public Position<int> Position { get; }
 
     /// <summary>
-    /// Sets a voxel at the specified local chunk coordinates, marking the chunk dirty.
+    ///     Sets a voxel at the specified local chunk coordinates, marking the chunk dirty.
     /// </summary>
     /// <param name="position">Local position within the chunk.</param>
     /// <param name="value">Voxel data to set.</param>
@@ -77,7 +74,7 @@ public class Chunk
     }
 
     /// <summary>
-    /// Gets a voxel at the specified local chunk coordinates.
+    ///     Gets a voxel at the specified local chunk coordinates.
     /// </summary>
     /// <param name="position">Local position within the chunk.</param>
     /// <returns>The voxel at the given position.</returns>
@@ -88,7 +85,7 @@ public class Chunk
     }
 
     /// <summary>
-    /// Calculates the flat index in VoxelBuffer for a 3D coordinate within this chunk.
+    ///     Calculates the flat index in VoxelBuffer for a 3D coordinate within this chunk.
     /// </summary>
     /// <param name="position">Local position within the chunk.</param>
     /// <returns>Zero-based index within the VoxelBuffer.</returns>
@@ -96,12 +93,12 @@ public class Chunk
     public int GetVoxelIndex(Position<int> position)
     {
         return position.X
-               + (ChunkSize * position.Z)
-               + (ChunkArea * position.Y);
+               + ChunkSize * position.Z
+               + ChunkArea * position.Y;
     }
 
     /// <summary>
-    /// Provides a span of the chunk's voxel data, useful for operations on a sub-region.
+    ///     Provides a span of the chunk's voxel data, useful for operations on a sub-region.
     /// </summary>
     /// <param name="xStart">Starting X coordinate within the chunk.</param>
     /// <param name="yStart">Starting Y coordinate within the chunk.</param>
@@ -122,9 +119,9 @@ public class Chunk
         // Return a slice of the Memory<Voxel>
         return VoxelBuffer.Slice(offset, length).Span;
     }
-        
+
     /// <summary>
-    /// Provides a span of the chunk's voxel data, useful for operations on the entire chunk.
+    ///     Provides a span of the chunk's voxel data, useful for operations on the entire chunk.
     /// </summary>
     /// <returns>A </returns>
     public Span<Voxel> GetVoxelSpan()

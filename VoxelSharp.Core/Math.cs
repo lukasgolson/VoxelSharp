@@ -12,7 +12,6 @@ public static class Math
     /// <param name="mod">The divisor.</param>
     /// <returns>The remainder of the division, adjusted to be non-negative.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-
     public static int EModulo(int value, int mod)
     {
         return mod switch
@@ -22,14 +21,14 @@ public static class Math
             _ => (value % mod + mod) % mod
         };
     }
-    
+
     public static T Clamp<T>(T value, T min, T max) where T : INumber<T>
     {
         return value < min ? min : value > max ? max : value;
     }
 
     /// <summary>
-    ///  Converts an angle in degrees to radians.
+    ///     Converts an angle in degrees to radians.
     /// </summary>
     /// <returns>The angle in radians.</returns>
     public static T ToRadians<T>(this T degrees) where T : INumber<T>
@@ -38,5 +37,4 @@ public static class Math
         var oneEighty = T.CreateChecked(180.0);
         return degrees * pi / oneEighty;
     }
-    
 }

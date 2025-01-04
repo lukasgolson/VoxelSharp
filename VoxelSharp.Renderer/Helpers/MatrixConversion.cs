@@ -1,7 +1,11 @@
-﻿namespace VoxelSharp.Renderer.Helpers;
+﻿using System.Numerics;
+using OpenTK.Mathematics;
 
-using System.Numerics; // For Matrix4x4
-using OpenTK.Mathematics; // For Matrix4
+namespace VoxelSharp.Renderer.Helpers;
+
+// For Matrix4x4
+
+// For Matrix4
 
 public static class MatrixConversion
 {

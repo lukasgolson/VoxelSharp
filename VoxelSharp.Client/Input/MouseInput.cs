@@ -1,25 +1,42 @@
-﻿using VoxelSharp.Abstractions.Input;
+﻿using System.Runtime.InteropServices;
+using VoxelSharp.Abstractions.Input;
 using VoxelSharp.Abstractions.Loop;
-using System.Runtime.InteropServices;
 using VoxelSharp.Abstractions.Window;
 
 namespace VoxelSharp.Client.Input;
 
 public partial class MouseInput : IUpdatable, IMouseRelative, IWindowTracker
 {
-    private Point _lastMousePosition;
     private bool _isTracking;
+    private Point _lastMousePosition;
     private IntPtr _windowHandle;
-
-
-    public double RelativeX { get; private set; }
-    public double RelativeY { get; private set; }
 
     public MouseInput(IGameLoop gameLoop, IWindow window)
     {
         gameLoop.RegisterUpdateAction(this);
 
         StartTracking(new IntPtr(window.WindowHandle));
+    }
+
+
+    public double RelativeX { get; private set; }
+    public double RelativeY { get; private set; }
+
+    public void Update(double deltaTime)
+    {
+        if (!_isTracking) return;
+
+        if (!GetCursorPos(out var currentMousePosition)) return;
+
+        // Calculate relative movement
+        var deltaX = currentMousePosition.X - _lastMousePosition.X;
+        var deltaY = currentMousePosition.Y - _lastMousePosition.Y;
+
+        // Trigger relative movement updates
+        (RelativeX, RelativeY) = (deltaX, deltaY);
+
+        // Reset the cursor position to the centre of the window
+        ResetCursorToCenter();
     }
 
 
@@ -51,23 +68,6 @@ public partial class MouseInput : IUpdatable, IMouseRelative, IWindowTracker
         SetCursorVisibility(true);
     }
 
-    public void Update(double deltaTime)
-    {
-        if (!_isTracking) return;
-
-        if (!GetCursorPos(out var currentMousePosition)) return;
-
-        // Calculate relative movement
-        var deltaX = currentMousePosition.X - _lastMousePosition.X;
-        var deltaY = currentMousePosition.Y - _lastMousePosition.Y;
-
-        // Trigger relative movement updates
-        (RelativeX, RelativeY) = (deltaX, deltaY);
-
-        // Reset the cursor position to the centre of the window
-        ResetCursorToCenter();
-    }
-
     private void ResetCursorToCenter()
     {
         if (_windowHandle == IntPtr.Zero) return;
@@ -78,8 +78,8 @@ public partial class MouseInput : IUpdatable, IMouseRelative, IWindowTracker
             ClientToScreen(_windowHandle, ref screenPoint);
 
             // Calculate the centre of the window
-            int centreX = screenPoint.X + (rect.Right - rect.Left) / 2;
-            int centreY = screenPoint.Y + (rect.Bottom - rect.Top) / 2;
+            var centreX = screenPoint.X + (rect.Right - rect.Left) / 2;
+            var centreY = screenPoint.Y + (rect.Bottom - rect.Top) / 2;
 
             // Set the cursor to the centre
             SetCursorPos(centreX, centreY);

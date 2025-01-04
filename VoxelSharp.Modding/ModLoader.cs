@@ -131,10 +131,7 @@ public class ModLoader
 
             try
             {
-                if (Activator.CreateInstance(type) is not IMod mod)
-                {
-                    continue;
-                }
+                if (Activator.CreateInstance(type) is not IMod mod) continue;
 
                 mods.Add(mod);
 

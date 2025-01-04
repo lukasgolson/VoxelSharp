@@ -1,7 +1,6 @@
 using VoxelSharp.Abstractions.Loop;
 using VoxelSharp.Abstractions.Renderer;
 using VoxelSharp.Modding;
-using VoxelSharp.Renderer.Interfaces;
 
 namespace VoxelSharp.Client.Wrappers;
 
@@ -10,7 +9,6 @@ namespace VoxelSharp.Client.Wrappers;
 /// </summary>
 public class ModLoaderWrapper : IRenderer, IUpdatable
 {
-    
     /// <summary>
     ///     Initializes a new instance of the ModLoaderWrapper.
     /// </summary>
@@ -18,7 +16,7 @@ public class ModLoaderWrapper : IRenderer, IUpdatable
     {
         ModLoader = modLoader;
     }
-   
+
 
     /// <summary>
     ///     Gets the underlying ModLoader instance.
@@ -37,7 +35,6 @@ public class ModLoaderWrapper : IRenderer, IUpdatable
     {
         ModLoader.Render();
     }
-  
 
 
     /// <summary>

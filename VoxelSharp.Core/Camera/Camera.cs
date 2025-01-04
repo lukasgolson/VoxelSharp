@@ -27,10 +27,19 @@ public abstract class Camera : IUpdatable, ICameraMatricesProvider, IAspectRatio
     /// <summary>
     ///     Initializes a new instance of the Camera class.
     /// </summary>
+    /// <param name="gameLoop"> The gameloop to register camera updates to.</param>
     /// <param name="aspectRatio">The aspect ratio of the camera's view.</param>
     protected Camera(IGameLoop gameLoop, float aspectRatio = 16f / 9f)
     {
         gameLoop.RegisterUpdateAction(this);
+        SetProjectionMatrix(45, aspectRatio);
+    }
+
+    /// <summary>
+    ///     Updates the aspect ratio for the camera's projection matrix.
+    /// </summary>
+    public void UpdateAspectRatio(float aspectRatio)
+    {
         SetProjectionMatrix(45, aspectRatio);
     }
 
@@ -120,13 +129,5 @@ public abstract class Camera : IUpdatable, ICameraMatricesProvider, IAspectRatio
 
 
         _pitch = Math.Clamp(_pitch + deltaPitch * MouseSensitivity, -89f, 89f);
-    }
-
-    /// <summary>
-    ///     Updates the aspect ratio for the camera's projection matrix.
-    /// </summary>
-    public void UpdateAspectRatio(float aspectRatio)
-    {
-        SetProjectionMatrix(45, aspectRatio);
     }
 }

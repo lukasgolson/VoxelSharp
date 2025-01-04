@@ -1,6 +1,5 @@
 ﻿using System.Windows.Input;
 using DeftSharp.Windows.Input.Keyboard;
-using SimpleInjector;
 using VoxelSharp.Abstractions.Client;
 using VoxelSharp.Abstractions.Loop;
 using VoxelSharp.Abstractions.Renderer;
@@ -13,12 +12,10 @@ namespace VoxelSharp.Client;
 
 public class Client : IClient
 {
-    private readonly WorldRenderer _worldRenderer;
-    private readonly IKeyboardListener _keyboardListener;
     private readonly IGameLoop _gameLoop;
+    private readonly IKeyboardListener _keyboardListener;
     private readonly ModLoaderWrapper _modloaderWrapper;
-
-    public World World { get; }
+    private readonly WorldRenderer _worldRenderer;
 
 
     public Client(IKeyboardListener keyboardListener, IGameLoop gameLoop,
@@ -28,7 +25,7 @@ public class Client : IClient
         _gameLoop = gameLoop;
 
         _modloaderWrapper = modLoaderWrapper;
-        
+
 
         World = new World(2, 16);
         _worldRenderer = new WorldRenderer(World, cameraMatricesProvider);
@@ -36,6 +33,8 @@ public class Client : IClient
 
         World.SetVoxel(new Position<int>(0, 0, 0), new Voxel(Color.Red));
     }
+
+    public World World { get; }
 
 
     public void Run()

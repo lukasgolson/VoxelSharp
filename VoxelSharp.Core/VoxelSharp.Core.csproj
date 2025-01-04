@@ -8,12 +8,12 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <Folder Include="ApplicationBuilding\" />
-      <Folder Include="Math\" />
+        <Folder Include="ApplicationBuilding\"/>
+        <Folder Include="Math\"/>
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\VoxelSharp.Abstractions\VoxelSharp.Abstractions.csproj" />
+        <ProjectReference Include="..\VoxelSharp.Abstractions\VoxelSharp.Abstractions.csproj"/>
     </ItemGroup>
 
 </Project>
