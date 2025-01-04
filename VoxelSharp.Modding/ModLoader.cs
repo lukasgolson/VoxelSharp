@@ -12,24 +12,18 @@ public class ModLoader
 
     private bool _loaded;
     private List<IMod> _mods = [];
-    private readonly string _modsPath;
-
-    public ModLoader(string modsPath)
-    {
-        // resolve the mods path to the absolute path
-        _modsPath = Path.GetFullPath(modsPath);
-        Console.WriteLine($"Resolved mods path to {_modsPath}");
-    }
 
 
-    public void LoadMods()
+    public void LoadMods(string modsPath)
     {
         if (_loaded) throw new InvalidOperationException("Mods have already been loaded.");
 
+        var path = Path.GetFullPath(modsPath);
 
-        var assemblyPaths = DiscoverAssemblies();
 
-        Console.WriteLine($"Found {assemblyPaths.Count} assemblies in {_modsPath}");
+        var assemblyPaths = DiscoverAssemblies(path);
+
+        Console.WriteLine($"Found {assemblyPaths.Count} assemblies in {path}");
 
         var modTypes = LoadAssemblies(assemblyPaths);
 
@@ -96,11 +90,11 @@ public class ModLoader
     }
 
 
-    private List<string> DiscoverAssemblies()
+    private static List<string> DiscoverAssemblies(string modsPath)
     {
-        if (!Directory.Exists(_modsPath)) throw new DirectoryNotFoundException($"Directory not found: {_modsPath}");
+        if (!Directory.Exists(modsPath)) throw new DirectoryNotFoundException($"Directory not found: {modsPath}");
 
-        return Directory.GetFiles(_modsPath, "*.dll").ToList();
+        return Directory.GetFiles(modsPath, "*.dll").ToList();
     }
 
     private static List<Type> LoadAssemblies(IEnumerable<string> assemblyPaths)

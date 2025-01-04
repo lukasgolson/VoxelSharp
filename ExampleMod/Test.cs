@@ -1,5 +1,6 @@
 using HarmonyLib;
 using SimpleInjector;
+using VoxelSharp.Abstractions.Client;
 using VoxelSharp.Client;
 using VoxelSharp.Core.Structs;
 using VoxelSharp.Core.World;
@@ -25,28 +26,33 @@ public class Test : IMod
         return true;
     }
 
+    private Container _container;
+
     public bool Initialize(Harmony harmony, Container container)
     {
         Console.WriteLine("Initialize Called");
-        
+
+        _container = container;
+
         return true;
     }
 
-    
+
     private bool triggered = false;
+
     public bool Update(double deltaTime)
     {
         if (!triggered)
         {
-            SetCursor(Program.Client.World);
+            var client = _container.GetInstance<IClient>() as Client;
+            SetCursor(client.World);
         }
-        
+
         return true;
     }
 
     public bool Render()
     {
-
         return true;
     }
 
@@ -58,12 +64,9 @@ public class Test : IMod
 
     private void SetCursor(World world)
     {
-        
         world.SetVoxel(worldPos: new Position<int>(0, 0, 0), voxel: new Voxel(Color.Red)); // Origin in red
         world.SetVoxel(worldPos: new Position<int>(1, 0, 0), voxel: new Voxel(Color.Green)); // X-axis in green
         world.SetVoxel(worldPos: new Position<int>(0, 1, 0), voxel: new Voxel(Color.Blue)); // Y-axis in blue
         world.SetVoxel(worldPos: new Position<int>(0, 0, 1), voxel: new Voxel(Color.Yellow)); // Z-axis in yellow
-        
-        
     }
 }

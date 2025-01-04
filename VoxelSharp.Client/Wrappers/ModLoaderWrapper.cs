@@ -14,11 +14,11 @@ public class ModLoaderWrapper : IRenderer, IUpdatable
     /// <summary>
     ///     Initializes a new instance of the ModLoaderWrapper.
     /// </summary>
-    /// <param name="modPath">The path to the mods to load.</param>
-    public ModLoaderWrapper(string modPath)
+    public ModLoaderWrapper(ModLoader modLoader)
     {
-        ModLoader = new ModLoader(modPath);
+        ModLoader = modLoader;
     }
+   
 
     /// <summary>
     ///     Gets the underlying ModLoader instance.

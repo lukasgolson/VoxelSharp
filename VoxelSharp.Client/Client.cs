@@ -1,50 +1,34 @@
 ﻿using System.Windows.Input;
 using DeftSharp.Windows.Input.Keyboard;
 using SimpleInjector;
-using VoxelSharp.Abstractions.Input;
+using VoxelSharp.Abstractions.Client;
 using VoxelSharp.Abstractions.Loop;
 using VoxelSharp.Abstractions.Renderer;
-using VoxelSharp.Abstractions.Window;
-using VoxelSharp.Client.Input;
 using VoxelSharp.Client.Wrappers;
-using VoxelSharp.Core.GameLoop;
 using VoxelSharp.Core.Structs;
 using VoxelSharp.Core.World;
-using VoxelSharp.Renderer;
 using VoxelSharp.Renderer.Mesh.World;
 
 namespace VoxelSharp.Client;
 
-public class Client
+public class Client : IClient
 {
-    public Container Container { get; }
-
     private readonly WorldRenderer _worldRenderer;
-    private ModLoaderWrapper ModLoader { get; init; }
+    private readonly IKeyboardListener _keyboardListener;
+    private readonly IGameLoop _gameLoop;
+    private readonly ModLoaderWrapper _modloaderWrapper;
 
     public World World { get; }
 
 
-    public Client(string[] args)
+    public Client(IKeyboardListener keyboardListener, IGameLoop gameLoop,
+        ICameraMatricesProvider cameraMatricesProvider, ModLoaderWrapper modLoaderWrapper)
     {
-        Container = new Container();
+        _keyboardListener = keyboardListener;
+        _gameLoop = gameLoop;
 
-        // Parse CLI arguments
-        ModLoader = LoadMods(GetModsDirectory(args), Container);
-
-        Container.RegisterSingleton<IGameLoop, GameLoop>();
-
-        Container.RegisterSingleton<IMouseRelative, MouseInput>();
-        Container.RegisterSingleton<IKeyboardListener, KeyboardListener>();
-        Container.RegisterSingleton<ICameraMatricesProvider, FlyingCamera>();
-        Container.RegisterSingleton<IWindow, Window>();
-
-
-        Container.Verify();
-
-
-        var cameraMatricesProvider = Container.GetInstance<ICameraMatricesProvider>();
-
+        _modloaderWrapper = modLoaderWrapper;
+        
 
         World = new World(2, 16);
         _worldRenderer = new WorldRenderer(World, cameraMatricesProvider);
@@ -53,52 +37,20 @@ public class Client
         World.SetVoxel(new Position<int>(0, 0, 0), new Voxel(Color.Red));
     }
 
-    private static ModLoaderWrapper LoadMods(string modsDirectory, Container container)
-    {
-        // Ensure the mods directory exists
-        if (!Directory.Exists(modsDirectory)) Directory.CreateDirectory(modsDirectory);
-
-        // Initialize ModLoader with the specified directory
-        var loader = new ModLoaderWrapper(modsDirectory);
-
-        loader.ModLoader.LoadMods();
-
-        loader.ModLoader.InitializeMods(container);
-
-        return loader;
-    }
-
-    private static string GetModsDirectory(string[] args)
-    {
-        var modsDirectory = "mods"; // Default directory
-        for (var i = 0; i < args.Length; i++)
-            if (args[i] == "--mods" && i + 1 < args.Length)
-            {
-                modsDirectory = args[i + 1];
-                break;
-            }
-
-        return modsDirectory;
-    }
 
     public void Run()
     {
-        var keyboardListener = Container.GetInstance<IKeyboardListener>();
+        _keyboardListener.Subscribe(Key.Escape, _gameLoop.Stop);
+
+        _gameLoop.RegisterUpdateAction(_modloaderWrapper);
+        _gameLoop.RegisterRenderAction(_modloaderWrapper);
+        _gameLoop.RegisterRenderAction(_worldRenderer);
 
 
-        var gameLoop = Container.GetInstance<IGameLoop>();
-
-        keyboardListener.Subscribe(Key.Escape, gameLoop.Stop);
-
-        gameLoop.RegisterUpdateAction(ModLoader);
-        gameLoop.RegisterRenderAction(ModLoader);
-        gameLoop.RegisterRenderAction(_worldRenderer);
-
-
-        ModLoader.InitializeShaders();
+        _modloaderWrapper.InitializeShaders();
         _worldRenderer.InitializeShaders();
 
 
-        gameLoop.Start();
+        _gameLoop.Start();
     }
 }
