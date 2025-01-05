@@ -23,9 +23,15 @@ public static class Program
     {
         var modsDirectory = GetModsDirectory(args);
         ModLoader.LoadMods(modsDirectory);
-        ModLoader.InitializeMods(Container);
+        ModLoader.PreInitializeMods(Container);
 
         RegisterDefaultDependencies();
+
+
+        ModLoader.InitializeMods(Container);
+
+        
+        
 
 
         var client = Container.GetInstance<IClient>();

@@ -10,13 +10,18 @@ public class ModLoader
 {
     private readonly DependencyResolver _resolver = new();
 
-    private bool _loaded;
     private List<IMod> _mods = [];
+    private readonly Dictionary<string, Harmony> _harmonyInstances = new();
 
+    public bool Loaded { get; private set; }
+
+    public bool Preinitialized { get; private set; }
+
+    public bool Initialized { get; private set; }
 
     public void LoadMods(string modsPath)
     {
-        if (_loaded) throw new InvalidOperationException("Mods have already been loaded.");
+        if (Loaded) throw new InvalidOperationException("Mods have already been loaded.");
 
         var path = Path.GetFullPath(modsPath);
 
@@ -41,26 +46,59 @@ public class ModLoader
 
 
         _mods = orderedMods;
-        _loaded = true;
+        Loaded = true;
     }
 
-    public void InitializeMods(Container container)
+
+    public void PreInitializeMods(Container container)
     {
-        if (!_loaded)
+        if (!Loaded)
             throw new InvalidOperationException("Mods have not been loaded yet. Call " + nameof(LoadMods) + " first.");
+
+        if (Preinitialized) throw new InvalidOperationException("Mods have already been pre-initialized.");
 
         foreach (var mod in _mods)
         {
-            mod.PreInitialize(container);
+            var harmony = GetHarmony(mod.ModInfo.Id);
+            mod.PreInitialize(harmony, container);
+
             Console.WriteLine($"Pre-initialized mod {mod.ModInfo.Name} v{mod.ModInfo.Version}");
         }
 
+        Preinitialized = true;
+    }
+
+
+    public void InitializeMods(Container container)
+    {
+        if (!Loaded)
+            throw new InvalidOperationException("Mods have not been loaded yet. Call " + nameof(LoadMods) + " first.");
+
+        if (!Preinitialized)
+            throw new InvalidOperationException("Mods have not been pre-initialized yet. Call " +
+                                                nameof(PreInitializeMods) + " first.");
+
+        if (Initialized) throw new InvalidOperationException("Mods have already been initialized.");
+
+
         foreach (var mod in _mods)
         {
-            var harmony = new Harmony(mod.ModInfo.Id);
+            var harmony = GetHarmony(mod.ModInfo.Id);
             mod.Initialize(harmony, container);
+
             Console.WriteLine($"Initialized mod {mod.ModInfo.Name} v{mod.ModInfo.Version}");
         }
+
+        Initialized = true;
+    }
+
+    private Harmony GetHarmony(string modId)
+    {
+        if (_harmonyInstances.TryGetValue(modId, out var harmony)) return harmony;
+        harmony = new Harmony(modId);
+        _harmonyInstances.Add(modId, harmony);
+
+        return harmony;
     }
 
     public void Update(double deltaTime)

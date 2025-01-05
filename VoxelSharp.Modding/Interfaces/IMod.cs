@@ -25,7 +25,7 @@ public interface IMod
     /// <returns>
     ///     Returns <c>true</c> if the pre-initialization was successful; otherwise, <c>false</c>.
     /// </returns>
-    bool PreInitialize(Container container);
+    bool PreInitialize(Harmony harmony, Container container);
 
     /// <summary>
     ///     Called when the mod is initialized.
