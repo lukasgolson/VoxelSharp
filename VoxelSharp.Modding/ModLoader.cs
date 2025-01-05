@@ -1,5 +1,6 @@
 using System.Reflection;
 using HarmonyLib;
+using SimpleInjector;
 using VoxelSharp.Modding.Interfaces;
 using VoxelSharp.Modding.Structs;
 
@@ -9,27 +10,25 @@ public class ModLoader
 {
     private readonly DependencyResolver _resolver = new();
 
-    private bool _initialized;
     private List<IMod> _mods = [];
-    private readonly string _modsPath;
+    private readonly Dictionary<string, Harmony> _harmonyInstances = new();
 
-    public ModLoader(string modsPath)
+    public bool Loaded { get; private set; }
+
+    public bool Preinitialized { get; private set; }
+
+    public bool Initialized { get; private set; }
+
+    public void LoadMods(string modsPath)
     {
-        // resolve the mods path to the absolute path
-        _modsPath = Path.GetFullPath(modsPath);
-        Console.WriteLine($"Resolved mods path to {_modsPath}");
-        
-    }
+        if (Loaded) throw new InvalidOperationException("Mods have already been loaded.");
+
+        var path = Path.GetFullPath(modsPath);
 
 
-    public void LoadMods()
-    {
-        if (_initialized) throw new InvalidOperationException("ModLoader has already been initialized.");
-        
+        var assemblyPaths = DiscoverAssemblies(path);
 
-        var assemblyPaths = DiscoverAssemblies();
-
-        Console.WriteLine($"Found {assemblyPaths.Count} assemblies in {_modsPath}");
+        Console.WriteLine($"Found {assemblyPaths.Count} assemblies in {path}");
 
         var modTypes = LoadAssemblies(assemblyPaths);
 
@@ -45,21 +44,61 @@ public class ModLoader
 
         Console.WriteLine($"Resolved loading order for {orderedMods.Count} mods");
 
-        foreach (var mod in orderedMods)
+
+        _mods = orderedMods;
+        Loaded = true;
+    }
+
+
+    public void PreInitializeMods(Container container)
+    {
+        if (!Loaded)
+            throw new InvalidOperationException("Mods have not been loaded yet. Call " + nameof(LoadMods) + " first.");
+
+        if (Preinitialized) throw new InvalidOperationException("Mods have already been pre-initialized.");
+
+        foreach (var mod in _mods)
         {
-            mod.PreInitialize();
+            var harmony = GetHarmony(mod.ModInfo.Id);
+            mod.PreInitialize(harmony, container);
+
             Console.WriteLine($"Pre-initialized mod {mod.ModInfo.Name} v{mod.ModInfo.Version}");
         }
 
-        foreach (var mod in orderedMods)
+        Preinitialized = true;
+    }
+
+
+    public void InitializeMods(Container container)
+    {
+        if (!Loaded)
+            throw new InvalidOperationException("Mods have not been loaded yet. Call " + nameof(LoadMods) + " first.");
+
+        if (!Preinitialized)
+            throw new InvalidOperationException("Mods have not been pre-initialized yet. Call " +
+                                                nameof(PreInitializeMods) + " first.");
+
+        if (Initialized) throw new InvalidOperationException("Mods have already been initialized.");
+
+
+        foreach (var mod in _mods)
         {
-            var harmony = new Harmony(mod.ModInfo.Id);
-            mod.Initialize(harmony);
+            var harmony = GetHarmony(mod.ModInfo.Id);
+            mod.Initialize(harmony, container);
+
             Console.WriteLine($"Initialized mod {mod.ModInfo.Name} v{mod.ModInfo.Version}");
         }
 
-        _mods = orderedMods;
-        _initialized = true;
+        Initialized = true;
+    }
+
+    private Harmony GetHarmony(string modId)
+    {
+        if (_harmonyInstances.TryGetValue(modId, out var harmony)) return harmony;
+        harmony = new Harmony(modId);
+        _harmonyInstances.Add(modId, harmony);
+
+        return harmony;
     }
 
     public void Update(double deltaTime)
@@ -89,11 +128,11 @@ public class ModLoader
     }
 
 
-    private List<string> DiscoverAssemblies()
+    private static List<string> DiscoverAssemblies(string modsPath)
     {
-        if (!Directory.Exists(_modsPath)) throw new DirectoryNotFoundException($"Directory not found: {_modsPath}");
+        if (!Directory.Exists(modsPath)) throw new DirectoryNotFoundException($"Directory not found: {modsPath}");
 
-        return Directory.GetFiles(_modsPath, "*.dll").ToList();
+        return Directory.GetFiles(modsPath, "*.dll").ToList();
     }
 
     private static List<Type> LoadAssemblies(IEnumerable<string> assemblyPaths)
@@ -130,13 +169,10 @@ public class ModLoader
 
             try
             {
-                if (Activator.CreateInstance(type) is not IMod mod)
-                {
-                    continue;
-                }
-                
+                if (Activator.CreateInstance(type) is not IMod mod) continue;
+
                 mods.Add(mod);
-                
+
                 Console.WriteLine($"Created mod instance {mod.ModInfo.Name} v{mod.ModInfo.Version}");
             }
             catch (Exception ex)

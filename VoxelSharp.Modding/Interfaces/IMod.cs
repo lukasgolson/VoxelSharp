@@ -1,4 +1,5 @@
 using HarmonyLib;
+using SimpleInjector;
 using VoxelSharp.Modding.Structs;
 
 namespace VoxelSharp.Modding.Interfaces;
@@ -18,23 +19,27 @@ public interface IMod
     ///     Called before the mod is initialized.
     ///     Use this method to perform any setup tasks that do not rely on other mods being initialized.
     /// </summary>
+    /// <param name="container">
+    ///     The SimpleInjector container to register dependencies or retrieve required services.
+    /// </param>
     /// <returns>
     ///     Returns <c>true</c> if the pre-initialization was successful; otherwise, <c>false</c>.
     /// </returns>
-    bool PreInitialize();
+    bool PreInitialize(Harmony harmony, Container container);
 
     /// <summary>
     ///     Called when the mod is initialized.
     ///     Perform setup tasks that depend on other mods being initialized, and register any HarmonyX patches using the
     ///     provided <see cref="Harmony" /> instance.
-    ///     For more information on HarmonyX, visit
-    ///     <see href="https://github.com/BepInEx/HarmonyX/wiki">HarmonyX Documentation</see>.
     /// </summary>
     /// <param name="harmony">The Harmony instance to use for patch registration.</param>
+    /// <param name="container">
+    ///     The SimpleInjector container to register dependencies or retrieve required services.
+    /// </param>
     /// <returns>
     ///     Returns <c>true</c> if the initialization was successful; otherwise, <c>false</c>.
     /// </returns>
-    bool Initialize(Harmony harmony);
+    bool Initialize(Harmony harmony, Container container);
 
     /// <summary>
     ///     Called once per frame to update the mod's state.

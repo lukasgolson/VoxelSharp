@@ -1,4 +1,6 @@
 using HarmonyLib;
+using SimpleInjector;
+using VoxelSharp.Abstractions.Client;
 using VoxelSharp.Client;
 using VoxelSharp.Core.Structs;
 using VoxelSharp.Core.World;
@@ -17,52 +19,44 @@ public class Test : IMod
         "VoxelSharp"
     );
 
-    public bool PreInitialize()
+    public bool PreInitialize(Harmony harmony, Container container)
     {
-        Console.WriteLine("PreInitialize Called");
 
         return true;
     }
 
-    public bool Initialize(Harmony harmony)
+    public bool Initialize(Harmony harmony, Container container)
     {
-        Console.WriteLine("Initialize Called");
-        
-        return true;
-    }
-
-    
-    private bool triggered = false;
-    public bool Update(double deltaTime)
-    {
-        if (!triggered)
+        if (container.GetInstance<IClient>() is not Client client)
         {
-            SetCursor(Program.Client.World);
+            return false;
         }
         
+        SetCursor(client.World);
+        
+        return true;
+    }
+
+    public bool Update(double deltaTime)
+    {
         return true;
     }
 
     public bool Render()
     {
-
         return true;
     }
 
     public void InitializeShaders()
     {
-        Console.WriteLine("InitializeShaders Called");
     }
 
 
-    private void SetCursor(World world)
+    private static void SetCursor(World world)
     {
-        
-        world.SetVoxel(worldPos: new Position<int>(0, 0, 0), voxel: new Voxel(Color.Red)); // Origin in red
-        world.SetVoxel(worldPos: new Position<int>(1, 0, 0), voxel: new Voxel(Color.Green)); // X-axis in green
-        world.SetVoxel(worldPos: new Position<int>(0, 1, 0), voxel: new Voxel(Color.Blue)); // Y-axis in blue
-        world.SetVoxel(worldPos: new Position<int>(0, 0, 1), voxel: new Voxel(Color.Yellow)); // Z-axis in yellow
-        
-        
+        world.SetVoxel(new Position<int>(0, 0, 0), new Voxel(Color.Red)); // Origin in red
+        world.SetVoxel(new Position<int>(1, 0, 0), new Voxel(Color.Green)); // X-axis in green
+        world.SetVoxel(new Position<int>(0, 1, 0), new Voxel(Color.Blue)); // Y-axis in blue
+        world.SetVoxel(new Position<int>(0, 0, 1), new Voxel(Color.Yellow)); // Z-axis in yellow
     }
 }

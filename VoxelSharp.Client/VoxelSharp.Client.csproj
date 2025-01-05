@@ -15,7 +15,8 @@
     </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Include="DeftSharp.Windows.Input" Version="0.10.0" />
+        <PackageReference Include="DeftSharp.Windows.Input" Version="0.10.0"/>
+        <PackageReference Include="SimpleInjector" Version="5.5.0"/>
     </ItemGroup>
 
 </Project>

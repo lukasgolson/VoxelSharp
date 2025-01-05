@@ -29,9 +29,9 @@ public class ChunkMesh(Chunk chunk) : BaseMesh
     }
 
     /// <summary>
-    /// Uses a memory pool to rent a float buffer to store vertex data.
-    /// Once completed, SetupMesh will store this data in a GPU buffer,
-    /// and this memory will be returned to the pool.
+    ///     Uses a memory pool to rent a float buffer to store vertex data.
+    ///     Once completed, SetupMesh will store this data in a GPU buffer,
+    ///     and this memory will be returned to the pool.
     /// </summary>
     /// <param name="vertexCount">Returns the total float elements used.</param>
     /// <returns>An IMemoryOwner of float, which you can dispose or return to the pool.</returns>
@@ -71,7 +71,7 @@ public class ChunkMesh(Chunk chunk) : BaseMesh
     }
 
     /// <summary>
-    /// Sets up vertex attribute pointers for this mesh.
+    ///     Sets up vertex attribute pointers for this mesh.
     /// </summary>
     /// <param name="shaderProgram">Active shader program to query attributes from.</param>
     protected override void SetVertexAttributes(Shader shaderProgram)
@@ -103,7 +103,7 @@ public class ChunkMesh(Chunk chunk) : BaseMesh
     }
 
     /// <summary>
-    /// Computes the model matrix for this chunk based on its world position.
+    ///     Computes the model matrix for this chunk based on its world position.
     /// </summary>
     /// <returns>A translation matrix placing this chunk in world space.</returns>
     public override Matrix4 GetModelMatrix()
@@ -117,8 +117,8 @@ public class ChunkMesh(Chunk chunk) : BaseMesh
     }
 
     /// <summary>
-    /// Checks whether the voxel at the specified coordinates is "void" from the perspective of rendering
-    /// (i.e., out of bounds or transparent).
+    ///     Checks whether the voxel at the specified coordinates is "void" from the perspective of rendering
+    ///     (i.e., out of bounds or transparent).
     /// </summary>
     /// <param name="x">X coordinate within the chunk.</param>
     /// <param name="y">Y coordinate within the chunk.</param>
@@ -140,14 +140,14 @@ public class ChunkMesh(Chunk chunk) : BaseMesh
 
     private bool IsWithinBounds(int x, int y, int z)
     {
-        return (x >= 0 && x < chunk.ChunkSize) &&
-               (y >= 0 && y < chunk.ChunkSize) &&
-               (z >= 0 && z < chunk.ChunkSize);
+        return x >= 0 && x < chunk.ChunkSize &&
+               y >= 0 && y < chunk.ChunkSize &&
+               z >= 0 && z < chunk.ChunkSize;
     }
 
     /// <summary>
-    /// For a given voxel, checks each face to determine if it should be rendered.
-    /// If visible, adds the corresponding vertices to the shared vertex span.
+    ///     For a given voxel, checks each face to determine if it should be rendered.
+    ///     If visible, adds the corresponding vertices to the shared vertex span.
     /// </summary>
     /// <param name="span">The vertex buffer span.</param>
     /// <param name="voxelSpan">Span of this chunk's voxels.</param>
@@ -163,43 +163,31 @@ public class ChunkMesh(Chunk chunk) : BaseMesh
 
         // Top face
         if (IsVoid(x, y + 1, z, alpha, voxelSpan))
-        {
             AddVerticesToSpan(span, ref index, VoxelVertex.CreateFace(x, y, z, voxel, FaceId.Top));
-        }
 
         // Bottom face
         if (IsVoid(x, y - 1, z, alpha, voxelSpan))
-        {
             AddVerticesToSpan(span, ref index, VoxelVertex.CreateFace(x, y, z, voxel, FaceId.Bottom));
-        }
 
         // Right face
         if (IsVoid(x + 1, y, z, alpha, voxelSpan))
-        {
             AddVerticesToSpan(span, ref index, VoxelVertex.CreateFace(x, y, z, voxel, FaceId.Right));
-        }
 
         // Left face
         if (IsVoid(x - 1, y, z, alpha, voxelSpan))
-        {
             AddVerticesToSpan(span, ref index, VoxelVertex.CreateFace(x, y, z, voxel, FaceId.Left));
-        }
 
         // Back face
         if (IsVoid(x, y, z - 1, alpha, voxelSpan))
-        {
             AddVerticesToSpan(span, ref index, VoxelVertex.CreateFace(x, y, z, voxel, FaceId.Back));
-        }
 
         // Front face
         if (IsVoid(x, y, z + 1, alpha, voxelSpan))
-        {
             AddVerticesToSpan(span, ref index, VoxelVertex.CreateFace(x, y, z, voxel, FaceId.Front));
-        }
     }
 
     /// <summary>
-    /// Adds each vertex to the shared vertex buffer span.
+    ///     Adds each vertex to the shared vertex buffer span.
     /// </summary>
     /// <param name="span">The float span for our vertex data.</param>
     /// <param name="index">A reference to the current write position in the span.</param>
