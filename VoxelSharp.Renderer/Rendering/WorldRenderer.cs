@@ -1,17 +1,27 @@
+using Microsoft.Extensions.Logging;
 using VoxelSharp.Abstractions.Renderer;
+using VoxelSharp.Core.World;
+using VoxelSharp.Renderer.Mesh.World;
 
-namespace VoxelSharp.Renderer.Mesh.World;
+namespace VoxelSharp.Renderer.Rendering;
 
 public class WorldRenderer : IRenderer
 {
     private readonly ICameraMatricesProvider _cameraMatricesProvider;
-    private readonly ChunkMesh[] _chunkMeshArray;
+    private ChunkMesh[]? _chunkMeshArray;
     private Shader? _chunkShader;
 
-    public WorldRenderer(Core.World.World world, ICameraMatricesProvider cameraMatricesProvider)
+    private readonly ILogger _logger;
+
+    public WorldRenderer(ICameraMatricesProvider cameraMatricesProvider, ILogger<WorldRenderer> logger)
     {
         _cameraMatricesProvider = cameraMatricesProvider;
 
+        _logger = logger;
+    }
+
+    public void AssociateWorld(World world)
+    {
         var worldVolume = world.WorldSize * world.WorldSize * world.WorldSize;
         _chunkMeshArray = new ChunkMesh[worldVolume];
 
@@ -25,7 +35,7 @@ public class WorldRenderer : IRenderer
 
     public void InitializeShaders()
     {
-        Console.WriteLine("Initializing shaders for WorldRenderer");
+        _logger.LogInformation("Initializing shaders for WorldRenderer");
         _chunkShader = new Shader("Shaders/chunk.vert", "Shaders/chunk.frag");
     }
 
@@ -40,7 +50,9 @@ public class WorldRenderer : IRenderer
         _chunkShader.SetUniform("m_view", _cameraMatricesProvider.GetViewMatrix());
         _chunkShader.SetUniform("m_projection", _cameraMatricesProvider.GetProjectionMatrix());
 
-        foreach (var chunkMesh in _chunkMeshArray) chunkMesh.Render(_chunkShader);
+        if (_chunkMeshArray != null)
+            foreach (var chunkMesh in _chunkMeshArray)
+                chunkMesh.Render(_chunkShader);
 
         Shader.Unuse();
     }

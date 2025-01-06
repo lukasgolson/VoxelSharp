@@ -16,6 +16,10 @@
 
     <ItemGroup>
         <PackageReference Include="DeftSharp.Windows.Input" Version="0.10.0"/>
+        <PackageReference Include="Microsoft.Extensions.Logging" Version="9.0.0" />
+        <PackageReference Include="Serilog.Extensions.Logging" Version="9.0.0" />
+        <PackageReference Include="Serilog.Sinks.Console" Version="6.0.0" />
+        <PackageReference Include="Serilog.Sinks.File" Version="6.0.0" />
         <PackageReference Include="SimpleInjector" Version="5.5.0"/>
     </ItemGroup>
 
