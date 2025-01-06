@@ -1,5 +1,6 @@
 using System.Reflection;
 using HarmonyLib;
+using Microsoft.Extensions.Logging;
 using SimpleInjector;
 using VoxelSharp.Modding.Interfaces;
 using VoxelSharp.Modding.Structs;
@@ -19,6 +20,13 @@ public class ModLoader
 
     public bool Initialized { get; private set; }
 
+    private readonly ILogger<ModLoader> _logger;
+
+    public ModLoader(ILogger<ModLoader> logger)
+    {
+        _logger = logger;
+    }
+
     public void LoadMods(string modsPath)
     {
         if (Loaded) throw new InvalidOperationException("Mods have already been loaded.");
@@ -28,22 +36,36 @@ public class ModLoader
 
         var assemblyPaths = DiscoverAssemblies(path);
 
-        Console.WriteLine($"Found {assemblyPaths.Count} assemblies in {path}");
+
+        _logger.LogInformation("Found {AssemblyPathsCount} assemblies in {Path}", assemblyPaths.Count, path);
+
 
         var modTypes = LoadAssemblies(assemblyPaths);
 
-        Console.WriteLine($"Found {modTypes.Count} mod interfaces in {assemblyPaths.Count} assemblies");
+        switch (assemblyPaths.Count)
+        {
+            case 0:
+                _logger.LogWarning("No assemblies found in {Path}", path);
+                return;
+            case 1:
+                _logger.LogInformation("Found {ModTypesCount} mod interface in {AssemblyPathsCount} assembly",
+                    modTypes.Count, assemblyPaths.Count);
+                break;
+            default:
+                _logger.LogInformation("Found {ModTypesCount} mod interfaces in {AssemblyPathsCount} assemblies",
+                    modTypes.Count, assemblyPaths.Count);
+                break;
+        }
+
 
         var mods = CreateModInstances(modTypes);
 
-        Console.WriteLine($"Created {mods.Count} mod instances");
+        _logger.LogInformation("Created {ModsCount} mod instances", mods.Count);
 
 
-        // create a dictionary of mod info to Mods
         var orderedMods = ResolveLoadingOrder(mods);
 
-        Console.WriteLine($"Resolved loading order for {orderedMods.Count} mods");
-
+        _logger.LogInformation("Resolved loading order for {OrderedModsCount} mods", orderedMods.Count);
 
         _mods = orderedMods;
         Loaded = true;
@@ -62,7 +84,8 @@ public class ModLoader
             var harmony = GetHarmony(mod.ModInfo.Id);
             mod.PreInitialize(harmony, container);
 
-            Console.WriteLine($"Pre-initialized mod {mod.ModInfo.Name} v{mod.ModInfo.Version}");
+            _logger.LogInformation("Pre-initialized mod {ModName} v{ModVersion}", mod.ModInfo.Name,
+                mod.ModInfo.Version);
         }
 
         Preinitialized = true;
@@ -86,7 +109,7 @@ public class ModLoader
             var harmony = GetHarmony(mod.ModInfo.Id);
             mod.Initialize(harmony, container);
 
-            Console.WriteLine($"Initialized mod {mod.ModInfo.Name} v{mod.ModInfo.Version}");
+            _logger.LogInformation("Initialized mod {ModName} v{ModVersion}", mod.ModInfo.Name, mod.ModInfo.Version);
         }
 
         Initialized = true;
@@ -135,7 +158,7 @@ public class ModLoader
         return Directory.GetFiles(modsPath, "*.dll").ToList();
     }
 
-    private static List<Type> LoadAssemblies(IEnumerable<string> assemblyPaths)
+    private List<Type> LoadAssemblies(IEnumerable<string> assemblyPaths)
     {
         var modTypes = new List<Type>();
 
@@ -153,19 +176,19 @@ public class ModLoader
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Failed to load assembly {path}: {ex.Message}");
+                _logger.LogError(ex, "Failed to load assembly {Path}", path);
             }
 
         return modTypes;
     }
 
-    private static List<IMod> CreateModInstances(IEnumerable<Type> modTypes)
+    private List<IMod> CreateModInstances(IEnumerable<Type> modTypes)
     {
         var mods = new List<IMod>();
 
         foreach (var type in modTypes)
         {
-            Console.WriteLine($"Creating mod instance {type.Name}");
+            _logger.LogInformation("Creating mod instance {TypeName}", type.Name);
 
             try
             {
@@ -173,11 +196,12 @@ public class ModLoader
 
                 mods.Add(mod);
 
-                Console.WriteLine($"Created mod instance {mod.ModInfo.Name} v{mod.ModInfo.Version}");
+                _logger.LogInformation("Created mod instance {ModName} v{ModVersion}", mod.ModInfo.Name,
+                    mod.ModInfo.Version);
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Failed to create mod instance {type.Name}: {ex.Message}");
+                _logger.LogError(ex, "Failed to create mod instance {TypeName}", type.Name);
             }
         }
 

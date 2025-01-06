@@ -6,13 +6,11 @@ public class World
 {
     public readonly Chunk[] ChunkArray;
 
+    public readonly int WorldSize = 2; // temporary placeholder until we have a proper world generation system in place
+    private const int ChunkSize = 16;
 
-    public World(int worldSize, int chunkSize)
+    public World()
     {
-        WorldSize = worldSize;
-        ChunkSize = chunkSize;
-
-
         var worldVolume = WorldSize * WorldSize * WorldSize;
 
         ChunkArray = new Chunk[worldVolume];
@@ -23,9 +21,6 @@ public class World
             ChunkArray[i] = chunk;
         }
     }
-
-    public int WorldSize { get; }
-    public int ChunkSize { get; }
 
 
     public Voxel GetVoxel(Position<int> worldPos)

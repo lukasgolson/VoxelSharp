@@ -1,12 +1,12 @@
 ﻿using System.Windows.Input;
 using DeftSharp.Windows.Input.Keyboard;
+using Microsoft.Extensions.Logging;
 using VoxelSharp.Abstractions.Client;
 using VoxelSharp.Abstractions.Loop;
-using VoxelSharp.Abstractions.Renderer;
 using VoxelSharp.Client.Wrappers;
 using VoxelSharp.Core.Structs;
 using VoxelSharp.Core.World;
-using VoxelSharp.Renderer.Mesh.World;
+using VoxelSharp.Renderer.Rendering;
 
 namespace VoxelSharp.Client;
 
@@ -15,27 +15,32 @@ public class Client : IClient
     private readonly IGameLoop _gameLoop;
     private readonly IKeyboardListener _keyboardListener;
     private readonly ModLoaderWrapper _modloaderWrapper;
+    public readonly World World;
     private readonly WorldRenderer _worldRenderer;
 
 
-    public Client(IKeyboardListener keyboardListener, IGameLoop gameLoop,
-        ICameraMatricesProvider cameraMatricesProvider, ModLoaderWrapper modLoaderWrapper)
+    private readonly ILogger<Client> _logger;
+
+    public Client(IKeyboardListener keyboardListener, IGameLoop gameLoop, ModLoaderWrapper modLoaderWrapper,
+        ILogger<Client> logger,
+        WorldRenderer worldRenderer, World world)
     {
         _keyboardListener = keyboardListener;
         _gameLoop = gameLoop;
 
         _modloaderWrapper = modLoaderWrapper;
 
-
-        World = new World(2, 16);
-        _worldRenderer = new WorldRenderer(World, cameraMatricesProvider);
+        _logger = logger;
 
 
-        World.SetVoxel(new Position<int>(0, 0, 0), new Voxel(Color.Red));
+        World = world;
+        _worldRenderer = worldRenderer;
+
+        _worldRenderer.AssociateWorld(world);
+
+
+        world.SetVoxel(new Position<int>(0, 0, 0), new Voxel(Color.Red));
     }
-
-    public World World { get; }
-
 
     public void Run()
     {
@@ -49,7 +54,12 @@ public class Client : IClient
         _modloaderWrapper.InitializeShaders();
         _worldRenderer.InitializeShaders();
 
+        _logger.LogInformation("Starting game loop...");
 
+
+        GC.Collect();
+        GC.WaitForPendingFinalizers();
+        GC.Collect();
         _gameLoop.Start();
     }
 }

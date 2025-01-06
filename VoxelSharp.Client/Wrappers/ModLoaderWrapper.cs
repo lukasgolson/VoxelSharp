@@ -12,7 +12,7 @@ public class ModLoaderWrapper : IRenderer, IUpdatable
     /// <summary>
     ///     Initializes a new instance of the ModLoaderWrapper.
     /// </summary>
-    public ModLoaderWrapper(ModLoader modLoader)
+    public ModLoaderWrapper(ModLoader? modLoader)
     {
         ModLoader = modLoader;
     }
@@ -21,7 +21,7 @@ public class ModLoaderWrapper : IRenderer, IUpdatable
     /// <summary>
     ///     Gets the underlying ModLoader instance.
     /// </summary>
-    public ModLoader ModLoader { get; }
+    public ModLoader? ModLoader { get; }
 
     public void InitializeShaders()
     {
