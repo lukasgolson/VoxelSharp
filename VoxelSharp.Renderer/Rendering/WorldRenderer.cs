@@ -20,16 +20,16 @@ public class WorldRenderer : IRenderer
         _logger = logger;
     }
 
-    public void AssociateWorld(World world)
+    public void AssociateWorld(VoxelWorld voxelWorld)
     {
-        var worldVolume = world.WorldSize * world.WorldSize * world.WorldSize;
+        var worldVolume = voxelWorld.WorldSize * voxelWorld.WorldSize * voxelWorld.WorldSize;
         _chunkMeshArray = new ChunkMesh[worldVolume];
 
-        foreach (var chunk in world.ChunkArray)
+        foreach (var chunk in voxelWorld.ChunkArray)
         {
             var chunkMesh = new ChunkMesh(chunk);
 
-            _chunkMeshArray[chunk.Position.ToIndex(world.WorldSize)] = chunkMesh;
+            _chunkMeshArray[chunk.Position.ToIndex(voxelWorld.WorldSize)] = chunkMesh;
         }
     }
 

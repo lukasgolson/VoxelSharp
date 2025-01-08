@@ -46,6 +46,9 @@ public class ModLoader
         {
             case 0:
                 _logger.LogWarning("No assemblies found in {Path}", path);
+                _mods = [];
+                Loaded = true;
+
                 return;
             case 1:
                 _logger.LogInformation("Found {ModTypesCount} mod interface in {AssemblyPathsCount} assembly",
@@ -68,6 +71,7 @@ public class ModLoader
         _logger.LogInformation("Resolved loading order for {OrderedModsCount} mods", orderedMods.Count);
 
         _mods = orderedMods;
+
         Loaded = true;
     }
 

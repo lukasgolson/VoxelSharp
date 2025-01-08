@@ -15,7 +15,7 @@ public class Client : IClient
     private readonly IGameLoop _gameLoop;
     private readonly IKeyboardListener _keyboardListener;
     private readonly ModLoaderWrapper _modloaderWrapper;
-    public readonly World World;
+    public readonly VoxelWorld VoxelWorld;
     private readonly WorldRenderer _worldRenderer;
 
 
@@ -23,7 +23,7 @@ public class Client : IClient
 
     public Client(IKeyboardListener keyboardListener, IGameLoop gameLoop, ModLoaderWrapper modLoaderWrapper,
         ILogger<Client> logger,
-        WorldRenderer worldRenderer, World world)
+        WorldRenderer worldRenderer, VoxelWorld voxelWorld)
     {
         _keyboardListener = keyboardListener;
         _gameLoop = gameLoop;
@@ -33,13 +33,13 @@ public class Client : IClient
         _logger = logger;
 
 
-        World = world;
+        VoxelWorld = voxelWorld;
         _worldRenderer = worldRenderer;
 
-        _worldRenderer.AssociateWorld(world);
+        _worldRenderer.AssociateWorld(voxelWorld);
 
 
-        world.SetVoxel(new Position<int>(0, 0, 0), new Voxel(Color.Red));
+        voxelWorld.SetVoxel(new Position<int>(0, 0, 0), new Voxel(Color.Red));
     }
 
     public void Run()
