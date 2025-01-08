@@ -32,7 +32,7 @@ public class Test : IMod
             return false;
         }
         
-        SetCursor(client.World);
+        SetCursor(client.VoxelWorld);
         
         return true;
     }
@@ -52,11 +52,11 @@ public class Test : IMod
     }
 
 
-    private static void SetCursor(World world)
+    private static void SetCursor(VoxelWorld voxelWorld)
     {
-        world.SetVoxel(new Position<int>(0, 0, 0), new Voxel(Color.Red)); // Origin in red
-        world.SetVoxel(new Position<int>(1, 0, 0), new Voxel(Color.Green)); // X-axis in green
-        world.SetVoxel(new Position<int>(0, 1, 0), new Voxel(Color.Blue)); // Y-axis in blue
-        world.SetVoxel(new Position<int>(0, 0, 1), new Voxel(Color.Yellow)); // Z-axis in yellow
+        voxelWorld.SetVoxel(new Position<int>(0, 0, 0), new Voxel(Color.Red)); // Origin in red
+        voxelWorld.SetVoxel(new Position<int>(1, 0, 0), new Voxel(Color.Green)); // X-axis in green
+        voxelWorld.SetVoxel(new Position<int>(0, 1, 0), new Voxel(Color.Blue)); // Y-axis in blue
+        voxelWorld.SetVoxel(new Position<int>(0, 0, 1), new Voxel(Color.Yellow)); // Z-axis in yellow
     }
 }

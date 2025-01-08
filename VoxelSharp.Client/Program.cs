@@ -86,7 +86,7 @@ public static class Program
         container.RegisterSingleton<ICameraMatricesProvider, FlyingCamera>();
         container.RegisterSingleton<IWindow, Window>();
 
-        container.RegisterSingleton<World>();
+        container.RegisterSingleton<VoxelWorld>();
         container.RegisterSingleton<WorldRenderer>();
 
 
