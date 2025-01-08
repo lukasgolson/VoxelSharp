@@ -6,7 +6,7 @@ public class VoxelWorld
 {
     public readonly Chunk[] ChunkArray;
 
-    public readonly int WorldSize = 2; // temporary placeholder until we have a proper world generation system in place
+    public readonly int WorldSize = 8; // temporary placeholder until we have a proper world generation system in place
     private const int ChunkSize = 16;
 
     public VoxelWorld()

@@ -49,9 +49,14 @@ public readonly struct Color(byte r, byte g, byte b, byte a) : IEquatable<Color>
 
     public static Color Transparent { get; } = new(0, 0, 0, 0);
 
-    public static Color GetRandomColor()
+    public static Color GetRandomColor(int max = 127)
     {
-        return new Color((byte)Random.Shared.Next(0, 255), (byte)Random.Shared.Next(0, 255),
-            (byte)Random.Shared.Next(0, 255), 255);
+        if (max is < 0 or > 255)
+        {
+            throw new ArgumentOutOfRangeException(nameof(max), "Value must be between 0 and 255.");
+        }
+        
+        return new Color((byte)Random.Shared.Next(0, max), (byte)Random.Shared.Next(0, max),
+            (byte)Random.Shared.Next(0, max), 255);
     }
 }

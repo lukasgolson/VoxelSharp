@@ -19,6 +19,10 @@
         <PackageReference Include="HarmonyX" Version="2.13.0"/>
     </ItemGroup>
 
+    <ItemGroup>
+      <Compile Remove="Test.cs" />
+    </ItemGroup>
+
 
     <Target Name="PostBuild" AfterTargets="Build">
         <Copy SourceFiles="$(OutputPath)\$(AssemblyName).dll" DestinationFolder="..\.mods\"/>
