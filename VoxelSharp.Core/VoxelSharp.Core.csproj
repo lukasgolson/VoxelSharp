@@ -19,6 +19,8 @@
     <ItemGroup>
       <PackageReference Include="Arch" Version="1.2.8" />
       <PackageReference Include="Arch.AOT.SourceGenerator" Version="1.0.1" />
+      <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.0" />
+      <PackageReference Include="SimpleInjector" Version="5.5.0" />
     </ItemGroup>
 
 </Project>

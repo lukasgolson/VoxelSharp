@@ -9,6 +9,7 @@ using VoxelSharp.Abstractions.Renderer;
 using VoxelSharp.Abstractions.Window;
 using VoxelSharp.Client.Input;
 using VoxelSharp.Client.Wrappers;
+using VoxelSharp.Core.ECS;
 using VoxelSharp.Core.GameLoop;
 using VoxelSharp.Core.World;
 using VoxelSharp.Modding;
@@ -21,7 +22,7 @@ public static class Program
 {
     private static Container Container { get; } = new();
     private static ModLoader? ModLoader { get; set; }
-    
+
     public static void Main(string[] args)
     {
         var loggerFactory = ConfigureLogging(Container);
@@ -32,8 +33,13 @@ public static class Program
         ModLoader.LoadMods(modsDirectory);
         ModLoader.PreInitializeMods(Container);
 
+        
+        
         ConfigureServices(Container);
-
+        
+        var ecs = new Ecs();
+        
+        ecs.AddWorldToContainer(Container);
         Container.Verify();
 
 
@@ -42,6 +48,9 @@ public static class Program
 
         var client = Container.GetInstance<IClient>();
         client.Run();
+        
+        
+        ecs.Dispose();
     }
 
     private static ILoggerFactory ConfigureLogging(Container container)
@@ -55,7 +64,7 @@ public static class Program
 
         container.RegisterInstance(loggerFactory);
         container.Register(typeof(ILogger<>), typeof(Logger<>), Lifestyle.Singleton);
-        
+
         return loggerFactory;
     }
 
@@ -85,12 +94,10 @@ public static class Program
         container.RegisterSingleton<IKeyboardListener, KeyboardListener>();
         container.RegisterSingleton<ICameraMatricesProvider, FlyingCamera>();
         container.RegisterSingleton<IWindow, Window>();
-
         container.RegisterSingleton<VoxelWorld>();
         container.RegisterSingleton<WorldRenderer>();
-
-
-
         container.RegisterSingleton<IClient, Client>();
     }
+
+ 
 }
