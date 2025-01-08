@@ -8,7 +8,6 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <Folder Include="ApplicationBuilding\"/>
         <Folder Include="Math\"/>
     </ItemGroup>
 
@@ -19,6 +18,8 @@
     <ItemGroup>
       <PackageReference Include="Arch" Version="1.2.8" />
       <PackageReference Include="Arch.AOT.SourceGenerator" Version="1.0.1" />
+      <PackageReference Include="Arch.System" Version="1.0.5" />
+      <PackageReference Include="Arch.System.SourceGenerator" Version="1.2.1" />
       <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.0" />
       <PackageReference Include="SimpleInjector" Version="5.5.0" />
     </ItemGroup>
