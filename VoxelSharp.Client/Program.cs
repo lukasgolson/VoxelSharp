@@ -44,6 +44,8 @@ public static class Program
         ModLoader.InitializeMods(Container);
         
         Container.Verify();
+        
+        ModLoader.PostInitializeMods(Container);
 
 
         var client = Container.GetInstance<IClient>();

@@ -124,6 +124,14 @@ public class Chunk
         // Return a slice of the Memory<Voxel>
         return VoxelBuffer.Slice(offset, length).Span;
     }
+    
+
+    public Span<Voxel> GetVoxelSpan(Position<int> start, Position<int> end)
+    {
+        var size = end - start;
+        return GetVoxelSpan(start.X, start.Y, start.Z, size.X, size.Y, size.Z);
+    }
+    
 
     /// <summary>
     ///     Provides a span of the chunk's voxel data, useful for operations on the entire chunk.

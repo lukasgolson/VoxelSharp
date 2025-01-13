@@ -20,11 +20,13 @@ public interface IMod
     ///     Use this method to perform any setup tasks that do not rely on other mods being initialized.
     /// </summary>
     /// <param name="container">
-    ///     The SimpleInjector container to register dependencies or retrieve required services.
+    ///     The SimpleInjector container to register dependencies. This container is shared with all other mods and should not be used to retrieve dependencies.
     /// </param>
     /// <returns>
     ///     Returns <c>true</c> if the pre-initialization was successful; otherwise, <c>false</c>.
     /// </returns>
+    /// <remarks>The container is shared with all other mods and should not be used to retrieve dependencies in this method as it will lock the dependency graph.</remarks>
+
     bool PreInitialize(Harmony harmony, Container container);
 
     /// <summary>
@@ -34,36 +36,23 @@ public interface IMod
     /// </summary>
     /// <param name="harmony">The Harmony instance to use for patch registration.</param>
     /// <param name="container">
-    ///     The SimpleInjector container to register dependencies or retrieve required services.
+    ///     The SimpleInjector container to register dependencies.  
     /// </param>
     /// <returns>
     ///     Returns <c>true</c> if the initialization was successful; otherwise, <c>false</c>.
     /// </returns>
+    /// <remarks>The container is shared with all other mods and should not be used to retrieve dependencies in this method as it will lock the dependency graph.</remarks>
     bool Initialize(Harmony harmony, Container container);
 
     /// <summary>
-    ///     Called once per frame to update the mod's state.
-    ///     Use the <paramref name="deltaTime" /> parameter to calculate the time elapsed since the last update, as the
-    ///     interval between calls is not guaranteed to be constant.
-    ///     Note: This method is a temporary solution and may be replaced with a more robust system in future versions.
+    /// Called once all the mods are initialized to perform any post-initialization tasks.
     /// </summary>
-    /// <param name="deltaTime">The time, in seconds, that has elapsed since the last update.</param>
+    /// <param name="container">The SimpleInjector container to retrieve dependencies.</param>
     /// <returns>
-    ///     Returns <c>true</c> if the update was successful; otherwise, <c>false</c>.
+    /// Returns <c>true</c> if the post-initialization was successful; otherwise, <c>false</c>.
     /// </returns>
-    bool Update(double deltaTime);
+    /// <remarks>The container can be used to retrieve dependencies in this method.</remarks>
+    bool PostInitialize(Container container);
 
-    /// <summary>
-    ///     Called once per frame to render the mod.
-    ///     Note: This method is a temporary solution and may be replaced with a more robust system in future versions.
-    /// </summary>
-    /// <returns>
-    ///     Returns <c>true</c> if rendering was successful; otherwise, <c>false</c>.
-    /// </returns>
-    bool Render();
-
-    /// <summary>
-    ///     Called when it is time to initialize shaders for the mod.
-    /// </summary>
-    void InitializeShaders();
+  
 }

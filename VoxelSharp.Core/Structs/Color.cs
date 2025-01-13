@@ -46,6 +46,7 @@ public readonly struct Color(byte r, byte g, byte b, byte a) : IEquatable<Color>
     public static Color White { get; } = new(255, 255, 255, 255);
     public static Color Black { get; } = new(0, 0, 0, 255);
     public static Color Yellow { get; } = new(255, 255, 0, 255);
+    public static Color Grey { get; } = new(128, 128, 128, 255);
 
     public static Color Transparent { get; } = new(0, 0, 0, 0);
 

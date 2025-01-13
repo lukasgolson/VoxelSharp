@@ -17,7 +17,6 @@ public class WorldRenderer : IRenderer, IUpdatable
     private VoxelWorld? _voxelWorld;
 
     private const int RenderDistance = 4;
-    private const int RenderDistanceSquared = RenderDistance * RenderDistance;
 
     private readonly ILogger _logger;
     private readonly ICameraMatrices _cameraMatrices;

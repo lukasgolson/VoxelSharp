@@ -14,21 +14,18 @@ public class Client : IClient
 {
     private readonly IGameLoop _gameLoop;
     private readonly IKeyboardListener _keyboardListener;
-    private readonly ModLoaderWrapper _modloaderWrapper;
     public readonly VoxelWorld VoxelWorld;
     private readonly WorldRenderer _worldRenderer;
 
 
     private readonly ILogger<Client> _logger;
 
-    public Client(IKeyboardListener keyboardListener, IGameLoop gameLoop, ModLoaderWrapper modLoaderWrapper,
+    public Client(IKeyboardListener keyboardListener, IGameLoop gameLoop,
         ILogger<Client> logger,
         WorldRenderer worldRenderer, VoxelWorld voxelWorld)
     {
         _keyboardListener = keyboardListener;
         _gameLoop = gameLoop;
-
-        _modloaderWrapper = modLoaderWrapper;
 
         _logger = logger;
 
@@ -43,11 +40,8 @@ public class Client : IClient
     {
         _keyboardListener.Subscribe(Key.Escape, _gameLoop.Stop);
 
-        _gameLoop.RegisterUpdateAction(_modloaderWrapper);
-        _gameLoop.RegisterRenderAction(_modloaderWrapper);
-        
 
-        _modloaderWrapper.InitializeShaders();
+        
         _worldRenderer.InitializeShaders();
 
         _logger.LogInformation("Starting game loop...");
