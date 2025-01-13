@@ -48,8 +48,7 @@ public class Client : IClient
 
         _gameLoop.RegisterUpdateAction(_modloaderWrapper);
         _gameLoop.RegisterRenderAction(_modloaderWrapper);
-        _gameLoop.RegisterRenderAction(_worldRenderer);
-
+        
 
         _modloaderWrapper.InitializeShaders();
         _worldRenderer.InitializeShaders();

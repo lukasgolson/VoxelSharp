@@ -4,22 +4,43 @@ namespace VoxelSharp.Core.World;
 
 public class VoxelWorld
 {
-    public readonly Chunk[] ChunkArray;
+    public readonly Dictionary<Position<int>, Chunk> ChunkArray = new();
 
-    public readonly int WorldSize = 8; // temporary placeholder until we have a proper world generation system in place
+    public const int InitialChunkSize = 8; // temporary placeholder until we have a proper world generation system in place
     private const int ChunkSize = 16;
 
     public VoxelWorld()
     {
-        var worldVolume = WorldSize * WorldSize * WorldSize;
+        const int initialWorldVolume = InitialChunkSize * InitialChunkSize * InitialChunkSize;
 
-        ChunkArray = new Chunk[worldVolume];
 
-        for (var i = 0; i < worldVolume; i++)
+        for (var i = 0; i < initialWorldVolume; i++)
         {
-            var chunk = new Chunk(Position<int>.FromIndex(i, WorldSize), ChunkSize);
-            ChunkArray[i] = chunk;
+            var position = Position<int>.FromIndex(i, InitialChunkSize);
+            LoadChunk(position);
         }
+    }
+    
+    public bool IsChunkLoaded(Position<int> chunkPos)
+    {
+        return ChunkArray.ContainsKey(chunkPos);
+    }
+    
+    private void LoadChunk(Position<int> chunkPos)
+    {
+        if (IsChunkLoaded(chunkPos))
+            return;
+        
+        var chunk = new Chunk(chunkPos, ChunkSize);
+        ChunkArray.Add(chunk.Position, chunk);
+    }
+    
+    public Chunk GetChunk(Position<int> chunkPos)
+    {
+        if (!IsChunkLoaded(chunkPos))
+            LoadChunk(chunkPos);
+        
+        return ChunkArray[chunkPos];
     }
 
 
@@ -27,18 +48,26 @@ public class VoxelWorld
     {
         var chunkCoords = GetChunkCoordinates(worldPos);
         var localCoords = GetLocalCoordinates(worldPos);
+        
+        if (!IsChunkLoaded(chunkCoords))
+            LoadChunk(chunkCoords);
+        
+        return ChunkArray[chunkCoords].GetVoxel(localCoords);
 
-        var voxel = ChunkArray[chunkCoords.ToIndex(WorldSize)].GetVoxel(localCoords);
-
-        return voxel;
     }
+    
+    
 
     public void SetVoxel(Position<int> worldPos, Voxel voxel)
     {
         var chunkCoords = GetChunkCoordinates(worldPos);
         var localCoords = GetLocalCoordinates(worldPos);
-
-        ChunkArray[chunkCoords.ToIndex(WorldSize)].SetVoxel(localCoords, voxel);
+        
+        if (!IsChunkLoaded(chunkCoords))
+            LoadChunk(chunkCoords);
+        
+        var chunk = ChunkArray[chunkCoords];
+        chunk.SetVoxel(localCoords, voxel);
     }
 
     private Position<int> GetChunkCoordinates(Position<int> worldCoords)

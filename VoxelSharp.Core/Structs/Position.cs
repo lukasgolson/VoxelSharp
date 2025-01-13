@@ -4,10 +4,10 @@ using System.Runtime.CompilerServices;
 namespace VoxelSharp.Core.Structs;
 
 /// <summary>
-///     Represents a 3D position with generic numeric type.
+///     Represents a 3D position with X,Y,Z dimensions.
 /// </summary>
 /// <typeparam name="T">The numeric type of the position coordinates.</typeparam>
-public readonly struct Position<T> where T : INumber<T>
+public readonly record struct Position<T> where T : INumber<T>
 {
     /// <summary>
     ///     Gets the X coordinate.
@@ -38,6 +38,31 @@ public readonly struct Position<T> where T : INumber<T>
         Y = y;
         Z = z;
     }
+
+    /// <summary>
+    /// Represents a zero vector.
+    /// </summary>
+    public static Position<T> Zero => new(T.Zero, T.Zero, T.Zero);
+    
+    /// <summary>
+    /// Represents a one vector.
+    /// </summary>
+    public static Position<T> One => new(T.One, T.One, T.One);
+
+    /// <summary>
+    /// Represents a unit vector pointing in the negative X direction.
+    /// </summary>
+    public static Position<T> Right => new(T.One, T.Zero, T.Zero);
+    
+    /// <summary>
+    /// Represents a unit vector pointing in the positive Y direction.
+    /// </summary>
+    public static Position<T> Up => new(T.Zero, T.One, T.Zero);
+    
+    /// <summary>
+    /// Represents a unit vector pointing in the positive Z direction.
+    /// </summary>
+    public static Position<T> Forward => new(T.Zero, T.Zero, T.One);
 
 
     /// <summary>

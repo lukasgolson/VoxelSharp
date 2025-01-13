@@ -8,14 +8,18 @@ namespace VoxelSharp.Renderer.Mesh.World;
 
 public class ChunkMesh(Chunk chunk) : BaseMesh
 {
+    private Chunk? _chunk = chunk;
+
+    private Position<int>? Position => _chunk?.Position;
+
     public override void Render(Shader shaderProgram)
     {
         // Check if the chunk is dirty or uninitialized
-        if (chunk.IsDirty || !IsInitialized)
+        if (_chunk != null && (_chunk.IsDirty || !IsInitialized))
         {
             // Rebuild the mesh (8 elements per vertex)
             SetupMesh(8, shaderProgram);
-            chunk.IsDirty = false;
+            _chunk.IsDirty = false;
         }
 
         // After setup, skip rendering if there are no vertices
@@ -39,7 +43,7 @@ public class ChunkMesh(Chunk chunk) : BaseMesh
     {
         // Estimate the required size for the vertex buffer:
         //   ChunkVolume * 6 faces * 6 vertices/face * 8 float elements/vertex
-        var estimatedVertexCount = chunk.ChunkVolume * 6 * 6 * 8;
+        var estimatedVertexCount = _chunk.ChunkVolume * 6 * 6 * 8;
         var memoryOwner = MemoryPool<float>.Shared.Rent(estimatedVertexCount);
 
         // Get a span from the rented memory
@@ -48,15 +52,15 @@ public class ChunkMesh(Chunk chunk) : BaseMesh
         var index = 0;
 
         // Retrieve a span of the chunk's voxel data
-        var chunkVoxelSpan = chunk.GetVoxelSpan();
+        var chunkVoxelSpan = _chunk.GetVoxelSpan();
 
 
-        for (var x = 0; x < chunk.ChunkSize; x++)
-        for (var z = 0; z < chunk.ChunkSize; z++)
-        for (var y = 0; y < chunk.ChunkSize; y++)
+        for (var x = 0; x < _chunk.ChunkSize; x++)
+        for (var z = 0; z < _chunk.ChunkSize; z++)
+        for (var y = 0; y < _chunk.ChunkSize; y++)
         {
             // Compute this voxel's index
-            var voxelIndex = chunk.GetVoxelIndex(new Position<int>(x, y, z));
+            var voxelIndex = _chunk.GetVoxelIndex(new Position<int>(x, y, z));
             var voxel = chunkVoxelSpan[voxelIndex];
 
             // Skip transparent voxels
@@ -110,9 +114,9 @@ public class ChunkMesh(Chunk chunk) : BaseMesh
     {
         // Calculate the translation for this chunk
         return Matrix4.CreateTranslation(
-            chunk.Position.X * chunk.ChunkSize,
-            chunk.Position.Y * chunk.ChunkSize,
-            chunk.Position.Z * chunk.ChunkSize
+            _chunk.Position.X * _chunk.ChunkSize,
+            _chunk.Position.Y * _chunk.ChunkSize,
+            _chunk.Position.Z * _chunk.ChunkSize
         );
     }
 
@@ -134,15 +138,15 @@ public class ChunkMesh(Chunk chunk) : BaseMesh
         if (!IsWithinBounds(x, y, z)) return true;
 
         // Otherwise, check if the adjacent voxel is transparent
-        var idx = chunk.GetVoxelIndex(new Position<int>(x, y, z));
+        var idx = _chunk.GetVoxelIndex(new Position<int>(x, y, z));
         return voxelSpan[idx].Color.A != currentAlpha;
     }
 
     private bool IsWithinBounds(int x, int y, int z)
     {
-        return x >= 0 && x < chunk.ChunkSize &&
-               y >= 0 && y < chunk.ChunkSize &&
-               z >= 0 && z < chunk.ChunkSize;
+        return x >= 0 && x < _chunk.ChunkSize &&
+               y >= 0 && y < _chunk.ChunkSize &&
+               z >= 0 && z < _chunk.ChunkSize;
     }
 
     /// <summary>

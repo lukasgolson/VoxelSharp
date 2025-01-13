@@ -3,6 +3,9 @@ using VoxelSharp.Core.Structs;
 
 namespace VoxelSharp.Core.World;
 
+/// <summary>
+/// A chunk is a 3D grid of voxels that represents a portion of the world.
+/// </summary>
 public class Chunk
 {
     /// <summary>
