@@ -90,14 +90,12 @@ public class WorldRenderer : IRenderer, IUpdatable
 
         var currentCameraPosition = _cameraParameters.Position.AsPosition();
 
-        
-        
+
         // convert the camera position to chunk position
         var currentRenderPosition = _voxelWorld.GetChunkCoordinates(currentCameraPosition.RoundToInt());
 
-
         // the list of chunks to render
-        List<Position<int>> chunkPositions = [];
+        HashSet<Position<int>> chunkPositions = [];
 
         for (var x = -RenderDistance; x < RenderDistance; x++)
         {
@@ -105,17 +103,14 @@ public class WorldRenderer : IRenderer, IUpdatable
             {
                 for (var z = -RenderDistance; z < RenderDistance; z++)
                 {
-
                     var chunkPos = new Position<int>(
                         currentRenderPosition.X + x,
                         currentRenderPosition.Y + y,
                         currentRenderPosition.Z + z
                     );
 
-                    if (_voxelWorld.IsChunkLoaded(chunkPos))
-                    {
-                        chunkPositions.Add(chunkPos);
-                    }
+
+                    chunkPositions.Add(chunkPos);
                 }
             }
         }
@@ -132,12 +127,11 @@ public class WorldRenderer : IRenderer, IUpdatable
         // add new chunks that are in the render distance
         foreach (var chunkPos in chunkPositions)
         {
-            if (!_chunkMeshArray.ContainsKey(chunkPos))
-            {
-                var chunk = _voxelWorld.GetChunk(chunkPos);
-                var chunkMesh = new ChunkMesh(chunk);
-                _chunkMeshArray.Add(chunkPos, chunkMesh);
-            }
+            if (_chunkMeshArray.ContainsKey(chunkPos)) continue;
+
+            var chunk = _voxelWorld.GetChunk(chunkPos);
+            var chunkMesh = new ChunkMesh(chunk);
+            _chunkMeshArray.Add(chunkPos, chunkMesh);
         }
     }
 }
