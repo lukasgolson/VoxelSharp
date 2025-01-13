@@ -92,7 +92,12 @@ public static class Program
 
         container.RegisterSingleton<IMouseRelative, MouseInput>();
         container.RegisterSingleton<IKeyboardListener, KeyboardListener>();
-        container.RegisterSingleton<ICameraMatricesProvider, FlyingCamera>();
+        
+        var cameraService = Lifestyle.Singleton.CreateRegistration<FlyingBaseCamera>(container);
+        
+        container.AddRegistration<ICameraMatricesProvider>(cameraService);
+        
+        
         container.RegisterSingleton<IWindow, Window>();
         container.RegisterSingleton<VoxelWorld>();
         container.RegisterSingleton<WorldRenderer>();

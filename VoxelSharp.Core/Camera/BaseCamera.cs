@@ -6,33 +6,45 @@ using Vector3 = System.Numerics.Vector3;
 
 namespace VoxelSharp.Core.Camera;
 
-public abstract class Camera : IUpdatable, ICameraMatricesProvider, IAspectRatioEventSubscriber
+public abstract class BaseCamera : IUpdatable, ICameraMatricesProvider, IAspectRatioEventSubscriber, ICameraParameters
 {
     private const float MouseSensitivity = 0.5f;
-    private float _pitch; // Vertical rotation
 
     // Camera position and directions
-    private Vector3 _position = Vector3.Zero;
-    private Matrix4x4 _projectionMatrix;
+    public Vector3 Position { get; private set; }
+
+    public Vector3 Rotation => _rotation;
+
+    public float FieldOfView => 45;
+    public float NearClip => 0.01f;
+    public float FarClip => 2000f;
+    public float AspectRatio { get; }
+    public ICameraParameters.CameraType Camera => ICameraParameters.CameraType.Perspective;
+
 
     // Matrices
+    private Matrix4x4 _projectionMatrix;
     private Matrix4x4 _viewMatrix = Matrix4x4.Identity;
 
-    // Rotation
-    private float _yaw; // Horizontal rotation
+
+    private Vector3 _rotation;
+
+    
     protected Vector3 Forward = -Vector3.UnitZ;
     protected Vector3 Right = Vector3.UnitX;
     protected Vector3 Up = Vector3.UnitY;
+
 
     /// <summary>
     ///     Initializes a new instance of the Camera class.
     /// </summary>
     /// <param name="gameLoop"> The gameloop to register camera updates to.</param>
     /// <param name="aspectRatio">The aspect ratio of the camera's view.</param>
-    protected Camera(IGameLoop gameLoop, float aspectRatio = 16f / 9f)
+    protected BaseCamera(IGameLoop gameLoop, float aspectRatio = 16f / 9f)
     {
+        AspectRatio = aspectRatio;
         gameLoop.RegisterUpdateAction(this);
-        SetProjectionMatrix(45, aspectRatio);
+        SetProjectionMatrix(FieldOfView, AspectRatio);
     }
 
     /// <summary>
@@ -40,7 +52,7 @@ public abstract class Camera : IUpdatable, ICameraMatricesProvider, IAspectRatio
     /// </summary>
     public void UpdateAspectRatio(float aspectRatio)
     {
-        SetProjectionMatrix(45, aspectRatio);
+        SetProjectionMatrix(FieldOfView, aspectRatio);
     }
 
     /// <summary>
@@ -73,15 +85,11 @@ public abstract class Camera : IUpdatable, ICameraMatricesProvider, IAspectRatio
     /// </summary>
     private void SetProjectionMatrix(float verticalFov, float aspectRatio)
     {
-        const float nearPlane = 0.01f;
-        const float farPlane = 2000f;
-
-
         var verticalFovRadians = verticalFov.ToRadians();
 
 
         _projectionMatrix =
-            Matrix4x4.CreatePerspectiveFieldOfView(verticalFovRadians, aspectRatio, nearPlane, farPlane);
+            Matrix4x4.CreatePerspectiveFieldOfView(verticalFovRadians, aspectRatio, NearClip, FarClip);
     }
 
     /// <summary>
@@ -89,7 +97,7 @@ public abstract class Camera : IUpdatable, ICameraMatricesProvider, IAspectRatio
     /// </summary>
     private void UpdateViewMatrix()
     {
-        _viewMatrix = Matrix4x4.CreateLookAt(_position, _position + Forward, Up);
+        _viewMatrix = Matrix4x4.CreateLookAt(Position, Position + Forward, Up);
     }
 
     /// <summary>
@@ -97,8 +105,8 @@ public abstract class Camera : IUpdatable, ICameraMatricesProvider, IAspectRatio
     /// </summary>
     private void UpdateRelativeVectors()
     {
-        var pitchRadians = _pitch.ToRadians();
-        var yawRadians = _yaw.ToRadians();
+        var pitchRadians = Rotation.X.ToRadians();
+        var yawRadians = Rotation.Y.ToRadians();
 
 
         Forward = new Vector3(
@@ -116,18 +124,24 @@ public abstract class Camera : IUpdatable, ICameraMatricesProvider, IAspectRatio
     /// </summary>
     protected void UpdatePosition(Vector3 deltaPosition)
     {
-        _position += deltaPosition;
+        Position += deltaPosition;
     }
 
     /// <summary>
     ///     Updates the camera's rotation based on the given yaw and pitch deltas.
     /// </summary>
-    public void UpdateRotation(float deltaYaw, float deltaPitch)
+    protected void UpdateRotation(float deltaYaw, float deltaPitch)
     {
-        _yaw = (_yaw + deltaYaw * MouseSensitivity) % 360f; // Normalize yaw to the range [0, 360)
-        if (_yaw < 0f) _yaw += 360f; // Ensure positive yaw
+        var pitch = _rotation.X;
+        var yaw = _rotation.Y;
+
+        pitch = Math.Clamp(pitch + deltaPitch * MouseSensitivity, -89f, 89f);
 
 
-        _pitch = Math.Clamp(_pitch + deltaPitch * MouseSensitivity, -89f, 89f);
+        yaw = (yaw + deltaYaw * MouseSensitivity) % 360f; // Normalize yaw to the range [0, 360)
+        if (yaw < 0f) yaw += 360f; // Ensure positive yaw
+
+        _rotation.X = pitch;
+        _rotation.Y = yaw;
     }
 }

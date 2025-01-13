@@ -9,7 +9,7 @@ using VoxelSharp.Core.Helpers;
 
 namespace VoxelSharp.Client;
 
-public class FlyingCamera : Camera
+public class FlyingBaseCamera : BaseCamera
 {
     private const float Speed = 10f;
     private const float DampingFactor = 5f; // Controls how quickly movement slows down
@@ -20,7 +20,7 @@ public class FlyingCamera : Camera
 
     private Vector3 _velocity = Vector3.Zero;
 
-    public FlyingCamera(IGameLoop gameLoop, IMouseRelative mouseInput, IKeyboardListener keyboardListener,
+    public FlyingBaseCamera(IGameLoop gameLoop, IMouseRelative mouseInput, IKeyboardListener keyboardListener,
         IWindow window)
         : base(gameLoop)
     {
