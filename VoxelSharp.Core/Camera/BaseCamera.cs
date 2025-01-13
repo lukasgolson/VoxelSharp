@@ -6,7 +6,7 @@ using Vector3 = System.Numerics.Vector3;
 
 namespace VoxelSharp.Core.Camera;
 
-public abstract class BaseCamera : IUpdatable, ICameraMatricesProvider, IAspectRatioEventSubscriber, ICameraParameters
+public abstract class BaseCamera : IUpdatable, ICameraMatrices, IAspectRatioEventSubscriber, ICameraParameters
 {
     private const float MouseSensitivity = 0.5f;
 

@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Logging;
 using VoxelSharp.Abstractions.Loop;
 using VoxelSharp.Abstractions.Renderer;
+using VoxelSharp.Core.Helpers;
 using VoxelSharp.Core.Structs;
 using VoxelSharp.Core.World;
 using VoxelSharp.Renderer.Mesh.World;
@@ -12,7 +13,6 @@ public class WorldRenderer : IRenderer, IUpdatable
     private readonly Dictionary<Position<int>, ChunkMesh> _chunkMeshArray;
     private Shader? _chunkShader;
 
-    private readonly Position<int> _currentRenderPosition = Position<int>.Zero;
 
     private VoxelWorld? _voxelWorld;
 
@@ -20,15 +20,18 @@ public class WorldRenderer : IRenderer, IUpdatable
     private const int RenderDistanceSquared = RenderDistance * RenderDistance;
 
     private readonly ILogger _logger;
-    private readonly ICameraMatricesProvider _cameraMatricesProvider;
+    private readonly ICameraMatrices _cameraMatrices;
+    private readonly ICameraParameters _cameraParameters;
 
-    public WorldRenderer(ICameraMatricesProvider cameraMatricesProvider, ILogger<WorldRenderer> logger,
+    public WorldRenderer(ICameraMatrices cameraMatrices, ICameraParameters cameraParameters,
+        ILogger<WorldRenderer> logger,
         IGameLoop gameLoop)
     {
         gameLoop.RegisterRenderAction(this);
         gameLoop.RegisterUpdateAction(this);
 
-        _cameraMatricesProvider = cameraMatricesProvider;
+        _cameraMatrices = cameraMatrices;
+        _cameraParameters = cameraParameters;
         _logger = logger;
 
         var worldVolume = Math.Pow(RenderDistance, 3);
@@ -54,8 +57,8 @@ public class WorldRenderer : IRenderer, IUpdatable
 
         _chunkShader.Use();
 
-        _chunkShader.SetUniform("m_view", _cameraMatricesProvider.GetViewMatrix());
-        _chunkShader.SetUniform("m_projection", _cameraMatricesProvider.GetProjectionMatrix());
+        _chunkShader.SetUniform("m_view", _cameraMatrices.GetViewMatrix());
+        _chunkShader.SetUniform("m_projection", _cameraMatrices.GetProjectionMatrix());
 
         foreach (var chunkMesh in _chunkMeshArray.Values)
             chunkMesh.Render(_chunkShader);
@@ -85,6 +88,14 @@ public class WorldRenderer : IRenderer, IUpdatable
             throw new InvalidOperationException("ChunkMesh array not initialized.");
 
 
+        var currentCameraPosition = _cameraParameters.Position.AsPosition();
+
+        
+        
+        // convert the camera position to chunk position
+        var currentRenderPosition = _voxelWorld.GetChunkCoordinates(currentCameraPosition.RoundToInt());
+
+
         // the list of chunks to render
         List<Position<int>> chunkPositions = [];
 
@@ -97,9 +108,9 @@ public class WorldRenderer : IRenderer, IUpdatable
                     if (x * x + y * y + z * z >= RenderDistanceSquared) continue;
 
                     var chunkPos = new Position<int>(
-                        _currentRenderPosition.X + x,
-                        _currentRenderPosition.Y + y,
-                        _currentRenderPosition.Z + z
+                        currentRenderPosition.X + x,
+                        currentRenderPosition.Y + y,
+                        currentRenderPosition.Z + z
                     );
 
                     if (_voxelWorld.IsChunkLoaded(chunkPos))

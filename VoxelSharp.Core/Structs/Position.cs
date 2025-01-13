@@ -89,6 +89,11 @@ public readonly record struct Position<T> where T : INumber<T>
 
         return new Position<T>(X / magnitude, Y / magnitude, Z / magnitude);
     }
+    
+    public Position<int> RoundToInt()
+    {
+        return new Position<int>(Convert.ToInt32(X), Convert.ToInt32(Y), Convert.ToInt32(Z));
+    }
 
     /// <summary>
     ///     Adds two vectors.

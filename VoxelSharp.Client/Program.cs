@@ -95,8 +95,8 @@ public static class Program
         
         var cameraService = Lifestyle.Singleton.CreateRegistration<FlyingBaseCamera>(container);
         
-        container.AddRegistration<ICameraMatricesProvider>(cameraService);
-        
+        container.AddRegistration<ICameraMatrices>(cameraService);
+        container.AddRegistration<ICameraParameters>(cameraService);
         
         container.RegisterSingleton<IWindow, Window>();
         container.RegisterSingleton<VoxelWorld>();

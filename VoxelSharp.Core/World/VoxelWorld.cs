@@ -7,7 +7,8 @@ public class VoxelWorld
     public readonly Dictionary<Position<int>, Chunk> ChunkArray = new();
 
     public const int InitialChunkSize = 8; // temporary placeholder until we have a proper world generation system in place
-    private const int ChunkSize = 16;
+    
+    public int ChunkSize => 16;
 
     public VoxelWorld()
     {
@@ -57,6 +58,8 @@ public class VoxelWorld
     }
     
     
+    
+    
 
     public void SetVoxel(Position<int> worldPos, Voxel voxel)
     {
@@ -70,7 +73,7 @@ public class VoxelWorld
         chunk.SetVoxel(localCoords, voxel);
     }
 
-    private Position<int> GetChunkCoordinates(Position<int> worldCoords)
+    public Position<int> GetChunkCoordinates(Position<int> worldCoords)
     {
         var x = worldCoords.X / ChunkSize;
         var y = worldCoords.Y / ChunkSize;
