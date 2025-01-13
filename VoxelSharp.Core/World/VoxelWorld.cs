@@ -1,4 +1,5 @@
-﻿using VoxelSharp.Core.Structs;
+﻿using VoxelSharp.Core.Interfaces.WorldGen;
+using VoxelSharp.Core.Structs;
 
 namespace VoxelSharp.Core.World;
 
@@ -9,9 +10,13 @@ public class VoxelWorld
     public const int InitialChunkSize = 8; // temporary placeholder until we have a proper world generation system in place
     
     public int ChunkSize => 16;
+    
+    private readonly IWorldGenerator _worldGenerator;
 
-    public VoxelWorld()
+    public VoxelWorld(IWorldGenerator worldGenerator)
     {
+        _worldGenerator = worldGenerator;
+        
         const int initialWorldVolume = InitialChunkSize * InitialChunkSize * InitialChunkSize;
 
 
@@ -33,7 +38,12 @@ public class VoxelWorld
             return;
         
         var chunk = new Chunk(chunkPos, ChunkSize);
+        
+        _worldGenerator.GenerateChunk(chunk);
+        
         ChunkArray.Add(chunk.Position, chunk);
+        
+        
     }
     
     public Chunk GetChunk(Position<int> chunkPos)

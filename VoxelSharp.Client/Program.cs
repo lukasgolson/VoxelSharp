@@ -11,7 +11,9 @@ using VoxelSharp.Client.Input;
 using VoxelSharp.Client.Wrappers;
 using VoxelSharp.Core.ECS;
 using VoxelSharp.Core.GameLoop;
+using VoxelSharp.Core.Interfaces.WorldGen;
 using VoxelSharp.Core.World;
+using VoxelSharp.Core.WorldGen;
 using VoxelSharp.Modding;
 using VoxelSharp.Renderer;
 using VoxelSharp.Renderer.Rendering;
@@ -23,6 +25,8 @@ public static class Program
     private static Container Container { get; } = new();
     private static ModLoader? ModLoader { get; set; }
 
+    private static Ecs Ecs { get; } = new();
+
     public static void Main(string[] args)
     {
         var loggerFactory = ConfigureLogging(Container);
@@ -33,25 +37,23 @@ public static class Program
         ModLoader.LoadMods(modsDirectory);
         ModLoader.PreInitializeMods(Container);
 
-        
-        
-        ConfigureServices(Container);
-        
-        var ecs = new Ecs();
-        
-        ecs.AddWorldToContainer(Container);
-        Container.Verify();
+
+        ConfigureServices(Container, Ecs);
 
 
         ModLoader.InitializeMods(Container);
+        
+        Container.Verify();
 
 
         var client = Container.GetInstance<IClient>();
         client.Run();
-        
-        
-        ecs.Dispose();
+
+
+        Ecs.Dispose();
     }
+
+   
 
     private static ILoggerFactory ConfigureLogging(Container container)
     {
@@ -84,7 +86,7 @@ public static class Program
         return modsDirectory;
     }
 
-    private static void ConfigureServices(Container container)
+    private static void ConfigureServices(Container container, Ecs ecs)
     {
         container.RegisterInstance(new ModLoaderWrapper(ModLoader));
 
@@ -92,17 +94,19 @@ public static class Program
 
         container.RegisterSingleton<IMouseRelative, MouseInput>();
         container.RegisterSingleton<IKeyboardListener, KeyboardListener>();
-        
+
         var cameraService = Lifestyle.Singleton.CreateRegistration<FlyingBaseCamera>(container);
-        
+
         container.AddRegistration<ICameraMatrices>(cameraService);
         container.AddRegistration<ICameraParameters>(cameraService);
-        
+
         container.RegisterSingleton<IWindow, Window>();
         container.RegisterSingleton<VoxelWorld>();
         container.RegisterSingleton<WorldRenderer>();
         container.RegisterSingleton<IClient, Client>();
-    }
+        
+        container.RegisterSingleton<IWorldGenerator, EmptyWorldGenerator>();
 
- 
+        ecs.AddWorldToContainer(Container);
+    }
 }

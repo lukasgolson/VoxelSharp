@@ -105,7 +105,6 @@ public class WorldRenderer : IRenderer, IUpdatable
             {
                 for (var z = -RenderDistance; z < RenderDistance; z++)
                 {
-                    if (x * x + y * y + z * z >= RenderDistanceSquared) continue;
 
                     var chunkPos = new Position<int>(
                         currentRenderPosition.X + x,
@@ -128,7 +127,6 @@ public class WorldRenderer : IRenderer, IUpdatable
         {
             _chunkMeshArray[key].Dispose();
             _chunkMeshArray.Remove(key);
-            _logger.LogInformation("Removed chunk at {ChunkPos}", key);
         }
 
         // add new chunks that are in the render distance
@@ -139,8 +137,6 @@ public class WorldRenderer : IRenderer, IUpdatable
                 var chunk = _voxelWorld.GetChunk(chunkPos);
                 var chunkMesh = new ChunkMesh(chunk);
                 _chunkMeshArray.Add(chunkPos, chunkMesh);
-
-                _logger.LogInformation("Added chunk at {ChunkPos}", chunkPos);
             }
         }
     }

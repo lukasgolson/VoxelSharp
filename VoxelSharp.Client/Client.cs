@@ -36,10 +36,7 @@ public class Client : IClient
         VoxelWorld = voxelWorld;
         _worldRenderer = worldRenderer;
 
-        _worldRenderer.AssociateWorld(voxelWorld);
-
-
-        voxelWorld.SetVoxel(new Position<int>(0, 0, 0), new Voxel(Color.Red));
+        _worldRenderer.AssociateWorld(voxelWorld); 
     }
 
     public void Run()

@@ -62,6 +62,8 @@ public class Chunk
     ///     The world position of this chunk.
     /// </summary>
     public Position<int> Position { get; }
+    
+    public int Dimension { get; } = 0;
 
     /// <summary>
     ///     Sets a voxel at the specified local chunk coordinates, marking the chunk dirty.
