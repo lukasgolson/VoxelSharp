@@ -1,5 +1,6 @@
 ﻿using System.Runtime.CompilerServices;
 using VoxelSharp.Core.Structs;
+using VoxelSharp.Resources;
 
 namespace VoxelSharp.Core.World;
 
@@ -28,7 +29,7 @@ public class Chunk
         // Fill the Memory<Voxel> with transparent voxels
         var span = VoxelBuffer.Span;
 
-        var transparentVoxel = new Voxel(Color.Transparent);
+        var transparentVoxel = new Voxel(Rgba.Transparent);
 
         for (var i = 0; i < span.Length; i++) span[i] = transparentVoxel;
     }

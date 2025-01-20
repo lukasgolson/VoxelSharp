@@ -2,6 +2,7 @@
 using VoxelSharp.Core.Interfaces.WorldGen;
 using VoxelSharp.Core.Structs;
 using VoxelSharp.Core.World;
+using VoxelSharp.Resources;
 
 namespace VoxelSharp.Core.WorldGen;
 
@@ -17,7 +18,7 @@ public class EmptyWorldGenerator : IWorldGenerator
     /// <inheritdoc />
     public bool GenerateChunk(Chunk chunk)
     {
-        chunk.SetVoxel(new Position<int>(0, 0, 0), new Voxel(Color.Red));
+        chunk.SetVoxel(new Position<int>(0, 0, 0), new Voxel(Rgba.Red));
         
         chunk.IsDirty = true;
         

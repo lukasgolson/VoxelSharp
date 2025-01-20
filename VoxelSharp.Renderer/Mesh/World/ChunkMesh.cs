@@ -64,7 +64,7 @@ public class ChunkMesh(Chunk chunk) : BaseMesh
             var voxel = chunkVoxelSpan[voxelIndex];
 
             // Skip transparent voxels
-            if (voxel.Color.A == 0) continue;
+            if (voxel.Rgba.A == 0) continue;
 
             // Add visible faces
             AddVisibleFacesToSpan(span, chunkVoxelSpan, ref index, x, y, z, voxel);
@@ -139,7 +139,7 @@ public class ChunkMesh(Chunk chunk) : BaseMesh
 
         // Otherwise, check if the adjacent voxel is transparent
         var idx = _chunk.GetVoxelIndex(new Position<int>(x, y, z));
-        return voxelSpan[idx].Color.A != currentAlpha;
+        return voxelSpan[idx].Rgba.A != currentAlpha;
     }
 
     private bool IsWithinBounds(int x, int y, int z)
@@ -163,7 +163,7 @@ public class ChunkMesh(Chunk chunk) : BaseMesh
     private void AddVisibleFacesToSpan(Span<float> span, Span<Voxel> voxelSpan, ref int index,
         int x, int y, int z, Voxel voxel)
     {
-        int alpha = voxel.Color.A;
+        int alpha = voxel.Rgba.A;
 
         // Top face
         if (IsVoid(x, y + 1, z, alpha, voxelSpan))

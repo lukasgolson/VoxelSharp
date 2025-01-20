@@ -9,6 +9,7 @@
 
     <ItemGroup>
         <ProjectReference Include="..\VoxelSharp.Abstractions\VoxelSharp.Abstractions.csproj"/>
+        <ProjectReference Include="..\VoxelSharp.Resources\VoxelSharp.Resources.csproj" />
     </ItemGroup>
 
     <ItemGroup>
