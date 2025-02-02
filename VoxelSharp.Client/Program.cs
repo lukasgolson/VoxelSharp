@@ -17,6 +17,7 @@ using VoxelSharp.Core.WorldGen;
 using VoxelSharp.Modding;
 using VoxelSharp.Renderer;
 using VoxelSharp.Renderer.Rendering;
+using VoxelSharp.Resources;
 
 namespace VoxelSharp.Client;
 
@@ -108,6 +109,8 @@ public static class Program
         container.RegisterSingleton<IClient, Client>();
         
         container.RegisterSingleton<IWorldGenerator, EmptyWorldGenerator>();
+        
+        container.RegisterSingleton<ResourceDictionary>();
 
         ecs.AddWorldToContainer(Container);
     }

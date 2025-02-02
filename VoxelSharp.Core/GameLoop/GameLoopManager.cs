@@ -4,12 +4,13 @@ using VoxelSharp.Abstractions.Renderer;
 
 namespace VoxelSharp.Core.GameLoop;
 
+
 public class GameLoop : IGameLoop
 {
     private const double MaxCatchUpTime = 2.0; // Maximum allowable catch-up time in seconds
     private readonly List<Action> _postRenderActions = [];
     private readonly List<Action> _preRenderActions = [];
-    private readonly List<Action<double>> _renderActions = [];
+    private readonly List<Renderer> _renderActions = [];
 
     private readonly Stopwatch _stopwatch = new();
     private readonly List<Action<double>> _tickActions = [];
@@ -30,6 +31,38 @@ public class GameLoop : IGameLoop
     private int _ticksProcessed;
     private double _tickTimeAccumulator;
 
+    internal struct Renderer : IEquatable<Renderer>
+    {
+        public Action<double> RenderAction;
+        public int priority;
+
+
+        public bool Equals(Renderer other)
+        {
+            return RenderAction.Equals(other.RenderAction);
+        }
+
+        public override bool Equals(object? obj)
+        {
+            return obj is Renderer other && Equals(other);
+        }
+
+        public override int GetHashCode()
+        {
+            return RenderAction.GetHashCode();
+        }
+
+        public static bool operator ==(Renderer left, Renderer right)
+        {
+            return left.Equals(right);
+        }
+
+        public static bool operator !=(Renderer left, Renderer right)
+        {
+            return !left.Equals(right);
+        }
+    }
+    
     public GameLoop()
     {
         _isRunning = false;
@@ -78,12 +111,10 @@ public class GameLoop : IGameLoop
                         tickAccumulator -= _tickDuration;
                     }
 
-                    if (frameAccumulator >= _frameDuration)
-                    {
-                        RunRender(frameAccumulator /
-                                  _frameDuration); // Use interpolation factor for smooth rendering
-                        frameAccumulator -= _frameDuration;
-                    }
+                    if (!(frameAccumulator >= _frameDuration)) continue;
+                    RunRender(frameAccumulator /
+                              _frameDuration); // Use interpolation factor for smooth rendering
+                    frameAccumulator -= _frameDuration;
                 }
 
                 UpdatePerformanceMetrics();
@@ -139,12 +170,20 @@ public class GameLoop : IGameLoop
         UnregisterUpdateAction(updatable.Update);
     }
 
-    public void RegisterRenderAction(Action<double> renderAction)
+    public void RegisterRenderAction(Action<double> renderAction, int priority = 0)
     {
-        if (!_renderActions.Contains(renderAction)) _renderActions.Add(renderAction);
+        
+        var renderer = new Renderer { RenderAction = renderAction, priority = priority };
+        
+        if (!_renderActions.Contains(renderer))
+        {
+            _renderActions.Add(renderer);
+        }
+        
+        _renderActions.Sort((a, b) => a.priority.CompareTo(b.priority));
     }
 
-    public void RegisterRenderAction(IRenderer renderer)
+    public void RegisterRenderAction(IRenderer renderer, int priority = 0)
     {
         RegisterRenderAction(renderer.Render);
     }
@@ -160,8 +199,9 @@ public class GameLoop : IGameLoop
 
     public void UnregisterRenderAction(Action<double> renderAction)
     {
-        _renderActions.Remove(renderAction);
+        _renderActions.Remove(new Renderer { RenderAction = renderAction });
     }
+
 
     public void UnregisterRenderAction(IRenderer renderer)
     {
@@ -211,7 +251,7 @@ public class GameLoop : IGameLoop
     {
         foreach (var preRenderAction in _preRenderActions) preRenderAction();
 
-        foreach (var action in _renderActions) action(interpolationFactor);
+        foreach (var action in _renderActions) action.RenderAction(interpolationFactor);
 
         foreach (var postRenderAction in _postRenderActions) postRenderAction();
 

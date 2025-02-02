@@ -60,9 +60,9 @@ public interface IGameLoop
     ///     Registers a render action, which is called as often as possible with an interpolation factor.
     /// </summary>
     /// <param name="renderAction">The action to execute during rendering.</param>
-    void RegisterRenderAction(Action<double> renderAction);
+    void RegisterRenderAction(Action<double> renderAction, int priority = 0);
 
-    void RegisterRenderAction(IRenderer renderer);
+    void RegisterRenderAction(IRenderer renderer, int priority = 0);
 
     void RegisterRenderProcessingAction(IRendererProcessing rendererProcessing);
 

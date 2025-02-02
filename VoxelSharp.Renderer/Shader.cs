@@ -13,13 +13,31 @@ public class Shader
 
     private readonly Dictionary<string, int> _uniformLocations;
 
-    public Shader(string vertPath, string fragPath)
+    
+
+    public Shader(string vert, string frag, bool fromString = false)
     {
-        if (!File.Exists(vertPath) || !File.Exists(fragPath)) throw new FileNotFoundException("Shader file not found.");
+        string vertSource;
+        string fragSource;
+
+        if (fromString)
+        {
+            vertSource = vert;
+            fragSource = frag;
+        }
+        else
+        {
+            if (!File.Exists(vert) || !File.Exists(frag))
+                throw new FileNotFoundException("Shader file not found.");
+
+            vertSource = File.ReadAllText(vert);
+            fragSource = File.ReadAllText(frag);
+        }
+
 
         // Load and compile shaders
-        var vertexShader = LoadAndCompileShader(vertPath, ShaderType.VertexShader);
-        var fragmentShader = LoadAndCompileShader(fragPath, ShaderType.FragmentShader);
+        var vertexShader = LoadAndCompileShader(vertSource, ShaderType.VertexShader);
+        var fragmentShader = LoadAndCompileShader(fragSource, ShaderType.FragmentShader);
 
         // Create shader program and link shaders
         _handle = GL.CreateProgram();
@@ -62,9 +80,9 @@ public class Shader
         }
     }
 
-    private static int LoadAndCompileShader(string path, ShaderType type)
+
+    private static int LoadAndCompileShader(string shaderSource, ShaderType type)
     {
-        var shaderSource = File.ReadAllText(path);
         var shader = GL.CreateShader(type);
         GL.ShaderSource(shader, shaderSource);
         CompileShader(shader);
@@ -140,10 +158,5 @@ public class Shader
     public void SetUniform(string name, Vector3 data)
     {
         if (_uniformLocations.TryGetValue(name, out var location) && location != -1) GL.Uniform3(location, ref data);
-    }
-
-    ~Shader()
-    {
-        GL.DeleteProgram(_handle);
     }
 }

@@ -3,8 +3,6 @@ using DeftSharp.Windows.Input.Keyboard;
 using Microsoft.Extensions.Logging;
 using VoxelSharp.Abstractions.Client;
 using VoxelSharp.Abstractions.Loop;
-using VoxelSharp.Client.Wrappers;
-using VoxelSharp.Core.Structs;
 using VoxelSharp.Core.World;
 using VoxelSharp.Renderer.Rendering;
 
@@ -14,8 +12,6 @@ public class Client : IClient
 {
     private readonly IGameLoop _gameLoop;
     private readonly IKeyboardListener _keyboardListener;
-    public readonly VoxelWorld VoxelWorld;
-    private readonly WorldRenderer _worldRenderer;
 
 
     private readonly ILogger<Client> _logger;
@@ -30,10 +26,7 @@ public class Client : IClient
         _logger = logger;
 
 
-        VoxelWorld = voxelWorld;
-        _worldRenderer = worldRenderer;
-
-        _worldRenderer.AssociateWorld(voxelWorld); 
+        worldRenderer.AssociateWorld(voxelWorld); 
     }
 
     public void Run()
@@ -42,7 +35,6 @@ public class Client : IClient
 
 
         
-        _worldRenderer.InitializeShaders();
 
         _logger.LogInformation("Starting game loop...");
 

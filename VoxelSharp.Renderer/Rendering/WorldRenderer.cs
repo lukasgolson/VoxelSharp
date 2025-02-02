@@ -11,7 +11,7 @@ namespace VoxelSharp.Renderer.Rendering;
 public class WorldRenderer : IRenderer, IUpdatable
 {
     private readonly Dictionary<Position<int>, ChunkMesh> _chunkMeshArray;
-    private Shader? _chunkShader;
+    private Shader _chunkShader;
 
 
     private VoxelWorld? _voxelWorld;
@@ -49,10 +49,20 @@ public class WorldRenderer : IRenderer, IUpdatable
     }
 
 
+    private bool _initialized;
+
     public void Render(double interpolationFactor)
     {
-        if (_chunkShader == null)
-            throw new InvalidOperationException("Shaders not initialized. Call InitializeShaders before rendering.");
+        if (!_initialized)
+        {
+            InitializeShaders();
+
+            if (_chunkShader == null)
+                throw new InvalidOperationException("Chunk shader not initialized.");
+
+            _initialized = true;
+
+        }
 
         _chunkShader.Use();
 

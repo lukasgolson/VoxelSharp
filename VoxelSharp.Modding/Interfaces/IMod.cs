@@ -27,7 +27,10 @@ public interface IMod
     /// </returns>
     /// <remarks>The container is shared with all other mods and should not be used to retrieve dependencies in this method as it will lock the dependency graph.</remarks>
 
-    bool PreInitialize(Harmony harmony, Container container);
+    bool PreInitialize(Harmony harmony, Container container)
+    {
+        return true;
+    }
 
     /// <summary>
     ///     Called when the mod is initialized.
@@ -42,7 +45,10 @@ public interface IMod
     ///     Returns <c>true</c> if the initialization was successful; otherwise, <c>false</c>.
     /// </returns>
     /// <remarks>The container is shared with all other mods and should not be used to retrieve dependencies in this method as it will lock the dependency graph.</remarks>
-    bool Initialize(Harmony harmony, Container container);
+    bool Initialize(Harmony harmony, Container container)
+    {
+        return true;
+    }
 
     /// <summary>
     /// Called once all the mods are initialized to perform any post-initialization tasks.

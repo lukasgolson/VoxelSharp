@@ -21,7 +21,9 @@ public class BasicWorldGenerator : IWorldGenerator
         {
             for (var index = 0; index < chunkSpan.Length; index++)
             {
-                chunkSpan[index] = voxel;
+                if (index % 2 == 0)
+                    chunkSpan[index] = voxel;
+           
             }
         }
         
