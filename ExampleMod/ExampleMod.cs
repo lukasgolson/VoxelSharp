@@ -28,7 +28,7 @@ public class ExampleMod : IMod
         container.Options.AllowOverridingRegistrations = true;
         container.RegisterSingleton<IWorldGenerator, BasicWorldGenerator>();
 
-       container.Register<SkyRenderer>();
+        container.Register<SkyRenderer>();
 
 
         var resourceDictionary = container.GetInstance<ResourceDictionary>();

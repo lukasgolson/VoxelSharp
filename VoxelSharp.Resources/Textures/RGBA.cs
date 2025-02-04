@@ -3,16 +3,35 @@
 /// <summary>
 /// This struct is used to represent an RGBA color.
 /// </summary>
-/// <param name="r">Red component</param>
-/// <param name="g">Green component</param>
-/// <param name="b">Blue component</param>
-/// <param name="a">Alpha component</param>
-public readonly struct Rgba(byte r, byte g, byte b, byte a) : IEquatable<Rgba>
+public readonly struct Rgba : IEquatable<Rgba>
 {
-    public byte R { get; } = r;
-    public byte G { get; } = g;
-    public byte B { get; } = b;
-    public byte A { get; } = a;
+    /// <summary>
+    /// This struct is used to represent an RGBA color.
+    /// </summary>
+    /// <param name="r">Red component</param>
+    /// <param name="g">Green component</param>
+    /// <param name="b">Blue component</param>
+    /// <param name="a">Alpha component</param>
+    public Rgba(byte r, byte g, byte b, byte a)
+    {
+        R = r;
+        G = g;
+        B = b;
+        A = a;
+    }
+    
+    public Rgba(byte r, byte g, byte b)
+    {
+        R = r;
+        G = g;
+        B = b;
+        A = 255;
+    }
+
+    public byte R { get; }
+    public byte G { get; }
+    public byte B { get; }
+    public byte A { get; }
 
 
     public override bool Equals(object? obj)

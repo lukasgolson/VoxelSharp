@@ -1,3 +1,4 @@
+using System.Numerics;
 using Microsoft.Extensions.Logging;
 using VoxelSharp.Abstractions.Loop;
 using VoxelSharp.Abstractions.Renderer;
@@ -5,6 +6,8 @@ using VoxelSharp.Core.Helpers;
 using VoxelSharp.Core.Structs;
 using VoxelSharp.Core.World;
 using VoxelSharp.Renderer.Mesh.World;
+
+using Vector3 = OpenTK.Mathematics.Vector3;
 
 namespace VoxelSharp.Renderer.Rendering;
 
@@ -21,7 +24,8 @@ public class WorldRenderer : IRenderer, IUpdatable
     private readonly ILogger _logger;
     private readonly ICameraMatrices _cameraMatrices;
     private readonly ICameraParameters _cameraParameters;
-
+    
+    
     public WorldRenderer(ICameraMatrices cameraMatrices, ICameraParameters cameraParameters,
         ILogger<WorldRenderer> logger,
         IGameLoop gameLoop)
@@ -35,7 +39,12 @@ public class WorldRenderer : IRenderer, IUpdatable
 
         var worldVolume = Math.Pow(RenderDistance, 3);
         _chunkMeshArray = new Dictionary<Position<int>, ChunkMesh>((int)worldVolume);
+
+    
+
     }
+
+ 
 
     public void AssociateWorld(VoxelWorld voxelWorld)
     {
@@ -69,12 +78,18 @@ public class WorldRenderer : IRenderer, IUpdatable
         _chunkShader.SetUniform("m_view", _cameraMatrices.GetViewMatrix());
         _chunkShader.SetUniform("m_projection", _cameraMatrices.GetProjectionMatrix());
 
+        // Calculate the light space matrix
+        // In your C# code where you set uniforms for the shader
+        _chunkShader.SetUniform("lightDirection", new Vector3(0.3f, -1.0f, 0.2f));
+
+
         foreach (var chunkMesh in _chunkMeshArray.Values)
             chunkMesh.Render(_chunkShader);
 
         Shader.Unuse();
     }
 
+  
 
     private float _updateTimer;
 
