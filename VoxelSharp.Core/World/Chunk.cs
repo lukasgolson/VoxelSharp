@@ -63,7 +63,7 @@ public class Chunk
     ///     The world position of this chunk.
     /// </summary>
     public Position<int> Position { get; }
-    
+
     public int Dimension { get; } = 0;
 
     /// <summary>
@@ -125,14 +125,14 @@ public class Chunk
         // Return a slice of the Memory<Voxel>
         return VoxelBuffer.Slice(offset, length).Span;
     }
-    
+
 
     public Span<Voxel> GetVoxelSpan(Position<int> start, Position<int> end)
     {
         var size = end - start;
         return GetVoxelSpan(start.X, start.Y, start.Z, size.X, size.Y, size.Z);
     }
-    
+
 
     /// <summary>
     ///     Provides a span of the chunk's voxel data, useful for operations on the entire chunk.
@@ -141,5 +141,44 @@ public class Chunk
     public Span<Voxel> GetVoxelSpan()
     {
         return VoxelBuffer.Span;
+    }
+
+
+    
+    public Position<int> LocalToGlobalPosition(Position<int> localVoxelPosition)
+    {
+        return localVoxelPosition + Position * ChunkSize;
+    }
+
+    /// <summary>
+    /// Iterates over all local voxel positions within the chunk.
+    /// </summary>
+    /// <returns>An enumerable of (x, y, z) tuples representing local voxel coordinates.</returns>
+    public IEnumerable<(Position<int> position, int index)> IterateVoxelPositions(
+        bool globalPosition = false)
+    {
+        var voxelSpan = VoxelBuffer.Span;
+        int chunkVolume = ChunkVolume; // Cache for loop condition
+
+        for (int index = 0; index < chunkVolume; index++)
+        {
+
+            // Calculate 3D coordinates from index (only if needed)
+            int y = index / ChunkArea;
+            int remaining = index % ChunkArea;
+            int z = remaining / ChunkSize;
+            int x = remaining % ChunkSize;
+            var localPos = new Position<int>(x, y, z);
+
+            if (globalPosition)
+            {
+                var globalPos = LocalToGlobalPosition(localPos);
+                yield return (globalPos, index);
+            }
+            else
+            {
+                yield return (localPos, index);
+            }
+        }
     }
 }

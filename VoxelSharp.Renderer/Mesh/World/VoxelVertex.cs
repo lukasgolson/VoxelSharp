@@ -34,7 +34,7 @@ public readonly struct VoxelVertex
             };
         else
             // Assign the color of the voxel to the vertex
-            (R, G, B, A) = (voxel.Rgba.R, voxel.Rgba.G, voxel.Rgba.B, voxel.Rgba.A);
+            (R, G, B, A) = (voxel.Rgba.R / 255f, voxel.Rgba.G / 255f, voxel.Rgba.B / 255f, voxel.Rgba.A / 255f);
     }
 
 

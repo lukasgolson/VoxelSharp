@@ -34,7 +34,9 @@ public class VoxelWorld
 
         var chunk = new Chunk(chunkPos, ChunkSize);
 
-        _worldGenerator.GenerateChunk(chunk);
+        _worldGenerator.GenerateChunkHeightmap(chunk);
+        
+        _worldGenerator.DecorateChunkHeightmap(chunk);
 
         ChunkArray.Add(chunk.Position, chunk);
 

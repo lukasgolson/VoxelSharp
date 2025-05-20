@@ -28,8 +28,7 @@ void main()
     // Combine voxel color with lighting
     vec4 finalColour = vec4(voxel_color.rgb * lighting, voxel_color.a); // Incorporate voxel color
 
-    // Apply gamma correction
-    finalColour.rgb = pow(finalColour.rgb, vec3(1.0 / gamma));
+   
 
     fragColor = finalColour; // Set the final fragment color
 }

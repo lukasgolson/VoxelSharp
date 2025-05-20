@@ -128,6 +128,22 @@ public readonly record struct Position<T> where T : INumber<T>
         return new Position<T>(-a.X, -a.Y, -a.Z);
     }
 
+    /// <summary>
+    ///  Modulo a vector by a scalar.
+    /// </summary>
+    /// <param name="a">The vector.</param>
+    /// <param name="scalar">The scalar value.</param>
+    /// <returns>The residue of the vector and scalar.</returns>
+    public static Position<T> operator %(Position<T> a, T scalar)
+    {
+        return new Position<T>(a.X % scalar, a.Y % scalar, a.Z % scalar);
+    }
+
+    public static Position<T> operator %(Position<T> a, Position<T> b)
+    {
+        return new Position<T>(a.X % b.X, a.Y % b.Y, a.Z % b.Z);
+    }
+
 
     /// <summary>
     ///     Multiplies a vector by a scalar.

@@ -12,5 +12,7 @@ public interface IWorldGenerator
     /// </summary>
     /// <param name="chunk">The newly created empty chunk.</param>
     /// <returns>Whether the chunk was succesfully generated or not.</returns>
-    public bool GenerateChunk(Chunk chunk);
+    public bool GenerateChunkHeightmap(Chunk chunk);
+    
+    public bool DecorateChunkHeightmap(Chunk chunk);
 }

@@ -86,4 +86,6 @@ public readonly struct Rgba : IEquatable<Rgba>
         return new Rgba((byte)Random.Shared.Next(0, max), (byte)Random.Shared.Next(0, max),
             (byte)Random.Shared.Next(0, max), 255);
     }
+
+    public bool IsTransparent => A == 0;
 }
