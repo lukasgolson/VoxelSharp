@@ -61,8 +61,8 @@ public readonly struct VoxelVertex
                 var v2 = new VoxelVertex(x + 1, y, z + 1, voxel, faceId);
                 var v3 = new VoxelVertex(x, y, z + 1, voxel, faceId);
 
-                // add in order: 0,2,3,0,1,2
-                return [v0, v2, v3, v0, v1, v2];
+                // [FIXED] add in order: 0,3,2,0,2,1
+                return [v0, v3, v2, v0, v2, v1];
             }
             case World.FaceId.Right:
             {
@@ -81,8 +81,8 @@ public readonly struct VoxelVertex
                 var v2 = new VoxelVertex(x, y + 1, z + 1, voxel, faceId);
                 var v3 = new VoxelVertex(x, y, z + 1, voxel, faceId);
 
-                // add in order: 0, 2, 1, 0, 3, 2
-                return [v0, v2, v1, v0, v3, v2];
+                // [FIXED] add in order: 0, 1, 2, 0, 2, 3
+                return [v0, v1, v2, v0, v2, v3];
             }
             case World.FaceId.Back:
             {
@@ -101,8 +101,8 @@ public readonly struct VoxelVertex
                 var v2 = new VoxelVertex(x + 1, y + 1, z + 1, voxel, faceId);
                 var v3 = new VoxelVertex(x + 1, y, z + 1, voxel, faceId);
 
-                // add in order: 0, 2, 1, 0, 3, 2
-                return [v0, v2, v1, v0, v3, v2];
+                // [FIXED] add in order: 0, 1, 2, 0, 2, 3
+                return [v0, v1, v2, v0, v2, v3];
             }
             default:
                 throw new ArgumentOutOfRangeException(nameof(faceId), faceId, "Invalid face id");

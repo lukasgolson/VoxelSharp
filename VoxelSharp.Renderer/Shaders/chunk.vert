@@ -14,8 +14,7 @@ uniform mat4 m_projection;
 
 out vec4 voxel_color;
 out vec2 frag_uv;
-out vec3 frag_normal;
-
+flat out vec3 frag_normal;
 
 
 const vec2 uv_coords[4] = vec2[4](
@@ -46,6 +45,6 @@ void main()
     else if (face_id == 5) frag_normal = vec3(0.0, 0.0, 1.0); // Front
 
 
-    gl_Position = vec4(in_position, 1.0) * m_model * m_view * m_projection;
+    gl_Position = m_projection * m_view * m_model * vec4(in_position, 1.0);
 
 }

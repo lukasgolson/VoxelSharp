@@ -65,7 +65,8 @@ public class Window : NativeWindow, IWindow, IRendererProcessing, IUpdatable
     {
         GL.Enable(EnableCap.DepthTest);
         GL.DepthFunc(DepthFunction.Less);
-        GL.Disable(EnableCap.CullFace);
+        //GL.Disable(EnableCap.CullFace);
+        GL.Enable(EnableCap.CullFace); 
 
         GL.Clear(ClearBufferMask.DepthBufferBit);
 

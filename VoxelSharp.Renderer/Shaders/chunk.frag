@@ -6,7 +6,7 @@ out vec4 fragColor;
 // Inputs from vertex shader
 in vec4 voxel_color;
 in vec2 frag_uv;
-in vec3 frag_normal;
+flat in vec3 frag_normal;
 
 // Lighting uniforms
 uniform vec3 lightDirection = normalize(vec3(0.3, -1.0, 0.2)); // Direction of light

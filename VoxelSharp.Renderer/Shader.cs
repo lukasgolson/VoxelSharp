@@ -143,7 +143,7 @@ public class Shader
     public void SetUniform(string name, Matrix4 data)
     {
         if (_uniformLocations.TryGetValue(name, out var location) && location != -1)
-            GL.UniformMatrix4(location, true, ref data);
+            GL.UniformMatrix4(location, false, ref data);
     }
 
     public void SetUniform(string name, Matrix4x4 data)
@@ -152,7 +152,7 @@ public class Shader
 
         var openTkMatrix = data.ToMatrix4();
 
-        GL.UniformMatrix4(location, true, ref openTkMatrix);
+        GL.UniformMatrix4(location, false, ref openTkMatrix);
     }
 
     public void SetUniform(string name, Vector3 data)

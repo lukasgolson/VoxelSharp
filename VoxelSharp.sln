@@ -49,4 +49,7 @@ Global
 		{2796D4ED-AB25-49D5-AF05-9A761FFF99D1}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2796D4ED-AB25-49D5-AF05-9A761FFF99D1}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
+	GlobalSection(RiderSharedRunConfigurations) = postSolution
+		File = run\Example Mod.run.xml
+	EndGlobalSection
 EndGlobal

@@ -50,7 +50,7 @@ public class SkyRenderer : IRenderer, IUpdatable
         _cameraMatrices = cameraMatrices;
         _resourceDictionary = resourceDictionary;
 
-        gameLoop.RegisterRenderAction(this, -10);
+        gameLoop.RegisterRenderAction(this, 10);
         gameLoop.RegisterUpdateAction(this);
     }
 
@@ -80,17 +80,11 @@ public class SkyRenderer : IRenderer, IUpdatable
             _initialized = true;
         }
 
-        GL.DepthMask(false); // Disable depth writing (but keep depth testing)
-        GL.Disable(EnableCap.CullFace); // Optional: Prevents missing skybox faces
-
-        GL.DepthFunc(DepthFunction.Lequal); // Ensures skybox doesn't clip the world
-
+        // Keep the depth function change so the skybox draws "behind" everything
+        GL.DepthFunc(DepthFunction.Lequal);
 
         _shader.Use();
 
-        
-
-        
         GL.BindVertexArray(_vao);
 
         // Set uniforms
@@ -99,20 +93,16 @@ public class SkyRenderer : IRenderer, IUpdatable
 
         _shader.SetUniform("view", view);
         _shader.SetUniform("projection", projection);
-        _shader.SetUniform("time", _time % 60);
+        _shader.SetUniform("time", 1000);
 
         // Draw skybox
         GL.DrawElements(PrimitiveType.Triangles, _skyboxIndices.Length, DrawElementsType.UnsignedInt, 0);
-        
+
         GL.BindVertexArray(0);
-        
+
         Shader.Unuse();
 
-        GL.DepthMask(true); // Re-enable depth writing for other objects
-        GL.Enable(EnableCap.CullFace); // Re-enable face culling if used
         GL.DepthFunc(DepthFunction.Less); // Reset depth function
-        
-        
     }
 
     public void SetupMesh()
