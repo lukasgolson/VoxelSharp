@@ -21,6 +21,9 @@ public class WorldRenderer : IRenderer, IUpdatable
 
     private const int RenderDistance = 4;
 
+
+    private Vector3 LightDirection = new Vector3(0.5f, 0.8f, 0.3f);
+
     private readonly ILogger _logger;
     private readonly ICameraMatrices _cameraMatrices;
     private readonly ICameraParameters _cameraParameters;
@@ -79,8 +82,7 @@ public class WorldRenderer : IRenderer, IUpdatable
         _chunkShader.SetUniform("m_projection", _cameraMatrices.GetProjectionMatrix());
 
         // Calculate the light space matrix
-        // In your C# code where you set uniforms for the shader
-        _chunkShader.SetUniform("lightDirection", new Vector3(0.3f, -1.0f, 0.2f));
+       // _chunkShader.SetUniform("lightDirection", LightDirection);
 
 
         foreach (var chunkMesh in _chunkMeshArray.Values)

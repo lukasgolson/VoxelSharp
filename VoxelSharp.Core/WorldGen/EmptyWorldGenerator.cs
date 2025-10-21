@@ -18,7 +18,7 @@ public class EmptyWorldGenerator : IWorldGenerator
     /// <inheritdoc />
     public bool GenerateChunkHeightmap(Chunk chunk)
     {
-        chunk.SetVoxel(new Position<int>(0, 0, 0), new Voxel(Rgba.Red));
+        chunk.SetVoxel(new Position<int>(0, 0, 0), new Voxel(Rgba.White));
         
         chunk.IsDirty = true;
         
@@ -30,6 +30,6 @@ public class EmptyWorldGenerator : IWorldGenerator
 
     public bool DecorateChunkHeightmap(Chunk chunk)
     {
-        throw new NotImplementedException();
+        return true;
     }
 }

@@ -93,7 +93,7 @@ public class SkyRenderer : IRenderer, IUpdatable
 
         _shader.SetUniform("view", view);
         _shader.SetUniform("projection", projection);
-        _shader.SetUniform("time", 1000);
+        _shader.SetUniform("time", _time % 120 + 60);
 
         // Draw skybox
         GL.DrawElements(PrimitiveType.Triangles, _skyboxIndices.Length, DrawElementsType.UnsignedInt, 0);
