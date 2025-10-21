@@ -131,15 +131,25 @@ public class ChunkMesh(Chunk chunk) : BaseMesh
     /// <param name="voxelSpan">Span of all voxels in this chunk.</param>
     private bool IsVoid(int x, int y, int z, int currentAlpha, Span<Voxel> voxelSpan)
     {
-        // If the current voxel is transparent, treat as void
-        if (currentAlpha == 0) return true;
-
-        // If out of chunk bounds, treat as void
+        // If out of chunk bounds, treat as void (and render the face)
         if (!IsWithinBounds(x, y, z)) return true;
 
-        // Otherwise, check if the adjacent voxel is transparent
+        // Get the adjacent voxel's alpha
         var idx = _chunk.GetVoxelIndex(new Position<int>(x, y, z));
-        return voxelSpan[idx].Rgba.A != currentAlpha;
+        var adjacentAlpha = voxelSpan[idx].Rgba.A;
+
+        // If the adjacent block is Air (A=0), always draw the face.
+        if (adjacentAlpha == 0) return true;
+
+        // Check if the current voxel is opaque
+        bool isCurrentOpaque = currentAlpha == 255;
+
+        // Check if the adjacent voxel is opaque
+        bool isAdjacentOpaque = adjacentAlpha == 255;
+
+        // Draw a face only if one is opaque and the other is not.
+        // This prevents drawing faces between two semi-transparent blocks.
+        return isCurrentOpaque != isAdjacentOpaque;
     }
 
     private bool IsWithinBounds(int x, int y, int z)

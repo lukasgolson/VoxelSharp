@@ -13,7 +13,7 @@ public readonly struct VoxelVertex
     public readonly float A; // Alpha (fully opaque)
     public readonly int FaceId; // Identifier for the face
 
-    public VoxelVertex(int x, int y, int z, Voxel voxel, FaceId faceId, bool debug = false, bool randomColor = true)
+    public VoxelVertex(int x, int y, int z, Voxel voxel, FaceId faceId, bool debug = false, bool randomColor = false)
     {
         X = x;
         Y = y;
