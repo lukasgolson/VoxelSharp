@@ -15,7 +15,26 @@ public partial class MouseInput : IUpdatable, IMouseRelative, IWindowTracker
     {
         gameLoop.RegisterUpdateAction(this);
 
-        StartTracking(new IntPtr(window.WindowHandle));
+        _windowHandle = new IntPtr(window.WindowHandle);
+        
+        window.OnFocus += HandleFocusGained;
+        window.OnUnfocus += HandleFocusLost;
+
+        // Check initial focus state
+        if (window.IsFocused)
+        {
+            StartTracking(_windowHandle);
+        }
+    }
+    
+    private void HandleFocusGained()
+    {
+        StartTracking(_windowHandle);
+    }
+
+    private void HandleFocusLost()
+    {
+        StopTracking();
     }
 
 

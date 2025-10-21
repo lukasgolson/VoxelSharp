@@ -16,7 +16,7 @@ public abstract class BaseCamera : IUpdatable, ICameraMatrices, IAspectRatioEven
     public Vector3 Rotation => _rotation;
 
     public float FieldOfView => 45;
-    public float NearClip => 0.01f;
+    public float NearClip => 0.1f;
     public float FarClip => 2000f;
     public float AspectRatio { get; }
     public ICameraParameters.CameraType Camera => ICameraParameters.CameraType.Perspective;

@@ -48,6 +48,10 @@ public class Window : NativeWindow, IWindow, IRendererProcessing, IUpdatable
     }
 
     public event EventHandler<double>? OnWindowResize;
+    public event Action? OnFocus;
+    public event Action? OnUnfocus;
+    
+    public bool IsFocused => base.IsFocused;
 
 
     public (int Width, int Height) ScreenSize => (Size.X, Size.Y);
@@ -58,6 +62,20 @@ public class Window : NativeWindow, IWindow, IRendererProcessing, IUpdatable
         {
             var windowHandle = GLFW.GetWin32Window(WindowPtr);
             return windowHandle.ToInt64();
+        }
+    }
+    
+    protected override void OnFocusedChanged(FocusedChangedEventArgs e)
+    {
+        base.OnFocusedChanged(e);
+
+        if (e.IsFocused)
+        {
+            OnFocus?.Invoke();
+        }
+        else
+        {
+            OnUnfocus?.Invoke();
         }
     }
 
