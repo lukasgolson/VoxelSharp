@@ -99,7 +99,7 @@ public class ChunkMesh(Chunk chunk) : BaseMesh
         }
 
         // Face ID attribute
-        var faceIndex = shaderProgram.GetAttribLocation("face_id");
+        var faceIndex = shaderProgram.GetAttribLocation("in_face_id_float");
         if (faceIndex == -1) return;
         GL.EnableVertexAttribArray(faceIndex);
         GL.VertexAttribPointer(faceIndex, 1, VertexAttribPointerType.Float, false, 8 * sizeof(float),

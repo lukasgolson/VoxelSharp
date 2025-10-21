@@ -13,14 +13,19 @@ public readonly struct VoxelVertex
     public readonly float A; // Alpha (fully opaque)
     public readonly int FaceId; // Identifier for the face
 
-    public VoxelVertex(int x, int y, int z, Voxel voxel, FaceId faceId, bool debug = false)
+    public VoxelVertex(int x, int y, int z, Voxel voxel, FaceId faceId, bool debug = false, bool randomColor = true)
     {
         X = x;
         Y = y;
         Z = z;
         FaceId = (int)faceId;
 
-        if (debug)
+        if (randomColor)
+        {
+            (R, G, B, A) = (1.0f, (float)Random.Shared.NextDouble(),
+                (float)Random.Shared.NextDouble(), 1.0f);
+        }
+        else if (debug)
             // Assign unique colors based on FaceId for debugging
             (R, G, B, A) = faceId switch
             {

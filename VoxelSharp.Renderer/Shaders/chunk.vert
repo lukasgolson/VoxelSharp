@@ -2,7 +2,7 @@
 
 layout (location = 0) in vec3 in_position;
 layout (location = 1) in vec4 in_color;
-layout (location = 2) in int face_id;
+layout (location = 2) in float in_face_id_float;
 
 
 
@@ -35,6 +35,8 @@ void main()
     
     int index = gl_VertexID % 6;
     frag_uv = uv_coords[uv_indices[index]];
+
+    int face_id = int(in_face_id_float); // NEW: Cast the float to an int
 
     // Assign normals based on face_id (0 to 5).
     if (face_id == 0)      frag_normal = vec3(0.0, 1.0, 0.0); // Top
