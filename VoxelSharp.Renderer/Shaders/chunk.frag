@@ -25,10 +25,11 @@ void main()
     float darkeningFactor = 0.5 + (0.5 * diffuse); // Adjust darkening factor
     vec3 lighting = (ambientFactor + (darkeningFactor * lightColour)); // Calculate final lighting
 
+    vec4 finalColour;
     // Combine voxel color with lighting
-    vec4 finalColour = vec4(voxel_color.rgb * lighting, voxel_color.a); // Incorporate voxel color
+    finalColour.rgb = voxel_color.rgb * lighting * voxel_color.a;
+    finalColour.a = voxel_color.a;
 
-   
+    fragColor = finalColour;
 
-    fragColor = finalColour; // Set the final fragment color
 }

@@ -8,30 +8,51 @@ namespace VoxelSharp.Renderer.Mesh.World;
 
 public class ChunkMesh(Chunk chunk) : BaseMesh
 {
-    private Chunk? _chunk = chunk;
+    private enum MeshType {Opaque, Transparent}
+    
+    
+    public readonly Chunk? _chunk = chunk;
 
     private Position<int>? Position => _chunk?.Position;
 
-    public override void Render(Shader shaderProgram)
+    public override void RenderOpaque(Shader shaderProgram)
     {
-        // Check if the chunk is dirty or uninitialized
-        if (_chunk != null && (_chunk.IsDirty || !IsInitialized))
+        if (_chunk.IsDirty || !IsOpaqueInitialized)
         {
-            // Rebuild the mesh (8 elements per vertex)
-            SetupMesh(8, shaderProgram);
-            _chunk.IsDirty = false;
+            SetupOpaqueMesh(8, shaderProgram);
         }
 
-        // After setup, skip rendering if there are no vertices
-        if (VertexCount == 0) return;
+        if (OpaqueVertexCount == 0) return;
 
-        // Set the model matrix for this chunk
         shaderProgram.SetUniform("m_model", GetModelMatrix());
 
-        // Call the base Render to handle VAO binding and OpenGL draw calls
-        base.Render(shaderProgram);
+        base.RenderOpaque(shaderProgram);
     }
 
+    public override void RenderTransparent(Shader shaderProgram)
+    {
+        if (_chunk.IsDirty || !IsOpaqueInitialized)
+        {
+            SetupTransparentMesh(8, shaderProgram);
+        }
+        
+        _chunk.IsDirty = false;
+
+
+        if (TransparentVertexCount == 0) return;
+
+        shaderProgram.SetUniform("m_model", GetModelMatrix());
+
+        base.RenderTransparent(shaderProgram);
+    }
+    
+    public override void Render(Shader shaderProgram)
+    {
+        RenderOpaque(shaderProgram);
+        RenderTransparent(shaderProgram);
+    }
+    
+    
     /// <summary>
     ///     Uses a memory pool to rent a float buffer to store vertex data.
     ///     Once completed, SetupMesh will store this data in a GPU buffer,
@@ -39,40 +60,56 @@ public class ChunkMesh(Chunk chunk) : BaseMesh
     /// </summary>
     /// <param name="vertexCount">Returns the total float elements used.</param>
     /// <returns>An IMemoryOwner of float, which you can dispose or return to the pool.</returns>
-    protected override IMemoryOwner<float> GetVertexDataMemory(out int vertexCount)
+    private IMemoryOwner<float> BuildVertexDataMemory(out int vertexCount, MeshType meshType)
     {
-        // Estimate the required size for the vertex buffer:
-        //   ChunkVolume * 6 faces * 6 vertices/face * 8 float elements/vertex
         var estimatedVertexCount = _chunk.ChunkVolume * 6 * 6 * 8;
         var memoryOwner = MemoryPool<float>.Shared.Rent(estimatedVertexCount);
-
-        // Get a span from the rented memory
         var span = memoryOwner.Memory.Span;
-
         var index = 0;
-
-        // Retrieve a span of the chunk's voxel data
         var chunkVoxelSpan = _chunk.GetVoxelSpan();
-
 
         for (var x = 0; x < _chunk.ChunkSize; x++)
         for (var z = 0; z < _chunk.ChunkSize; z++)
         for (var y = 0; y < _chunk.ChunkSize; y++)
         {
-            // Compute this voxel's index
             var voxelIndex = _chunk.GetVoxelIndex(new Position<int>(x, y, z));
             var voxel = chunkVoxelSpan[voxelIndex];
-
-            // Skip transparent voxels
-            if (voxel.Rgba.A == 0) continue;
-
-            // Add visible faces
+            var alpha = voxel.Rgba.A;
+            
+            // This is the only logic that changes
+            switch (meshType)
+            {
+                case MeshType.Opaque:
+                    // Skip non-opaque (A != 255) voxels
+                    if (alpha != 255) continue;
+                    break;
+                case MeshType.Transparent:
+                    // Skip opaque (A=255) and fully transparent/air (A=0) voxels
+                    if (alpha is 255 or 0) continue;
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(meshType), meshType, null);
+            }
+            
+            // The rest of the logic is shared
             AddVisibleFacesToSpan(span, chunkVoxelSpan, ref index, x, y, z, voxel);
         }
 
-        vertexCount = index; // The total floats used in the span
+        vertexCount = index;
         return memoryOwner;
     }
+    
+    protected override IMemoryOwner<float> GetOpaqueVertexDataMemory(out int vertexCount)
+    {
+        return BuildVertexDataMemory(out vertexCount, MeshType.Opaque);
+    }
+
+    protected override IMemoryOwner<float> GetTransparentVertexDataMemory(out int vertexCount)
+    {
+        return BuildVertexDataMemory(out vertexCount, MeshType.Transparent);
+    }
+    
+   
 
     /// <summary>
     ///     Sets up vertex attribute pointers for this mesh.

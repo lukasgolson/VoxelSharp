@@ -1,12 +1,12 @@
 using System.Numerics;
 using Microsoft.Extensions.Logging;
+using OpenTK.Graphics.OpenGL4;
 using VoxelSharp.Abstractions.Loop;
 using VoxelSharp.Abstractions.Renderer;
 using VoxelSharp.Core.Helpers;
 using VoxelSharp.Core.Structs;
 using VoxelSharp.Core.World;
 using VoxelSharp.Renderer.Mesh.World;
-
 using Vector3 = OpenTK.Mathematics.Vector3;
 
 namespace VoxelSharp.Renderer.Rendering;
@@ -23,11 +23,12 @@ public class WorldRenderer : IRenderer, IUpdatable
 
 
     private readonly Vector3 _lightDirection = new(0.5f, -0.8f, 0.3f);
+
     private readonly ILogger _logger;
     private readonly ICameraMatrices _cameraMatrices;
     private readonly ICameraParameters _cameraParameters;
-    
-    
+
+
     public WorldRenderer(ICameraMatrices cameraMatrices, ICameraParameters cameraParameters,
         ILogger<WorldRenderer> logger,
         IGameLoop gameLoop)
@@ -41,12 +42,8 @@ public class WorldRenderer : IRenderer, IUpdatable
 
         var worldVolume = Math.Pow(RenderDistance, 3);
         _chunkMeshArray = new Dictionary<Position<int>, ChunkMesh>((int)worldVolume);
-
-    
-
     }
 
- 
 
     public void AssociateWorld(VoxelWorld voxelWorld)
     {
@@ -72,25 +69,57 @@ public class WorldRenderer : IRenderer, IUpdatable
                 throw new InvalidOperationException("Chunk shader not initialized.");
 
             _initialized = true;
-
         }
+
 
         _chunkShader.Use();
 
         _chunkShader.SetUniform("m_view", _cameraMatrices.GetViewMatrix());
         _chunkShader.SetUniform("m_projection", _cameraMatrices.GetProjectionMatrix());
+        _chunkShader.SetUniform("lightDirection", _lightDirection);
 
-        // Calculate the light space matrix
-       _chunkShader.SetUniform("lightDirection", _lightDirection);
 
+        // -- Pass 1: Opaque Geometry --
+        GL.DepthMask(true);
+        // No blending needed
+        GL.Disable(EnableCap.Blend);
 
         foreach (var chunkMesh in _chunkMeshArray.Values)
-            chunkMesh.Render(_chunkShader);
+        {
+            chunkMesh.RenderOpaque(_chunkShader);
+        }
 
+
+        // -- Pass 2: Transparent geometry --
+        GL.Enable(EnableCap.Blend);
+        // CRITICAL: Disable depth writing
+        GL.DepthMask(false);
+
+        var cameraPos = _cameraParameters.Position;
+        var cameraSNNVector = new System.Numerics.Vector3(cameraPos.X, cameraPos.Y, cameraPos.Z);
+
+        var sortedChunks = _chunkMeshArray.Values.OrderByDescending(mesh =>
+            System.Numerics.Vector3.Distance(
+                new System.Numerics.Vector3(
+                    mesh._chunk.Position.X,
+                    mesh._chunk.Position.Y,
+                    mesh._chunk.Position.Z) * mesh._chunk.ChunkSize,
+                cameraSNNVector
+            )
+        );
+
+        foreach (var chunkMesh in sortedChunks)
+        {
+            chunkMesh.RenderTransparent(_chunkShader);
+        }
+
+        // --- CLEANUP ---
+
+        // Reset GL state
+        GL.DepthMask(true);
         Shader.Unuse();
     }
 
-  
 
     private float _updateTimer;
 

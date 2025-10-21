@@ -90,8 +90,7 @@ public class Window : NativeWindow, IWindow, IRendererProcessing, IUpdatable
 
 
         GL.Enable(EnableCap.Blend); // Enable blending for transparency
-        GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha); // Set blending function
-
+        GL.BlendFunc(BlendingFactor.One, BlendingFactor.OneMinusSrcAlpha);
 
         GL.ClearColor(0.1f, 0.1f, 0.1f, 1.0f);
     }
