@@ -101,9 +101,9 @@ public class WorldRenderer : IRenderer, IUpdatable
         var sortedChunks = _chunkMeshArray.Values.OrderByDescending(mesh =>
             System.Numerics.Vector3.Distance(
                 new System.Numerics.Vector3(
-                    mesh._chunk.Position.X,
-                    mesh._chunk.Position.Y,
-                    mesh._chunk.Position.Z) * mesh._chunk.ChunkSize,
+                    mesh.Chunk.Position.X,
+                    mesh.Chunk.Position.Y,
+                    mesh.Chunk.Position.Z) * mesh.Chunk.ChunkSize,
                 cameraSNNVector
             )
         );
@@ -184,7 +184,7 @@ public class WorldRenderer : IRenderer, IUpdatable
             if (_chunkMeshArray.ContainsKey(chunkPos)) continue;
 
             var chunk = _voxelWorld.GetChunk(chunkPos);
-            var chunkMesh = new ChunkMesh(chunk);
+            var chunkMesh = new ChunkMesh(chunk, _voxelWorld);
             _chunkMeshArray.Add(chunkPos, chunkMesh);
         }
     }

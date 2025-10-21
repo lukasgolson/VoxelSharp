@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
 using VoxelSharp.Core.Interfaces.WorldGen;
 using VoxelSharp.Core.Structs;
+using VoxelSharp.Resources;
 
 namespace VoxelSharp.Core.World;
 
@@ -74,6 +75,29 @@ public class VoxelWorld
 
         var chunk = ChunkArray[chunkCoords];
         chunk.SetVoxel(localCoords, voxel);
+        
+        if (localCoords.X == 0)
+            SetChunkDirty(chunkCoords - Position<int>.Right);
+        else if (localCoords.X == ChunkSize - 1)
+            SetChunkDirty(chunkCoords + Position<int>.Right);
+
+        if (localCoords.Y == 0)
+            SetChunkDirty(chunkCoords - Position<int>.Up);
+        else if (localCoords.Y == ChunkSize - 1)
+            SetChunkDirty(chunkCoords + Position<int>.Up);
+
+        if (localCoords.Z == 0)
+            SetChunkDirty(chunkCoords - Position<int>.Forward);
+        else if (localCoords.Z == ChunkSize - 1)
+            SetChunkDirty(chunkCoords + Position<int>.Forward);
+    }
+    
+    private void SetChunkDirty(Position<int> chunkPos)
+    {
+        if (IsChunkLoaded(chunkPos))
+        {
+            ChunkArray[chunkPos].IsDirty = true;
+        }
     }
 
     public Position<int> GetChunkCoordinates(Position<int> worldCoords)
@@ -93,4 +117,21 @@ public class VoxelWorld
 
         return new Position<int>(x, y, z);
     }
+    
+    public Voxel GetVoxelReadOnly(Position<int> worldPos)
+    {
+        var chunkCoords = GetChunkCoordinates(worldPos);
+        var localCoords = GetLocalCoordinates(worldPos);
+
+        // Check if the chunk is loaded
+        if (!IsChunkLoaded(chunkCoords))
+        {
+            // Do NOT generate the chunk. Return Air.
+            return new Voxel(Rgba.Transparent);
+        }
+
+        // Chunk is loaded, so we can safely get the voxel
+        return ChunkArray[chunkCoords].GetVoxel(localCoords);
+    }
+    
 }

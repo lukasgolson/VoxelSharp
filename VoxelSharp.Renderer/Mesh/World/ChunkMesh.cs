@@ -6,18 +6,27 @@ using VoxelSharp.Core.World;
 
 namespace VoxelSharp.Renderer.Mesh.World;
 
-public class ChunkMesh(Chunk chunk) : BaseMesh
+public class ChunkMesh : BaseMesh
 {
+    private readonly VoxelWorld _voxelWorld; // Add this
+
+    public Chunk? Chunk { get; }
+
+    public ChunkMesh(Chunk chunk, VoxelWorld voxelWorld) : base() // Add VoxelWorld here
+    {
+        Chunk = chunk;
+        _voxelWorld = voxelWorld; // Store it
+    }
+    
     private enum MeshType {Opaque, Transparent}
     
     
-    public readonly Chunk? _chunk = chunk;
 
-    private Position<int>? Position => _chunk?.Position;
+    private Position<int>? Position => Chunk?.Position;
 
     public override void RenderOpaque(Shader shaderProgram)
     {
-        if (_chunk.IsDirty || !IsOpaqueInitialized)
+        if (Chunk.IsDirty || !IsOpaqueInitialized)
         {
             SetupOpaqueMesh(8, shaderProgram);
         }
@@ -31,12 +40,12 @@ public class ChunkMesh(Chunk chunk) : BaseMesh
 
     public override void RenderTransparent(Shader shaderProgram)
     {
-        if (_chunk.IsDirty || !IsOpaqueInitialized)
+        if (Chunk.IsDirty || !IsOpaqueInitialized)
         {
             SetupTransparentMesh(8, shaderProgram);
         }
         
-        _chunk.IsDirty = false;
+        Chunk.IsDirty = false;
 
 
         if (TransparentVertexCount == 0) return;
@@ -62,17 +71,17 @@ public class ChunkMesh(Chunk chunk) : BaseMesh
     /// <returns>An IMemoryOwner of float, which you can dispose or return to the pool.</returns>
     private IMemoryOwner<float> BuildVertexDataMemory(out int vertexCount, MeshType meshType)
     {
-        var estimatedVertexCount = _chunk.ChunkVolume * 6 * 6 * 8;
+        var estimatedVertexCount = Chunk.ChunkVolume * 6 * 6 * 8;
         var memoryOwner = MemoryPool<float>.Shared.Rent(estimatedVertexCount);
         var span = memoryOwner.Memory.Span;
         var index = 0;
-        var chunkVoxelSpan = _chunk.GetVoxelSpan();
+        var chunkVoxelSpan = Chunk.GetVoxelSpan();
 
-        for (var x = 0; x < _chunk.ChunkSize; x++)
-        for (var z = 0; z < _chunk.ChunkSize; z++)
-        for (var y = 0; y < _chunk.ChunkSize; y++)
+        for (var x = 0; x < Chunk.ChunkSize; x++)
+        for (var z = 0; z < Chunk.ChunkSize; z++)
+        for (var y = 0; y < Chunk.ChunkSize; y++)
         {
-            var voxelIndex = _chunk.GetVoxelIndex(new Position<int>(x, y, z));
+            var voxelIndex = Chunk.GetVoxelIndex(new Position<int>(x, y, z));
             var voxel = chunkVoxelSpan[voxelIndex];
             var alpha = voxel.Rgba.A;
             
@@ -151,9 +160,9 @@ public class ChunkMesh(Chunk chunk) : BaseMesh
     {
         // Calculate the translation for this chunk
         return Matrix4.CreateTranslation(
-            _chunk.Position.X * _chunk.ChunkSize,
-            _chunk.Position.Y * _chunk.ChunkSize,
-            _chunk.Position.Z * _chunk.ChunkSize
+            Chunk.Position.X * Chunk.ChunkSize,
+            Chunk.Position.Y * Chunk.ChunkSize,
+            Chunk.Position.Z * Chunk.ChunkSize
         );
     }
 
@@ -168,32 +177,45 @@ public class ChunkMesh(Chunk chunk) : BaseMesh
     /// <param name="voxelSpan">Span of all voxels in this chunk.</param>
     private bool IsVoid(int x, int y, int z, int currentAlpha, Span<Voxel> voxelSpan)
     {
-        // If out of chunk bounds, treat as void (and render the face)
-        if (!IsWithinBounds(x, y, z)) return true;
+        byte adjacentAlpha;
+        var neighborLocalPos = new Position<int>(x, y, z);
 
-        // Get the adjacent voxel's alpha
-        var idx = _chunk.GetVoxelIndex(new Position<int>(x, y, z));
-        var adjacentAlpha = voxelSpan[idx].Rgba.A;
+        if (!IsWithinBounds(x, y, z))
+        {
+            // --- NEIGHBOR CHUNK LOGIC ---
+            // 1. Get the global position of this neighbor
+            var neighborGlobalPos = Chunk.LocalToGlobalPosition(neighborLocalPos);            
+            // 2. Ask the world for the voxel at that global position
+            var neighborVoxel = _voxelWorld.GetVoxel(neighborGlobalPos);
+            adjacentAlpha = neighborVoxel.Rgba.A;
+        }
+        else
+        {
+            // --- SAME CHUNK LOGIC ---
+            var idx = Chunk.GetVoxelIndex(neighborLocalPos);
+            adjacentAlpha = voxelSpan[idx].Rgba.A;
+        }
 
-        // If the adjacent block is Air (A=0), always draw the face.
+        // --- SHARED CULLING LOGIC ---
+        
+        // If adjacent is Air, always draw
         if (adjacentAlpha == 0) return true;
+        
+        bool isCurrentOpaque = (currentAlpha == 255);
+        bool isAdjacentOpaque = (adjacentAlpha == 255);
 
-        // Check if the current voxel is opaque
-        bool isCurrentOpaque = currentAlpha == 255;
-
-        // Check if the adjacent voxel is opaque
-        bool isAdjacentOpaque = adjacentAlpha == 255;
-
-        // Draw a face only if one is opaque and the other is not.
-        // This prevents drawing faces between two semi-transparent blocks.
+        // Draw if one is opaque and the other is not
+        // This correctly handles:
+        //   Solid-Solid (false), Water-Water (false)
+        //   Solid-Water (true), Water-Air (true)
         return isCurrentOpaque != isAdjacentOpaque;
     }
 
     private bool IsWithinBounds(int x, int y, int z)
     {
-        return x >= 0 && x < _chunk.ChunkSize &&
-               y >= 0 && y < _chunk.ChunkSize &&
-               z >= 0 && z < _chunk.ChunkSize;
+        return x >= 0 && x < Chunk.ChunkSize &&
+               y >= 0 && y < Chunk.ChunkSize &&
+               z >= 0 && z < Chunk.ChunkSize;
     }
 
     /// <summary>

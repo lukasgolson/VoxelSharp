@@ -26,6 +26,7 @@ public readonly record struct Position<T> where T : INumber<T>
     public T Z { get; }
 
 
+
     /// <summary>
     ///     Initializes a new instance of the <see cref="Position{T}" /> struct.
     /// </summary>
@@ -53,6 +54,8 @@ public readonly record struct Position<T> where T : INumber<T>
     /// Represents a unit vector pointing in the negative X direction.
     /// </summary>
     public static Position<T> Right => new(T.One, T.Zero, T.Zero);
+    
+
     
     /// <summary>
     /// Represents a unit vector pointing in the positive Y direction.
