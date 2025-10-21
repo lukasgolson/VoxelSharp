@@ -10,7 +10,7 @@ in vec3 frag_normal;
 
 // Lighting uniforms
 uniform vec3 lightDirection = normalize(vec3(0.3, -1.0, 0.2)); // Direction of light
-uniform vec3 lightColour = vec3(1.0, 0.0, 0.0); // Light color
+uniform vec3 lightColour = vec3(1.0, 1.0, 1.0); // Light color
 uniform float ambientFactor = 0.1; // Ambient light factor
 const float gamma = 2.2;
 

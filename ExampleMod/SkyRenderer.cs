@@ -143,7 +143,7 @@ public class SkyRenderer : IRenderer, IUpdatable
 
     public void Update(double deltaTime)
     {
-        _time += (float)deltaTime * 0.1f;
+        _time += (float)deltaTime * 0.01f;
     }
     
     
