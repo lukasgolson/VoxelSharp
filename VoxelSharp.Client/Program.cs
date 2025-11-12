@@ -54,6 +54,7 @@ public static class Program
         client.Run();
 
 
+        Container.Dispose();
         Ecs.Dispose();
     }
 

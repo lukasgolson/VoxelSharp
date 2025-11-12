@@ -17,7 +17,7 @@ public class ImGuiMod : IMod
 
         gameLoop.RegisterRenderProcessingAction(new ImGuiController(window), 10);
         
-        gameLoop.RegisterRenderAction(new DebugWindow(), 20); // Priority 10 (runs after 3D scene)
+        gameLoop.RegisterRenderAction(new DebugWindow(gameLoop), 20); // Priority 10 (runs after 3D scene)
         
         return true;
     }

@@ -7,7 +7,7 @@ using VoxelSharp.Abstractions.Window;
 
 namespace ImGUIMod;
 
-public class ImGuiController : IRendererProcessing
+public class ImGuiController : IRendererProcessing, IDisposable
 {
     private readonly NativeWindow _window;
 
@@ -85,5 +85,15 @@ public class ImGuiController : IRendererProcessing
 
 
         _window.Context.MakeCurrent();
+    }
+
+    public void Dispose()
+    {
+        
+        ImguiImplOpenGl3.Shutdown();
+        ImguiImplOpenTk4.Shutdown();
+        ImGui.DestroyContext();
+        
+        _window.Dispose();
     }
 }

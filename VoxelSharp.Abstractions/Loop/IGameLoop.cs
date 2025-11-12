@@ -7,6 +7,10 @@ namespace VoxelSharp.Abstractions.Loop;
 /// </summary>
 public interface IGameLoop
 {
+    
+    public double CurrentUpdateFrequency { get; }
+    public double CurrentRenderFrequency { get; }
+    
     /// <summary>
     ///     Starts the game loop.
     /// </summary>
