@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
+using VoxelSharp.Core.ECS.Jobs;
 using VoxelSharp.Core.Interfaces.WorldGen;
 using VoxelSharp.Core.Structs;
 using VoxelSharp.Resources;
@@ -12,40 +13,60 @@ public class VoxelWorld
 
     public int ChunkSize => 16;
     
-    private HashSet<Position<int>> PendingChunks = new();
+    private readonly Arch.Core.World _ecsWorld;
+    private readonly HashSet<Position<int>> _pendingChunkRequests = [];
 
 
     private readonly ILogger<VoxelWorld> _logger;
 
-    public VoxelWorld(ILogger<VoxelWorld> logger)
+    public VoxelWorld(ILogger<VoxelWorld> logger, Arch.Core.World ecsWorld) 
     {
         _logger = logger;
+        _ecsWorld = ecsWorld;
+    }
+    
+    /// <summary>
+    /// Asynchronously requests a chunk to be loaded.
+    /// If the chunk is not loaded and not already pending,
+    /// this will create a new generation job for it.
+    /// </summary>
+    public void RequestChunk(Position<int> chunkPos)
+    {
+        if (IsChunkLoaded(chunkPos))
+            return;
+
+        if (_pendingChunkRequests.Contains(chunkPos))
+            return;
+
+        _pendingChunkRequests.Add(chunkPos);
+        _ecsWorld.Create(
+            new ChunkPosition { X = chunkPos.X, Y = chunkPos.Y, Z = chunkPos.Z },
+            new NeedsGeneration(),
+            new ChunkData { Chunk = null }
+        );
     }
 
     public bool IsChunkLoaded(Position<int> chunkPos)
     {
         return ChunkArray.ContainsKey(chunkPos);
     }
-
-    private void LoadChunk(Position<int> chunkPos)
+    
+    public void CommitChunk(Chunk chunk)
     {
-        if (IsChunkLoaded(chunkPos))
-            return;
-
-
-        //ChunkArray.Add(chunk.Position, chunk);
-
-        //_logger.LogInformation("Loaded chunk at position {0}", chunk.Position);
+        if (ChunkArray.TryAdd(chunk.Position, chunk))
+        {
+            _pendingChunkRequests.Remove(chunk.Position);
+            _logger.LogInformation("Committed chunk {0} to VoxelWorld", chunk.Position);
+        }
     }
 
     public Chunk? GetChunk(Position<int> chunkPos)
     {
-        if (!IsChunkLoaded(chunkPos))
+        if (ChunkArray.TryGetValue(chunkPos, out var chunk))
         {
-            return null; // Chunk doesn't exist in memory, just return null.
+            return chunk;
         }
-
-        return ChunkArray[chunkPos]; // It exists, return it.
+        return null; // Just return null if not found
     }
 
 
@@ -139,20 +160,5 @@ public class VoxelWorld
         return ChunkArray[chunkCoords].GetVoxel(localCoords);
     }
 
-    public bool IsChunkRequestPending(Position<int> chunkPos)
-    {
-        return PendingChunks.Contains(chunkPos);
-    }
-
-    public void SetChunkRequestPending(Position<int> chunkPos, bool pending)
-    {
-        if (pending)
-        {
-            PendingChunks.Add(chunkPos);
-        }
-        else
-        {
-            PendingChunks.Remove(chunkPos);
-        }
-    }
+   
 }

@@ -26,13 +26,8 @@ public class ChunkCommitSystem : IUpdatable
     {
         while (_mailbox.ChunkQueue.TryDequeue(out var chunk))
         {
-            
-            if (_voxelWorld.ChunkArray.TryAdd(chunk.Position, chunk))
-            {
-                _logger.LogInformation("Committed chunk {0} to VoxelWorld", chunk.Position);
-                
-                _voxelWorld.SetChunkRequestPending(chunk.Position, false);
-            }
+            _logger.LogDebug("Found chunk");
+            _voxelWorld.CommitChunk(chunk);
         }
     }
 }

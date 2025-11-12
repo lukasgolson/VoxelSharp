@@ -182,33 +182,21 @@ public class WorldRenderer : IRenderer, IUpdatable
             _chunkMeshArray.Remove(key);
         }
 
-        // add new chunks that are in the render distance
         foreach (var chunkPos in chunkPositions)
         {
-            // If the mesh is already loaded, skip
-            if (_chunkMeshArray.ContainsKey(chunkPos)) continue;
-
-            // Check if the CHUNK DATA is loaded
-            var chunk = _voxelWorld.GetChunk(chunkPos); // This is now a non-blocking null check
-
+            if (_chunkMeshArray.ContainsKey(chunkPos))
+                continue;
+            
+            var chunk = _voxelWorld.GetChunk(chunkPos);
             if (chunk != null)
             {
-                // Chunk data exists! We can create the mesh.
+                // Data is ready! Create the mesh.
                 var chunkMesh = new ChunkMesh(chunk, _voxelWorld);
                 _chunkMeshArray.Add(chunkPos, chunkMesh);
             }
             else
             {
-             
-                if (_voxelWorld.IsChunkRequestPending(chunkPos))
-                    continue;
-
-                _voxelWorld.SetChunkRequestPending(chunkPos, true); 
-                _ecsWorld.Create(
-                    new ChunkPosition { X = chunkPos.X, Y = chunkPos.Y, Z = chunkPos.Z },
-                    new NeedsGeneration(),
-                    new ChunkData { Chunk = null }
-                );
+                _voxelWorld.RequestChunk(chunkPos);
             }
         }
     }

@@ -44,7 +44,7 @@ public class WorldGenerationSystem : IUpdatable
         _voxelWorld = voxelWorld;
         _mailbox = mailbox;
 
-        gameLoop.RegisterBackgroundUpdateAction(this, "WorldGenLoop");    }
+        gameLoop.RegisterUpdateAction(this);    }
 
 
     private double _tick;
@@ -55,6 +55,7 @@ public class WorldGenerationSystem : IUpdatable
 
         if (_tick >= 1.0f)
         {
+            _logger.LogDebug("WorldGenLoop");
             _tick = 0;
 
 
