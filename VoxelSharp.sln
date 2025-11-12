@@ -14,6 +14,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VoxelSharp.Abstractions", "
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VoxelSharp.Resources", "VoxelSharp.Resources\VoxelSharp.Resources.csproj", "{2796D4ED-AB25-49D5-AF05-9A761FFF99D1}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Mods", "Mods", "{5E4AF998-459B-4102-B6B9-709144434609}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ImGUIMod", "ImGUIMod\ImGUIMod.csproj", "{A0E6B8E3-5931-4E20-A89C-502865DB3E64}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -48,8 +52,16 @@ Global
 		{2796D4ED-AB25-49D5-AF05-9A761FFF99D1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2796D4ED-AB25-49D5-AF05-9A761FFF99D1}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2796D4ED-AB25-49D5-AF05-9A761FFF99D1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A0E6B8E3-5931-4E20-A89C-502865DB3E64}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A0E6B8E3-5931-4E20-A89C-502865DB3E64}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A0E6B8E3-5931-4E20-A89C-502865DB3E64}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A0E6B8E3-5931-4E20-A89C-502865DB3E64}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(RiderSharedRunConfigurations) = postSolution
 		File = run\Example Mod.run.xml
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{B0A128DD-0A73-4D97-B1BC-1C9EA52C491D} = {5E4AF998-459B-4102-B6B9-709144434609}
+		{A0E6B8E3-5931-4E20-A89C-502865DB3E64} = {5E4AF998-459B-4102-B6B9-709144434609}
 	EndGlobalSection
 EndGlobal

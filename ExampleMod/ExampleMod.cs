@@ -28,7 +28,7 @@ public class ExampleMod : IMod
         container.Options.AllowOverridingRegistrations = true;
         //container.RegisterSingleton<IWorldGenerator, BasicWorldGenerator>();
 
-        //container.Register<SkyRenderer>();
+        container.Register<SkyRenderer>();
 
 
         var resourceDictionary = container.GetInstance<ResourceDictionary>();
@@ -42,6 +42,10 @@ public class ExampleMod : IMod
             Path.Combine(resourcePath, "Shaders/Sky.vert"));
 
 
+     
+        
+        
+
         return true;
     }
 
@@ -51,8 +55,9 @@ public class ExampleMod : IMod
         // Get the Resource dictionary from the container
 
 
-        // _skyRenderer = container.GetInstance<SkyRenderer>();
-
+        _skyRenderer = container.GetInstance<SkyRenderer>();
+        //var loop = container.GetInstance<IGameLoop>();
+        
 
         return true;
     }
