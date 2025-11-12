@@ -56,7 +56,6 @@ public class VoxelWorld
         if (ChunkArray.TryAdd(chunk.Position, chunk))
         {
             _pendingChunkRequests.Remove(chunk.Position);
-            _logger.LogInformation("Committed chunk {0} to VoxelWorld", chunk.Position);
         }
     }
 

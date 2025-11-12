@@ -30,9 +30,9 @@ public class WorldGenerationSystem : IUpdatable
     private readonly ILogger<WorldGenerationSystem> _logger;
     private readonly VoxelWorld _voxelWorld;
 
-    
+
     private readonly GeneratedChunkQueue _mailbox;
-    
+
     private Arch.Core.World _world;
 
     public WorldGenerationSystem(IGameLoop gameLoop, Arch.Core.World world, IWorldGenerator worldGenerator,
@@ -44,45 +44,36 @@ public class WorldGenerationSystem : IUpdatable
         _voxelWorld = voxelWorld;
         _mailbox = mailbox;
 
-        gameLoop.RegisterUpdateAction(this);    }
+       // gameLoop.RegisterBackgroundUpdateAction(this, "Test");
+       gameLoop.RegisterUpdateAction(this);
+    }
 
-
-    private double _tick;
 
     public void Update(double deltaTime)
     {
-        _tick += deltaTime;
-
-        if (_tick >= 1.0f)
-        {
-            _logger.LogDebug("WorldGenLoop");
-            _tick = 0;
+        using var commandBuffer = new CommandBuffer();
+        var query = new QueryDescription().WithAll<ChunkPosition, ChunkData, NeedsGeneration>();
 
 
-            using var commandBuffer = new CommandBuffer();
-            var query = new QueryDescription().WithAll<ChunkPosition, ChunkData, NeedsGeneration>();
+        _world.ParallelQuery(in query,
+            (Entity entity, ref ChunkPosition pos, ref ChunkData data, ref NeedsGeneration _) =>
+            {
+                var chunk = new Chunk(new Position<int>(pos.X, pos.Y, pos.Z), _voxelWorld.ChunkSize);
+
+                _worldGenerator.GenerateChunkHeightmap(chunk);
+
+                _worldGenerator.DecorateChunkHeightmap(chunk);
+
+                data.Chunk = chunk;
+
+                _mailbox.ChunkQueue.Enqueue(chunk);
 
 
-            _world.ParallelQuery(in query,
-                (Entity entity, ref ChunkPosition pos, ref ChunkData data, ref NeedsGeneration _) =>
-                {
-                    var chunk = new Chunk(new Position<int>(pos.X, pos.Y, pos.Z), _voxelWorld.ChunkSize);
-
-                    _worldGenerator.GenerateChunkHeightmap(chunk);
-
-                    _worldGenerator.DecorateChunkHeightmap(chunk);
-
-                    data.Chunk = chunk;
-                    
-                    _mailbox.ChunkQueue.Enqueue(chunk);
+                commandBuffer.Remove<NeedsGeneration>(entity);
+                commandBuffer.Add<NeedsMeshing>(entity);
+            });
 
 
-                    commandBuffer.Remove<NeedsGeneration>(entity);
-                    commandBuffer.Add<NeedsMeshing>(entity);
-                });
-
-
-            commandBuffer.Playback(_world);
-        }
+        commandBuffer.Playback(_world);
     }
 }
