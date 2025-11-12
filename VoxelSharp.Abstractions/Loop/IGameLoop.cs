@@ -65,11 +65,17 @@ public interface IGameLoop
     ///     Registers a render action, which is called as often as possible with an interpolation factor.
     /// </summary>
     /// <param name="renderAction">The action to execute during rendering.</param>
+    /// <param name="priority">The priority of the render action</param>
     void RegisterRenderAction(Action<double> renderAction, int priority = 0);
 
     void RegisterRenderAction(IRenderer renderer, int priority = 0);
 
-    void RegisterRenderProcessingAction(IRendererProcessing rendererProcessing);
+    /// <summary>
+    /// Registers a render processing action (pre and post render), which is called as often as possible with an interpolation factor
+    /// </summary>
+    /// <param name="rendererProcessing"></param>
+    /// <param name="priority">The priority of the onion stack. PreRender goes in ascending order while PostRender goes in descending order.</param>
+    void RegisterRenderProcessingAction(IRendererProcessing rendererProcessing, int priority = 0);
 
     /// <summary>
     ///     Unregisters a previously registered render action.

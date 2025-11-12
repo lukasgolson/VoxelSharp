@@ -12,7 +12,7 @@ public class DebugWindow : IRenderer
 
     public void Render(double interpolationFactor)
     {
-        ImGui.ShowDemoWindow(); // Show the demo window
+        //ImGui.ShowDemoWindow(); // Show the demo window
 
         ImGui.Begin("My ExampleMod Window");
         ImGui.Text("Hello from ExampleMod!");

@@ -4,17 +4,49 @@ using VoxelSharp.Abstractions.Renderer;
 
 namespace VoxelSharp.Core.GameLoop;
 
-
 public class GameLoop : IGameLoop
 {
+    internal struct PrioritizedProcessor : IEquatable<PrioritizedProcessor>
+    {
+        public IRendererProcessing Processor;
+        public int Priority;
+
+
+        public bool Equals(PrioritizedProcessor other)
+        {
+            return Processor.Equals(other.Processor) && Priority == other.Priority;
+        }
+
+        public override bool Equals(object? obj)
+        {
+            return obj is PrioritizedProcessor other && Equals(other);
+        }
+
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(Processor, Priority);
+        }
+
+        public static bool operator ==(PrioritizedProcessor left, PrioritizedProcessor right)
+        {
+            return left.Equals(right);
+        }
+
+        public static bool operator !=(PrioritizedProcessor left, PrioritizedProcessor right)
+        {
+            return !left.Equals(right);
+        }
+    }
+
+
     private const double MaxCatchUpTime = 2.0; // Maximum allowable catch-up time in seconds
-    private readonly List<Action> _postRenderActions = [];
-    private readonly List<Action> _preRenderActions = [];
+
+    private readonly List<PrioritizedProcessor> _processingActions = [];
     private readonly List<Renderer> _renderActions = [];
 
     private readonly Stopwatch _stopwatch = new();
     private readonly List<Action<double>> _tickActions = [];
-    
+
     private readonly Dictionary<string, GameLoop> _backgroundLoops = new();
     private readonly Dictionary<string, CancellationTokenSource> _backgroundLoopCts = new();
     private readonly Dictionary<string, Task> _backgroundLoopTasks = new();
@@ -35,8 +67,7 @@ public class GameLoop : IGameLoop
 
     private int _ticksProcessed;
     private double _tickTimeAccumulator;
-    
-    
+
 
     internal struct Renderer : IEquatable<Renderer>
     {
@@ -69,7 +100,7 @@ public class GameLoop : IGameLoop
             return !left.Equals(right);
         }
     }
-    
+
     public GameLoop()
     {
         _isRunning = false;
@@ -134,7 +165,7 @@ public class GameLoop : IGameLoop
     public void Stop()
     {
         _isRunning = false;
-        
+
         lock (_loopLock)
         {
             foreach (var loop in _backgroundLoops.Values) loop.Stop();
@@ -182,7 +213,7 @@ public class GameLoop : IGameLoop
         if (!_tickActions.Contains(tickAction)) _tickActions.Add(tickAction);
     }
 
-    
+
     public void RegisterUpdateAction(IUpdatable updatable)
     {
         RegisterUpdateAction(updatable.Update);
@@ -196,24 +227,24 @@ public class GameLoop : IGameLoop
             {
                 // The loop doesn't exist, so "spin one up"
                 // _logger.LogInformation("Spinning up new background loop: {loopName}", loopName);
-                
+
                 loop = new GameLoop();
                 loop.SetTargetTicksPerSecond(30); // Configurable background TPS
 
                 var cts = new CancellationTokenSource();
                 var task = Task.Run(() => loop.Start(), cts.Token);
-                
+
                 // Store all the new objects
                 _backgroundLoops[loopName] = loop;
                 _backgroundLoopCts[loopName] = cts;
                 _backgroundLoopTasks[loopName] = task;
             }
-            
+
             // Add the updatable to the correct loop
             loop.RegisterUpdateAction(updatable);
         }
     }
-    
+
     public void StopBackgroundLoop(string loopName)
     {
         lock (_loopLock)
@@ -252,14 +283,13 @@ public class GameLoop : IGameLoop
 
     public void RegisterRenderAction(Action<double> renderAction, int priority = 0)
     {
-        
         var renderer = new Renderer { RenderAction = renderAction, priority = priority };
-        
+
         if (!_renderActions.Contains(renderer))
         {
             _renderActions.Add(renderer);
         }
-        
+
         _renderActions.Sort((a, b) => a.priority.CompareTo(b.priority));
     }
 
@@ -268,13 +298,17 @@ public class GameLoop : IGameLoop
         RegisterRenderAction(renderer.Render);
     }
 
-    public void RegisterRenderProcessingAction(IRendererProcessing rendererProcessing)
+    public void RegisterRenderProcessingAction(IRendererProcessing rendererProcessing, int priority = 0)
     {
-        if (!_preRenderActions.Contains(rendererProcessing.PreRender))
-            _preRenderActions.Add(rendererProcessing.PreRender);
+        var action = new PrioritizedProcessor 
+        { 
+            Processor = rendererProcessing, 
+            Priority = priority 
+        };
 
-        if (!_postRenderActions.Contains(rendererProcessing.PostRender))
-            _postRenderActions.Add(rendererProcessing.PostRender);
+        if (_processingActions.Contains(action)) return;
+        _processingActions.Add(action);
+        _processingActions.Sort((a, b) => a.Priority.CompareTo(b.Priority));
     }
 
     public void UnregisterRenderAction(Action<double> renderAction)
@@ -290,8 +324,7 @@ public class GameLoop : IGameLoop
 
     public void UnregisterRenderProcessingAction(IRendererProcessing rendererProcessing)
     {
-        _preRenderActions.Remove(rendererProcessing.PreRender);
-        _postRenderActions.Remove(rendererProcessing.PostRender);
+        _processingActions.RemoveAll(p => p.Equals(rendererProcessing));
     }
 
     private void UpdatePerformanceMetrics()
@@ -329,11 +362,17 @@ public class GameLoop : IGameLoop
 
     private void RunRender(double interpolationFactor)
     {
-        foreach (var preRenderAction in _preRenderActions) preRenderAction();
+        // Run PreRender in ASCENDING order (low to high)
+        foreach (var action in _processingActions)
+            action.Processor.PreRender();
 
-        foreach (var action in _renderActions) action.RenderAction(interpolationFactor);
+        // Run main render actions (already prioritized)
+        foreach (var action in _renderActions) 
+            action.RenderAction(interpolationFactor);
 
-        foreach (var postRenderAction in _postRenderActions) postRenderAction();
+        // Run PostRender in DESCENDING order (high to low)
+        for (int i = _processingActions.Count - 1; i >= 0; i--)
+            _processingActions[i].Processor.PostRender();
 
         _framesRendered++;
         _frameTimeAccumulator += interpolationFactor * _tickDuration;

@@ -42,7 +42,7 @@ public class Window : NativeWindow, IWindow, IRendererProcessing, IUpdatable
     {
         Shader.Unuse();
         
-        //Context.SwapBuffers();
+        Context.SwapBuffers();
     }
 
 

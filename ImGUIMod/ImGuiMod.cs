@@ -15,7 +15,7 @@ public class ImGuiMod : IMod
         var gameLoop = container.GetInstance<IGameLoop>();
         var window = container.GetInstance<IWindow>();
 
-        gameLoop.RegisterRenderProcessingAction(new ImGuiController(window));
+        gameLoop.RegisterRenderProcessingAction(new ImGuiController(window), 10);
         
         gameLoop.RegisterRenderAction(new DebugWindow(), 20); // Priority 10 (runs after 3D scene)
         

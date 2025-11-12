@@ -85,6 +85,5 @@ public class ImGuiController : IRendererProcessing
 
 
         _window.Context.MakeCurrent();
-        _window.Context.SwapBuffers();
     }
 }
