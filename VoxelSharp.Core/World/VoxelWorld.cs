@@ -12,14 +12,11 @@ public class VoxelWorld
 
     public int ChunkSize => 16;
 
-    private readonly IWorldGenerator _worldGenerator;
 
     private readonly ILogger<VoxelWorld> _logger;
 
-    public VoxelWorld(IWorldGenerator worldGenerator, ILogger<VoxelWorld> logger)
+    public VoxelWorld(ILogger<VoxelWorld> logger)
     {
-        _worldGenerator = worldGenerator;
-
         _logger = logger;
     }
 
@@ -33,15 +30,11 @@ public class VoxelWorld
         if (IsChunkLoaded(chunkPos))
             return;
 
-        var chunk = new Chunk(chunkPos, ChunkSize);
+       
 
-        _worldGenerator.GenerateChunkHeightmap(chunk);
-        
-        _worldGenerator.DecorateChunkHeightmap(chunk);
+        //ChunkArray.Add(chunk.Position, chunk);
 
-        ChunkArray.Add(chunk.Position, chunk);
-
-        _logger.LogInformation("Loaded chunk at position {0}", chunk.Position);
+        //_logger.LogInformation("Loaded chunk at position {0}", chunk.Position);
     }
 
     public Chunk GetChunk(Position<int> chunkPos)
@@ -59,8 +52,12 @@ public class VoxelWorld
         var localCoords = GetLocalCoordinates(worldPos);
 
         if (!IsChunkLoaded(chunkCoords))
-            LoadChunk(chunkCoords);
+        {
+            // If not loaded, just return air
+            return new Voxel(Rgba.Transparent);
+        }
 
+        // Chunk is loaded, so we can safely get the voxel
         return ChunkArray[chunkCoords].GetVoxel(localCoords);
     }
 

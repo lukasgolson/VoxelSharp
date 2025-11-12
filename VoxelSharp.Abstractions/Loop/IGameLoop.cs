@@ -47,6 +47,11 @@ public interface IGameLoop
 
     void RegisterUpdateAction(IUpdatable updatable);
 
+    void RegisterBackgroundUpdateAction(IUpdatable updatable, string loopName);
+
+
+    void StopBackgroundLoop(string loopName);
+
 
     /// <summary>
     ///     Unregisters a previously registered tick action.

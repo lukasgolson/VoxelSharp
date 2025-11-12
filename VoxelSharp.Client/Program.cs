@@ -10,6 +10,7 @@ using VoxelSharp.Abstractions.Window;
 using VoxelSharp.Client.Input;
 using VoxelSharp.Client.Wrappers;
 using VoxelSharp.Core.ECS;
+using VoxelSharp.Core.ECS.Jobs;
 using VoxelSharp.Core.GameLoop;
 using VoxelSharp.Core.Interfaces.WorldGen;
 using VoxelSharp.Core.World;
@@ -92,7 +93,7 @@ public static class Program
     private static void ConfigureServices(Container container, Ecs ecs)
     {
         container.RegisterInstance(new ModLoaderWrapper(ModLoader));
-
+        
         container.RegisterSingleton<IGameLoop, GameLoop>();
 
         container.RegisterSingleton<IMouseRelative, MouseInput>();
@@ -104,8 +105,15 @@ public static class Program
         container.AddRegistration<ICameraParameters>(cameraService);
 
         container.RegisterSingleton<IWindow, Window>();
+        
+        container.RegisterSingleton<GeneratedChunkQueue>();
+        container.RegisterSingleton<WorldGenerationSystem>();
+        container.RegisterSingleton<ChunkCommitSystem>();
+        
         container.RegisterSingleton<VoxelWorld>();
         container.RegisterSingleton<WorldRenderer>();
+        
+        
         container.RegisterSingleton<IClient, Client>();
         
         container.RegisterSingleton<IWorldGenerator, EmptyWorldGenerator>();

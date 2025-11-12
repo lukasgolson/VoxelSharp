@@ -14,6 +14,11 @@ public class GameLoop : IGameLoop
 
     private readonly Stopwatch _stopwatch = new();
     private readonly List<Action<double>> _tickActions = [];
+    
+    private readonly Dictionary<string, GameLoop> _backgroundLoops = new();
+    private readonly Dictionary<string, CancellationTokenSource> _backgroundLoopCts = new();
+    private readonly Dictionary<string, Task> _backgroundLoopTasks = new();
+    private readonly object _loopLock = new object(); // To protect the dictionaries
 
     private readonly long _ticksPerSecond;
     private double _frameDuration;
@@ -30,6 +35,8 @@ public class GameLoop : IGameLoop
 
     private int _ticksProcessed;
     private double _tickTimeAccumulator;
+    
+    
 
     internal struct Renderer : IEquatable<Renderer>
     {
@@ -127,6 +134,26 @@ public class GameLoop : IGameLoop
     public void Stop()
     {
         _isRunning = false;
+        
+        lock (_loopLock)
+        {
+            foreach (var loop in _backgroundLoops.Values) loop.Stop();
+            foreach (var cts in _backgroundLoopCts.Values) cts.Cancel();
+
+            try
+            {
+                // Wait for all background tasks to shut down
+                Task.WhenAll(_backgroundLoopTasks.Values).Wait(TimeSpan.FromSeconds(2));
+            }
+            catch (Exception)
+            {
+                // Log this failure
+            }
+
+            _backgroundLoops.Clear();
+            _backgroundLoopCts.Clear();
+            _backgroundLoopTasks.Clear();
+        }
     }
 
     public void Pause()
@@ -155,7 +182,60 @@ public class GameLoop : IGameLoop
         if (!_tickActions.Contains(tickAction)) _tickActions.Add(tickAction);
     }
 
+    
     public void RegisterUpdateAction(IUpdatable updatable)
+    {
+        RegisterUpdateAction(updatable.Update);
+    }
+
+    public void RegisterBackgroundUpdateAction(IUpdatable updatable, string loopName)
+    {
+        lock (_loopLock)
+        {
+            if (!_backgroundLoops.TryGetValue(loopName, out var loop))
+            {
+                // The loop doesn't exist, so "spin one up"
+                // _logger.LogInformation("Spinning up new background loop: {loopName}", loopName);
+                
+                loop = new GameLoop();
+                loop.SetTargetTicksPerSecond(30); // Configurable background TPS
+
+                var cts = new CancellationTokenSource();
+                var task = Task.Run(() => loop.Start(), cts.Token);
+                
+                // Store all the new objects
+                _backgroundLoops[loopName] = loop;
+                _backgroundLoopCts[loopName] = cts;
+                _backgroundLoopTasks[loopName] = task;
+            }
+            
+            // Add the updatable to the correct loop
+            loop.RegisterUpdateAction(updatable);
+        }
+    }
+    
+    public void StopBackgroundLoop(string loopName)
+    {
+        lock (_loopLock)
+        {
+            if (_backgroundLoops.TryGetValue(loopName, out var loop))
+            {
+                // _logger.LogInformation("Spinning down background loop: {loopName}", loopName);
+
+                // Stop the loop and cancel the task
+                loop.Stop();
+                _backgroundLoopCts[loopName].Cancel();
+
+                // Remove from management
+                _backgroundLoops.Remove(loopName);
+                _backgroundLoopCts.Remove(loopName);
+                _backgroundLoopTasks.Remove(loopName);
+            }
+        }
+    }
+
+
+    public void RegisterUpdateAction(IUpdatable updatable, int i)
     {
         RegisterUpdateAction(updatable.Update);
     }
