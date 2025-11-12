@@ -74,6 +74,10 @@ public class WorldRenderer : IRenderer, IUpdatable
 
             _initialized = true;
         }
+        
+        GL.Enable(EnableCap.DepthTest);
+        GL.Enable(EnableCap.CullFace);
+        GL.DepthFunc(DepthFunction.Less);
 
 
         _chunkShader.Use();

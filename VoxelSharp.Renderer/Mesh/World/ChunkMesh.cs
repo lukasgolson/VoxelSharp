@@ -186,7 +186,7 @@ public class ChunkMesh : BaseMesh
             // 1. Get the global position of this neighbor
             var neighborGlobalPos = Chunk.LocalToGlobalPosition(neighborLocalPos);            
             // 2. Ask the world for the voxel at that global position
-            var neighborVoxel = _voxelWorld.GetVoxelReadOnly(neighborGlobalPos);
+            var neighborVoxel = _voxelWorld.GetVoxel(neighborGlobalPos);
             adjacentAlpha = neighborVoxel.Rgba.A;
         }
         else
