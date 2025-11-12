@@ -11,6 +11,8 @@ public class VoxelWorld
 
 
     public int ChunkSize => 16;
+    
+    private HashSet<Position<int>> PendingChunks = new();
 
 
     private readonly ILogger<VoxelWorld> _logger;
@@ -30,19 +32,20 @@ public class VoxelWorld
         if (IsChunkLoaded(chunkPos))
             return;
 
-       
 
         //ChunkArray.Add(chunk.Position, chunk);
 
         //_logger.LogInformation("Loaded chunk at position {0}", chunk.Position);
     }
 
-    public Chunk GetChunk(Position<int> chunkPos)
+    public Chunk? GetChunk(Position<int> chunkPos)
     {
         if (!IsChunkLoaded(chunkPos))
-            LoadChunk(chunkPos);
+        {
+            return null; // Chunk doesn't exist in memory, just return null.
+        }
 
-        return ChunkArray[chunkPos];
+        return ChunkArray[chunkPos]; // It exists, return it.
     }
 
 
@@ -54,6 +57,7 @@ public class VoxelWorld
         if (!IsChunkLoaded(chunkCoords))
         {
             // If not loaded, just return air
+            _logger.LogDebug("Tried to load non-loaded chunk {ChunkCoords}", chunkCoords);
             return new Voxel(Rgba.Transparent);
         }
 
@@ -68,11 +72,15 @@ public class VoxelWorld
         var localCoords = GetLocalCoordinates(worldPos);
 
         if (!IsChunkLoaded(chunkCoords))
-            LoadChunk(chunkCoords);
+        {
+            _logger.LogDebug("Tried to set voxel in non-loaded chunk {ChunkCoords}", chunkCoords);
+
+            return;
+        }
 
         var chunk = ChunkArray[chunkCoords];
         chunk.SetVoxel(localCoords, voxel);
-        
+
         if (localCoords.X == 0)
             SetChunkDirty(chunkCoords - Position<int>.Right);
         else if (localCoords.X == ChunkSize - 1)
@@ -88,7 +96,7 @@ public class VoxelWorld
         else if (localCoords.Z == ChunkSize - 1)
             SetChunkDirty(chunkCoords + Position<int>.Forward);
     }
-    
+
     private void SetChunkDirty(Position<int> chunkPos)
     {
         if (IsChunkLoaded(chunkPos))
@@ -114,7 +122,7 @@ public class VoxelWorld
 
         return new Position<int>(x, y, z);
     }
-    
+
     public Voxel GetVoxelReadOnly(Position<int> worldPos)
     {
         var chunkCoords = GetChunkCoordinates(worldPos);
@@ -130,5 +138,21 @@ public class VoxelWorld
         // Chunk is loaded, so we can safely get the voxel
         return ChunkArray[chunkCoords].GetVoxel(localCoords);
     }
-    
+
+    public bool IsChunkRequestPending(Position<int> chunkPos)
+    {
+        return PendingChunks.Contains(chunkPos);
+    }
+
+    public void SetChunkRequestPending(Position<int> chunkPos, bool pending)
+    {
+        if (pending)
+        {
+            PendingChunks.Add(chunkPos);
+        }
+        else
+        {
+            PendingChunks.Remove(chunkPos);
+        }
+    }
 }

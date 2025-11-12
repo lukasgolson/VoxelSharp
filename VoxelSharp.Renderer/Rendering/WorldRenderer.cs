@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using OpenTK.Graphics.OpenGL4;
 using VoxelSharp.Abstractions.Loop;
 using VoxelSharp.Abstractions.Renderer;
+using VoxelSharp.Core.ECS.Jobs;
 using VoxelSharp.Core.Helpers;
 using VoxelSharp.Core.Structs;
 using VoxelSharp.Core.World;
@@ -27,11 +28,12 @@ public class WorldRenderer : IRenderer, IUpdatable
     private readonly ILogger _logger;
     private readonly ICameraMatrices _cameraMatrices;
     private readonly ICameraParameters _cameraParameters;
+    private readonly Arch.Core.World _ecsWorld;
 
 
     public WorldRenderer(ICameraMatrices cameraMatrices, ICameraParameters cameraParameters,
         ILogger<WorldRenderer> logger,
-        IGameLoop gameLoop)
+        IGameLoop gameLoop, Arch.Core.World ecsWorld)
     {
         gameLoop.RegisterRenderAction(this);
         gameLoop.RegisterUpdateAction(this);
@@ -39,7 +41,9 @@ public class WorldRenderer : IRenderer, IUpdatable
         _cameraMatrices = cameraMatrices;
         _cameraParameters = cameraParameters;
         _logger = logger;
-
+        
+        _ecsWorld = ecsWorld;
+        
         var worldVolume = Math.Pow(RenderDistance, 3);
         _chunkMeshArray = new Dictionary<Position<int>, ChunkMesh>((int)worldVolume);
     }
@@ -127,7 +131,7 @@ public class WorldRenderer : IRenderer, IUpdatable
     {
         _updateTimer += (float)deltaTime;
 
-        if (_updateTimer < 0.25f)
+        if (_updateTimer < 0.5f)
             return;
 
         _updateTimer = 0;
@@ -181,11 +185,31 @@ public class WorldRenderer : IRenderer, IUpdatable
         // add new chunks that are in the render distance
         foreach (var chunkPos in chunkPositions)
         {
+            // If the mesh is already loaded, skip
             if (_chunkMeshArray.ContainsKey(chunkPos)) continue;
 
-            var chunk = _voxelWorld.GetChunk(chunkPos);
-            var chunkMesh = new ChunkMesh(chunk, _voxelWorld);
-            _chunkMeshArray.Add(chunkPos, chunkMesh);
+            // Check if the CHUNK DATA is loaded
+            var chunk = _voxelWorld.GetChunk(chunkPos); // This is now a non-blocking null check
+
+            if (chunk != null)
+            {
+                // Chunk data exists! We can create the mesh.
+                var chunkMesh = new ChunkMesh(chunk, _voxelWorld);
+                _chunkMeshArray.Add(chunkPos, chunkMesh);
+            }
+            else
+            {
+             
+                if (_voxelWorld.IsChunkRequestPending(chunkPos))
+                    continue;
+
+                _voxelWorld.SetChunkRequestPending(chunkPos, true); 
+                _ecsWorld.Create(
+                    new ChunkPosition { X = chunkPos.X, Y = chunkPos.Y, Z = chunkPos.Z },
+                    new NeedsGeneration(),
+                    new ChunkData { Chunk = null }
+                );
+            }
         }
     }
 }
