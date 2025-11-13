@@ -9,7 +9,7 @@ uniform mat4 projection; // Projection matrix
 void main()
 {
     skyDirection = normalize(aPos); // Pass normalized position as direction
-    gl_Position = vec4(aPos, 1.0) * view * projection;
+    gl_Position = projection * view * vec4(aPos, 1.0);
     gl_Position = gl_Position.xyww;  // Forces depth to 1.0 (far plane)
 
 }

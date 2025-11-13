@@ -23,17 +23,17 @@ public class WorldRenderer : IRenderer, IUpdatable
     private const int RenderDistance = 4;
 
 
-    private readonly Vector3 _lightDirection = new(0.5f, -0.8f, 0.3f);
-
     private readonly ILogger _logger;
     private readonly ICameraMatrices _cameraMatrices;
     private readonly ICameraParameters _cameraParameters;
     private readonly Arch.Core.World _ecsWorld;
+    
+    private readonly ILightSource _lightSource;
 
 
     public WorldRenderer(ICameraMatrices cameraMatrices, ICameraParameters cameraParameters,
         ILogger<WorldRenderer> logger,
-        IGameLoop gameLoop, Arch.Core.World ecsWorld)
+        IGameLoop gameLoop, Arch.Core.World ecsWorld, ILightSource lightSource)
     {
         gameLoop.RegisterRenderAction(this);
         gameLoop.RegisterUpdateAction(this);
@@ -46,6 +46,8 @@ public class WorldRenderer : IRenderer, IUpdatable
         
         var worldVolume = Math.Pow(RenderDistance, 3);
         _chunkMeshArray = new Dictionary<Position<int>, ChunkMesh>((int)worldVolume);
+        
+        _lightSource = lightSource;
     }
 
 
@@ -75,6 +77,12 @@ public class WorldRenderer : IRenderer, IUpdatable
             _initialized = true;
         }
         
+        var sysLightDir = _lightSource.GetCurrentLightDirection();
+        var sysLightColor = _lightSource.GetCurrentLightColor();
+        
+        var currentLightDirection = new Vector3(sysLightDir.X, sysLightDir.Y, sysLightDir.Z);
+        var currentLightColor = new Vector3(sysLightColor.X, sysLightColor.Y, sysLightColor.Z);
+        
         GL.Enable(EnableCap.DepthTest);
         GL.Enable(EnableCap.CullFace);
         GL.DepthFunc(DepthFunction.Less);
@@ -84,7 +92,8 @@ public class WorldRenderer : IRenderer, IUpdatable
 
         _chunkShader.SetUniform("m_view", _cameraMatrices.GetViewMatrix());
         _chunkShader.SetUniform("m_projection", _cameraMatrices.GetProjectionMatrix());
-        _chunkShader.SetUniform("lightDirection", _lightDirection);
+        _chunkShader.SetUniform("lightDirection", currentLightDirection);
+        _chunkShader.SetUniform("lightColour", currentLightColor);
 
 
         // -- Pass 1: Opaque Geometry --

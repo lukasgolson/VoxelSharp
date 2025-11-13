@@ -18,7 +18,7 @@ void main()
 {
     // Simple Lambertian lighting
     vec3 N = normalize(frag_normal);
-    vec3 L = normalize(-lightDirection); // Invert light direction for calculation
+    vec3 L = normalize(lightDirection); // Invert light direction for calculation
     float diffuse = max(dot(N, L), 0.0); // Calculate diffuse lighting
 
     // Darken faces based on the dot product

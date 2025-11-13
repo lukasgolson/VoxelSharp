@@ -22,6 +22,8 @@ public class MainMenuBar : IRenderer
                 }
                 if (ImGui.MenuItem("Open", "Ctrl+O"))
                 {
+                  
+
                 }
                 ImGui.Separator();
                 if (ImGui.MenuItem("Exit"))

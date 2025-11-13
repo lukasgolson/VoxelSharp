@@ -1,0 +1,32 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net8.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\VoxelSharp.Abstractions\VoxelSharp.Abstractions.csproj" />
+      <ProjectReference Include="..\VoxelSharp.Modding\VoxelSharp.Modding.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="ImGui.NET" Version="1.91.6.1" />
+    </ItemGroup>
+
+
+    <Target Name="PostBuild" AfterTargets="Build">
+        <PropertyGroup>
+            <ModsDirectory>..\.mods</ModsDirectory>
+            <ResourcesDirectory>$(ModsDirectory)\Resources</ResourcesDirectory>
+        </PropertyGroup>
+
+        <MakeDir Directories="$(ModsDirectory)" Condition="!Exists('$(ModsDirectory)')"/>
+
+        <Copy SourceFiles="$(OutputPath)\$(AssemblyName).dll" DestinationFolder="$(ModsDirectory)"/>
+
+        <Exec Command="robocopy &quot;$(OutputPath)\Resources&quot; &quot;$(ResourcesDirectory)&quot; /E /COPY:DAT || exit 0" Condition="Exists('$(OutputPath)\Resources\')"/>
+    </Target>
+
+</Project>

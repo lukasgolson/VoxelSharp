@@ -15,6 +15,12 @@ public class ImGuiController : IRendererProcessing, IDisposable
     {
         ImGui.CreateContext();
         var io = ImGui.GetIO();
+
+
+        unsafe
+        {
+            io.NativePtr->IniFilename = null;
+        }
         io.ConfigFlags |= ImGuiConfigFlags.NavEnableKeyboard;
         io.ConfigFlags |= ImGuiConfigFlags.NavEnableGamepad;
         io.ConfigFlags |= ImGuiConfigFlags.DockingEnable;

@@ -2,6 +2,7 @@
 using HarmonyLib;
 using SimpleInjector;
 using VoxelSharp.Abstractions.Loop;
+using VoxelSharp.Abstractions.Renderer;
 using VoxelSharp.Core.Interfaces.WorldGen;
 using VoxelSharp.Modding.Interfaces;
 using VoxelSharp.Modding.Structs;
@@ -28,7 +29,8 @@ public class ExampleMod : IMod
         container.Options.AllowOverridingRegistrations = true;
         //container.RegisterSingleton<IWorldGenerator, BasicWorldGenerator>();
 
-        container.Register<SkyRenderer>();
+        
+        container.RegisterSingleton<ILightSource, SkyRenderer>();
 
 
         var resourceDictionary = container.GetInstance<ResourceDictionary>();
@@ -55,7 +57,7 @@ public class ExampleMod : IMod
         // Get the Resource dictionary from the container
 
 
-        _skyRenderer = container.GetInstance<SkyRenderer>();
+        _skyRenderer = container.GetInstance<ILightSource>() as SkyRenderer;
         var gameLoop = container.GetInstance<IGameLoop>();
         
         gameLoop.RegisterRenderAction(_skyRenderer, 1);
