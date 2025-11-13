@@ -56,7 +56,10 @@ public class ExampleMod : IMod
 
 
         _skyRenderer = container.GetInstance<SkyRenderer>();
-        var loop = container.GetInstance<IGameLoop>();
+        var gameLoop = container.GetInstance<IGameLoop>();
+        
+        gameLoop.RegisterRenderAction(_skyRenderer, 1);
+        gameLoop.RegisterUpdateAction(_skyRenderer);
         
 
         return true;

@@ -22,6 +22,7 @@
       <option name="Build" />
       <option name="Build" default="false" projectName="ExampleMod" projectPath="$PROJECT_DIR$/ExampleMod/ExampleMod.csproj" />
       <option name="Build" default="false" projectName="ImGUIMod" projectPath="$PROJECT_DIR$/ImGUIMod/ImGUIMod.csproj" />
+      <option name="Build" default="false" projectName="VoxelSegmentation" projectPath="$PROJECT_DIR$/VoxelSegmentation/VoxelSegmentation.csproj" />
     </method>
   </configuration>
 </component>

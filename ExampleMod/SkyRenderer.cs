@@ -45,13 +45,10 @@ public class SkyRenderer : IRenderer, IUpdatable
     private int _vbo;
     private int _ebo;
 
-    public SkyRenderer(ResourceDictionary resourceDictionary, ICameraMatrices cameraMatrices, IGameLoop gameLoop)
+    public SkyRenderer(ResourceDictionary resourceDictionary, ICameraMatrices cameraMatrices)
     {
         _cameraMatrices = cameraMatrices;
         _resourceDictionary = resourceDictionary;
-
-        gameLoop.RegisterRenderAction(this, 10);
-        gameLoop.RegisterUpdateAction(this);
     }
 
 

@@ -26,7 +26,6 @@
 
         <MakeDir Directories="$(ModsDirectory)" Condition="!Exists('$(ModsDirectory)')"/>
 
-        <!-- Remove the ResourcesDirectory if it exists -->
         <Copy SourceFiles="$(OutputPath)\$(AssemblyName).dll" DestinationFolder="$(ModsDirectory)"/>
 
         <Exec Command="robocopy &quot;$(OutputPath)\Resources&quot; &quot;$(ResourcesDirectory)&quot; /E /COPY:DAT || exit 0" Condition="Exists('$(OutputPath)\Resources\')"/>
