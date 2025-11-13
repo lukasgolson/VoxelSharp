@@ -16,8 +16,11 @@ public class FlyingBaseCamera : BaseCamera
 
 
     private readonly IMouseRelative _mouseInput;
-    private Vector3 _input = Vector3.Zero;
 
+    private readonly IWindow _window; // Store the window interface
+    private bool _mouseLocked = true; // Track our lock state
+
+    private Vector3 _input = Vector3.Zero;
     private Vector3 _velocity = Vector3.Zero;
 
     public FlyingBaseCamera(IGameLoop gameLoop, IMouseRelative mouseInput, IKeyboardListener keyboardListener,
@@ -25,9 +28,29 @@ public class FlyingBaseCamera : BaseCamera
         : base(gameLoop)
     {
         _mouseInput = mouseInput;
+        _window = window; // Store the window
+
 
         window.OnWindowResize += (_, aspectRatio) => UpdateAspectRatio((float)aspectRatio);
+        
+        // --- Handle window focus changes ---
+        window.OnFocus += () =>
+        {
+            if (_mouseLocked) // Only re-lock if we are in the "locked" state
+            {
+                _mouseInput.StartTracking(new IntPtr(_window.WindowHandle));
+            }
+        };
+        
+        window.OnUnfocus += () =>
+        {
+            _mouseInput.StopTracking(); // Always unlock on unfocus
+            _input = Vector3.Zero;      // <-- ADD THIS
+        };
 
+        // --- Handle Ctrl key for manual lock/unlock ---
+        keyboardListener.Subscribe(Key.LeftCtrl, UnlockMouse, null, KeyboardEvent.KeyDown);
+        keyboardListener.Subscribe(Key.LeftCtrl, LockMouse, null, KeyboardEvent.KeyUp);
 
         keyboardListener.Subscribe(Key.W, forward_start);
         keyboardListener.Subscribe(Key.W, forward_stop, null, KeyboardEvent.KeyUp);
@@ -45,6 +68,32 @@ public class FlyingBaseCamera : BaseCamera
 
         keyboardListener.Subscribe(Key.LeftShift, down_start);
         keyboardListener.Subscribe(Key.LeftShift, down_stop, null, KeyboardEvent.KeyUp);
+        
+        if (_window.IsFocused && _mouseLocked)
+        {
+            _mouseInput.StartTracking(new IntPtr(_window.WindowHandle));
+        }
+    }
+
+    private void UnlockMouse()
+    {
+        _mouseLocked = false;
+        _mouseInput.StopTracking();
+        _input = Vector3.Zero; // Instantly stop movement
+    }
+
+    private void LockMouse()
+    {
+        _mouseLocked = true; // Set the desired state
+
+        // Only re-lock if the main window is currently focused.
+        // If an ImGui viewport has focus, this check will fail,
+        // and the OnFocus handler will lock it later when
+        // the user clicks back on the main 3D scene.
+        if (_window.IsFocused)
+        {
+            _mouseInput.StartTracking(new IntPtr(_window.WindowHandle));
+        }
     }
 
     private void forward_start()
@@ -110,28 +159,30 @@ public class FlyingBaseCamera : BaseCamera
 
     public override void Update(double deltaTime)
     {
-        _velocity += _input * Speed * (float)deltaTime;
+        // Only process movement/rotation if mouse is locked
+        if (_mouseLocked)
+        {
+            _velocity += _input * Speed * (float)deltaTime;
 
-        // clamp velocity to 0 to 1
-        _velocity = Vector3.Clamp(_velocity, -Vector3.One, Vector3.One);
+            _velocity = Vector3.Clamp(_velocity, -Vector3.One, Vector3.One);
 
-        // Apply damping to velocity
+            var movement = _velocity * Speed * (float)deltaTime;
+
+            // Calculate world movement direction
+            var worldMovement =
+                movement.Z * Forward + // Forward/backward
+                movement.X * Right + // Left/right
+                movement.Y * Up; // Up/down
+
+            UpdatePosition(worldMovement);
+            UpdateRotation((float)_mouseInput.RelativeX, (float)-_mouseInput.RelativeY);
+        }
+
+        // Apply damping even if unlocked, so you glide to a stop
         _velocity *= 1 - DampingFactor * (float)deltaTime;
-
         if (_velocity.Magnitude() < 0.01f) _velocity = Vector3.Zero;
 
-        var movement = _velocity * Speed * (float)deltaTime;
-
-        // Calculate world movement direction
-        var worldMovement =
-            movement.Z * Forward + // Forward/backward
-            movement.X * Right + // Left/right
-            movement.Y * Up; // Up/down
-
-
-        UpdatePosition(worldMovement);
-        UpdateRotation((float)_mouseInput.RelativeX, (float)-_mouseInput.RelativeY);
-
+        // This must be called every frame to update matrices
         base.Update(deltaTime);
     }
 }

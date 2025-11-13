@@ -5,26 +5,17 @@ using VoxelSharp.Abstractions.Window;
 
 namespace VoxelSharp.Client.Input;
 
-public partial class MouseInput : IUpdatable, IMouseRelative, IWindowTracker
+public partial class MouseInput : IUpdatable, IMouseRelative
 {
     private bool _isTracking;
     private Point _lastMousePosition;
     private IntPtr _windowHandle;
 
-    public MouseInput(IGameLoop gameLoop, IWindow window)
+    public MouseInput(IGameLoop gameLoop)
     {
         gameLoop.RegisterUpdateAction(this);
 
-        _windowHandle = new IntPtr(window.WindowHandle);
-        
-        window.OnFocus += HandleFocusGained;
-        window.OnUnfocus += HandleFocusLost;
-
-        // Check initial focus state
-        if (window.IsFocused)
-        {
-            StartTracking(_windowHandle);
-        }
+     
     }
     
     private void HandleFocusGained()
@@ -69,11 +60,12 @@ public partial class MouseInput : IUpdatable, IMouseRelative, IWindowTracker
         // Lock the cursor to the client area of the window
         ClipCursorToWindow(windowHandle);
 
-        // Hide the cursor
-        SetCursorVisibility(false);
 
         // Reset cursor position to the centre
         ResetCursorToCenter();
+        
+        // Hide the cursor
+        SetCursorVisibility(false);
     }
 
     public void StopTracking()

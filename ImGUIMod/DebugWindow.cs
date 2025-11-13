@@ -19,6 +19,9 @@ public class DebugWindow : IRenderer
 
     public void Render(double interpolationFactor)
     {
+        
+        //ImGui.ShowDemoWindow();
+        
         ImGui.Begin("Debug Info", ImGuiWindowFlags.NoInputs | ImGuiWindowFlags.NoTitleBar);
         
         ImGui.Text($"FPS: {_gameLoop.CurrentRenderFrequency:F1}");

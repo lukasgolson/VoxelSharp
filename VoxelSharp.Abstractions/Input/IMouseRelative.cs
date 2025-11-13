@@ -1,6 +1,8 @@
-﻿namespace VoxelSharp.Abstractions.Input;
+﻿using VoxelSharp.Abstractions.Window;
 
-public interface IMouseRelative
+namespace VoxelSharp.Abstractions.Input;
+
+public interface IMouseRelative : IWindowTracker
 {
     public double RelativeX { get; }
     public double RelativeY { get; }
