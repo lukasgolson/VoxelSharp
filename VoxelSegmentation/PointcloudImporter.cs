@@ -1,4 +1,5 @@
-﻿using VoxelSegmentation.structs;
+﻿using System.Numerics;
+using VoxelSegmentation.structs;
 using VoxelSharp.Abstractions.Loop;
 using VoxelSharp.Core.Structs;
 using VoxelSharp.Core.World;
@@ -10,28 +11,26 @@ public class PointcloudImporter : IUpdatable
 {
     private readonly VoxelWorld _voxelWorld;
     
-    // Queue to hold file paths requested by the UI
-    private readonly Queue<string> _importQueue = new();
+    // Update queue to store parameters
+    private readonly Queue<(string Path, Vector3 Rotation, float VoxelSize)> _importQueue = new();
     
-    // Store pending updates grouped by Chunk Coordinate
     private Dictionary<Position<int>, List<(int Index, Voxel Voxel)>>? _pendingChunks;
     
-    // Track if we are currently processing a file
-    private bool _isProcessing = false;
+    // State for UI
+    public bool IsProcessing { get; private set; }
+    public float ImportProgress { get; private set; }
+    public string StatusMessage { get; private set; } = "";
 
     public PointcloudImporter(VoxelWorld world)
     {
         _voxelWorld = world;
     }
 
-    /// <summary>
-    /// Called by the UI to start an import.
-    /// </summary>
-    public void QueueImport(string filePath)
+    public void QueueImport(string filePath, Vector3 rotation, float voxelSize)
     {
         if (File.Exists(filePath))
         {
-            _importQueue.Enqueue(filePath);
+            _importQueue.Enqueue((filePath, rotation, voxelSize));
             Console.WriteLine($"Queued import for: {filePath}");
         }
         else
@@ -42,17 +41,17 @@ public class PointcloudImporter : IUpdatable
 
     public void Update(double deltaTime)
     {
-        // 1. Check if we need to start a new import
-        if (!_isProcessing && _importQueue.Count > 0)
+        if (!IsProcessing && _importQueue.Count > 0)
         {
-            var file = _importQueue.Dequeue();
-            _isProcessing = true;
-            // Run IO on a background thread to keep the UI responsive
-            Task.Run(() => LoadAndSortPoints(file)); 
+            var request = _importQueue.Dequeue();
+            IsProcessing = true;
+            ImportProgress = 0f;
+            StatusMessage = "Starting...";
+            
+            Task.Run(() => LoadAndSortPoints(request.Path, request.Rotation, request.VoxelSize)); 
             return;
         }
 
-        // 2. If we have pending chunks data, process it into the world
         if (_pendingChunks != null && _pendingChunks.Count > 0)
         {
             ProcessPendingChunks();
@@ -61,10 +60,24 @@ public class PointcloudImporter : IUpdatable
 
     private void ProcessPendingChunks()
     {
+        StatusMessage = "Updating World...";
+        
+        // Simple progress based on chunks remaining
+        // Note: This isn't perfect linear progress but gives feedback
+        int totalChunks = _pendingChunks.Count; 
+        // We don't know original total here easily without storing it, 
+        // but we can keep the progress bar filled or pulsating.
+        // Or we can let the 'Load' phase be 0-90% and this be 90-100%.
+        ImportProgress = 0.9f + (0.1f * (1.0f - (_pendingChunks.Count / (float)(totalChunks + 1))));
+
         List<Position<int>> finishedChunks = new();
+        int chunksProcessedThisFrame = 0;
+        int maxChunksPerFrame = 16; // Throttle to prevent freezing
 
         foreach (var chunkBatch in _pendingChunks)
         {
+            if (chunksProcessedThisFrame >= maxChunksPerFrame) break;
+
             var chunkPos = chunkBatch.Key;
             
             if (_voxelWorld.IsChunkLoaded(chunkPos))
@@ -82,6 +95,7 @@ public class PointcloudImporter : IUpdatable
                     chunk.IsDirty = true;
                     MarkNeighborsDirty(chunkPos);
                     finishedChunks.Add(chunkPos);
+                    chunksProcessedThisFrame++;
                 }
             }
             else
@@ -95,28 +109,58 @@ public class PointcloudImporter : IUpdatable
             _pendingChunks.Remove(pos);
         }
         
-        // If we cleared the buffer, we are done processing
         if (_pendingChunks.Count == 0)
         {
-            _isProcessing = false;
+            IsProcessing = false;
             _pendingChunks = null;
+            ImportProgress = 1.0f;
+            StatusMessage = "Complete";
             Console.WriteLine("Import Complete.");
         }
     }
 
-    private void LoadAndSortPoints(string filePath)
+    private void LoadAndSortPoints(string filePath, Vector3 rotation, float voxelSize)
     {
         Console.WriteLine($"Starting import for {filePath}...");
-        
-        var pcl = new Pointcloud(filePath);
-        var quantized = pcl.Quantize(1.0f, centerAtOrigin: true); 
+        StatusMessage = "Reading File...";
+        ImportProgress = 0f;
 
+        // 1. Load (0% - 40%)
+        var pcl = new Pointcloud(filePath, ' ', progress =>
+        {
+            ImportProgress = 0.0f + (progress * 0.4f);
+        });
+
+        // 2. Rotate
+        if (rotation != Vector3.Zero)
+        {
+            StatusMessage = "Rotating...";
+            pcl.Rotate(rotation);
+        }
+
+        // 3. Quantize (40% - 80%)
+        StatusMessage = "Quantizing...";
+        ImportProgress = 0.4f;
+        
+        // Note: Quantize is monolithic, so we just jump to 80% after it's done
+        var quantized = pcl.Quantize(voxelSize, centerAtOrigin: true); 
+        ImportProgress = 0.8f;
+
+        StatusMessage = "Preparing Chunks...";
         var newBatch = new Dictionary<Position<int>, List<(int, Voxel)>>();
         int chunkSize = _voxelWorld.ChunkSize;
         int chunkArea = chunkSize * chunkSize;
 
+        int count = 0;
         foreach (var point in quantized)
         {
+            // Slight progress update during this loop
+            count++;
+            if (count % 1000 == 0)
+            {
+                ImportProgress = 0.8f + (0.1f * ((float)count / quantized.Count));
+            }
+
             var worldPos = new Position<int>((int)point.X, (int)point.Y, (int)point.Z);
             var chunkPos = _voxelWorld.GetChunkCoordinates(worldPos);
             
@@ -135,13 +179,14 @@ public class PointcloudImporter : IUpdatable
             list.Add((flatIndex, voxel));
         }
         
-        // Assign to the main field so Update() can pick it up
         _pendingChunks = newBatch;
+        ImportProgress = 0.9f;
         Console.WriteLine($"Data prepared. Applying to world...");
     }
 
     private void MarkNeighborsDirty(Position<int> center)
     {
+        // (Keep existing implementation)
         MarkDirtyIfLoaded(center + Position<int>.Right);
         MarkDirtyIfLoaded(center - Position<int>.Right);
         MarkDirtyIfLoaded(center + Position<int>.Up);
@@ -152,6 +197,7 @@ public class PointcloudImporter : IUpdatable
 
     private void MarkDirtyIfLoaded(Position<int> pos)
     {
+        // (Keep existing implementation)
         if (_voxelWorld.IsChunkLoaded(pos))
         {
             var c = _voxelWorld.GetChunk(pos);

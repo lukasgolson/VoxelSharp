@@ -13,23 +13,41 @@ public readonly struct Point(float x, float y, float z, float r, float g, float 
 
 public class Pointcloud
 {
-    private readonly List<Point> _points = new();
+    private List<Point> _points = new();
     
     // Store bounds to help with centering
     private Vector3 _minBounds = new(float.MaxValue);
 
-    public Pointcloud(string filename, char delimiter = ' ')
+    // Modified constructor to accept an optional progress callback
+    public Pointcloud(string filename, char delimiter = ' ', Action<float>? onProgress = null)
     {
-        LoadFromTxt(filename, delimiter);
+        LoadFromTxt(filename, delimiter, onProgress);
     }
 
-    private void LoadFromTxt(string filePath, char delimiter = ' ')
+    private void LoadFromTxt(string filePath, char delimiter, Action<float>? onProgress)
     {
         try
         {
+            // Get file size for progress
+            long totalBytes = new FileInfo(filePath).Length;
+            long bytesRead = 0;
+
             using var sr = new StreamReader(filePath);
-            while (sr.ReadLine() is { } line)
+            string? line;
+            
+            // We'll update progress every ~100 lines to avoid overhead
+            int lineCount = 0;
+
+            while ((line = sr.ReadLine()) != null)
             {
+                bytesRead += line.Length + 2; // Approx bytes (line + newline)
+                lineCount++;
+
+                if (onProgress != null && lineCount % 1000 == 0)
+                {
+                    onProgress((float)bytesRead / totalBytes);
+                }
+
                 if (string.IsNullOrWhiteSpace(line) || line.StartsWith('#')) continue;
 
                 var parts = line.Split(delimiter, StringSplitOptions.RemoveEmptyEntries);
@@ -58,6 +76,36 @@ public class Pointcloud
         {
             Console.WriteLine($"An error occurred while loading PointCloud: {ex.Message}");
         }
+    }
+
+    // NEW: Method to rotate all points
+    public void Rotate(Vector3 rotationDegrees)
+    {
+        // Convert to radians
+        float pitch = rotationDegrees.X * (MathF.PI / 180f);
+        float yaw = rotationDegrees.Y * (MathF.PI / 180f);
+        float roll = rotationDegrees.Z * (MathF.PI / 180f);
+
+        var rotationMatrix = Matrix4x4.CreateFromYawPitchRoll(yaw, pitch, roll);
+        var newPoints = new List<Point>(_points.Count);
+        
+        // Reset bounds
+        _minBounds = new Vector3(float.MaxValue);
+
+        foreach (var p in _points)
+        {
+            var v = new Vector3(p.X, p.Y, p.Z);
+            var rotated = Vector3.Transform(v, rotationMatrix);
+            
+            newPoints.Add(new Point(rotated.X, rotated.Y, rotated.Z, p.R, p.G, p.B));
+
+            // Re-calculate bounds
+            if (rotated.X < _minBounds.X) _minBounds.X = rotated.X;
+            if (rotated.Y < _minBounds.Y) _minBounds.Y = rotated.Y;
+            if (rotated.Z < _minBounds.Z) _minBounds.Z = rotated.Z;
+        }
+
+        _points = newPoints;
     }
 
     public List<Point> Quantize(float voxelSize, bool centerAtOrigin = true)

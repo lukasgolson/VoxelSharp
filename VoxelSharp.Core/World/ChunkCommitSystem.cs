@@ -37,7 +37,7 @@ public class ChunkCommitSystem : IUpdatable
         }
 
         // 2. UNLOADING: Remove old chunks that are too far away
-        ProcessUnloading(deltaTime);
+        //ProcessUnloading(deltaTime);
     }
 
     private void ProcessUnloading(double deltaTime)

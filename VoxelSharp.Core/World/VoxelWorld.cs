@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using System.Collections.Concurrent;
+using Microsoft.Extensions.Logging;
 using VoxelSharp.Core.ECS.Jobs;
 using VoxelSharp.Core.Interfaces.WorldGen;
 using VoxelSharp.Core.Structs;
@@ -8,7 +9,7 @@ namespace VoxelSharp.Core.World;
 
 public class VoxelWorld
 {
-    public readonly Dictionary<Position<int>, Chunk> ChunkArray = new();
+    public readonly ConcurrentDictionary<Position<int>, Chunk> ChunkArray = new();
 
 
     public int ChunkSize => 16;
@@ -65,6 +66,8 @@ public class VoxelWorld
             SetChunkDirty(chunk.Position + Position<int>.Forward);
         }
     }
+    
+    
 
     public Chunk? GetChunk(Position<int> chunkPos)
     {
@@ -168,9 +171,8 @@ public class VoxelWorld
 
     public void RemoveChunk(Position<int> chunkPos)
     {
-        if (ChunkArray.Remove(chunkPos))
+        if (ChunkArray.Remove(chunkPos, out _))
         {
-            // Optional: If you implement saving later, save to disk here before removing.
             _logger.LogDebug("Unloaded chunk at {Position}", chunkPos);
         }
     }
