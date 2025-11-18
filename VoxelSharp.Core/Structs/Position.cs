@@ -12,19 +12,18 @@ public readonly record struct Position<T> where T : INumber<T>
     /// <summary>
     ///     Gets the X coordinate.
     /// </summary>
-    public T X { get; }
+    public readonly T X;
 
     /// <summary>
     ///     Gets the Y coordinate.
     /// </summary>
-    public T Y { get; }
+    public readonly T Y;
 
 
     /// <summary>
     ///     Gets the Z coordinate.
     /// </summary>
-    public T Z { get; }
-
+    public readonly T Z;
 
 
     /// <summary>
@@ -33,6 +32,7 @@ public readonly record struct Position<T> where T : INumber<T>
     /// <param name="x">The X coordinate.</param>
     /// <param name="y">The Y coordinate.</param>
     /// <param name="z">The Z coordinate.</param>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Position(T x, T y, T z)
     {
         X = x;
@@ -44,7 +44,7 @@ public readonly record struct Position<T> where T : INumber<T>
     /// Represents a zero vector.
     /// </summary>
     public static Position<T> Zero => new(T.Zero, T.Zero, T.Zero);
-    
+
     /// <summary>
     /// Represents a one vector.
     /// </summary>
@@ -54,14 +54,13 @@ public readonly record struct Position<T> where T : INumber<T>
     /// Represents a unit vector pointing in the negative X direction.
     /// </summary>
     public static Position<T> Right => new(T.One, T.Zero, T.Zero);
-    
 
-    
+
     /// <summary>
     /// Represents a unit vector pointing in the positive Y direction.
     /// </summary>
     public static Position<T> Up => new(T.Zero, T.One, T.Zero);
-    
+
     /// <summary>
     /// Represents a unit vector pointing in the positive Z direction.
     /// </summary>
@@ -72,6 +71,7 @@ public readonly record struct Position<T> where T : INumber<T>
     ///     Calculates the magnitude of the vector.
     /// </summary>
     /// <returns>The magnitude of the vector.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public T Magnitude()
     {
         // Use a helper to compute the square root for numeric types.
@@ -84,6 +84,7 @@ public readonly record struct Position<T> where T : INumber<T>
     /// </summary>
     /// <returns>A new <see cref="Position{T}" /> representing the normalized vector.</returns>
     /// <exception cref="InvalidOperationException">Thrown when the vector is a zero vector.</exception>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Position<T> Normalize()
     {
         var magnitude = Magnitude();
@@ -92,7 +93,8 @@ public readonly record struct Position<T> where T : INumber<T>
 
         return new Position<T>(X / magnitude, Y / magnitude, Z / magnitude);
     }
-    
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Position<int> RoundToInt()
     {
         return new Position<int>(Convert.ToInt32(X), Convert.ToInt32(Y), Convert.ToInt32(Z));
@@ -104,6 +106,7 @@ public readonly record struct Position<T> where T : INumber<T>
     /// <param name="a">The first vector.</param>
     /// <param name="b">The second vector.</param>
     /// <returns>The sum of the two vectors.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Position<T> operator +(Position<T> a, Position<T> b)
     {
         return new Position<T>(a.X + b.X, a.Y + b.Y, a.Z + b.Z);
@@ -115,6 +118,7 @@ public readonly record struct Position<T> where T : INumber<T>
     /// <param name="a">The first vector.</param>
     /// <param name="b">The second vector.</param>
     /// <returns>The difference of the two vectors.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Position<T> operator -(Position<T> a, Position<T> b)
     {
         return new Position<T>(a.X - b.X, a.Y - b.Y, a.Z - b.Z);
@@ -126,6 +130,7 @@ public readonly record struct Position<T> where T : INumber<T>
     /// </summary>
     /// <param name="a">The vector to negate.</param>
     /// <returns>The negated vector.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Position<T> operator -(Position<T> a)
     {
         return new Position<T>(-a.X, -a.Y, -a.Z);
@@ -137,11 +142,13 @@ public readonly record struct Position<T> where T : INumber<T>
     /// <param name="a">The vector.</param>
     /// <param name="scalar">The scalar value.</param>
     /// <returns>The residue of the vector and scalar.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Position<T> operator %(Position<T> a, T scalar)
     {
         return new Position<T>(a.X % scalar, a.Y % scalar, a.Z % scalar);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Position<T> operator %(Position<T> a, Position<T> b)
     {
         return new Position<T>(a.X % b.X, a.Y % b.Y, a.Z % b.Z);
@@ -154,6 +161,7 @@ public readonly record struct Position<T> where T : INumber<T>
     /// <param name="a">The vector.</param>
     /// <param name="scalar">The scalar value.</param>
     /// <returns>The product of the vector and the scalar.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Position<T> operator *(Position<T> a, T scalar)
     {
         return new Position<T>(a.X * scalar, a.Y * scalar, a.Z * scalar);
@@ -167,6 +175,7 @@ public readonly record struct Position<T> where T : INumber<T>
     /// <param name="scalar">The scalar value.</param>
     /// <returns>The quotient of the vector and the scalar.</returns>
     /// <exception cref="DivideByZeroException">Thrown when the scalar is zero.</exception>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Position<T> operator /(Position<T> a, T scalar)
     {
         if (scalar == T.Zero)
@@ -180,6 +189,7 @@ public readonly record struct Position<T> where T : INumber<T>
     /// <param name="a">The first vector.</param>
     /// <param name="b">The second vector.</param>
     /// <returns>The dot product of the two vectors.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static T Dot(Position<T> a, Position<T> b)
     {
         return a.X * b.X + a.Y * b.Y + a.Z * b.Z;
@@ -191,6 +201,7 @@ public readonly record struct Position<T> where T : INumber<T>
     /// <param name="a">The first vector.</param>
     /// <param name="b">The second vector.</param>
     /// <returns>The cross product of the two vectors.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Position<T> Cross(Position<T> a, Position<T> b)
     {
         return new Position<T>(
@@ -207,6 +218,7 @@ public readonly record struct Position<T> where T : INumber<T>
     /// <param name="depth">The depth of the 3D grid.</param>
     /// <returns>The 1D index corresponding to the 3D position.</returns>
     /// <exception cref="ArgumentException">Thrown when width or depth is less than or equal to zero.</exception>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public int ToIndex(int width, int depth)
     {
         if (width <= 0 || depth <= 0)
@@ -222,6 +234,7 @@ public readonly record struct Position<T> where T : INumber<T>
     /// <param name="sideLength">The side length of the 3D grid.</param>
     /// <returns>The 1D index corresponding to the 3D position.</returns>
     /// <exception cref="ArgumentException">Thrown when side length is less than or equal to zero.</exception>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public int ToIndex(int sideLength)
     {
         return ToIndex(sideLength, sideLength);
@@ -235,6 +248,7 @@ public readonly record struct Position<T> where T : INumber<T>
     /// <param name="depth">The depth of the 3D grid.</param>
     /// <returns>A <see cref="Position{T}" /> representing the 3D coordinates corresponding to the given 1D index.</returns>
     /// <exception cref="ArgumentException">Thrown when width or depth is less than or equal to zero.</exception>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Position<T> FromIndex(int index, int width, int depth)
     {
         var area = width * depth;
@@ -244,9 +258,9 @@ public readonly record struct Position<T> where T : INumber<T>
         var x = remaining % width;
 
         // Convert x, y, z to type T
-        var convertedX = (T)Convert.ChangeType(x, typeof(T));
-        var convertedY = (T)Convert.ChangeType(y, typeof(T));
-        var convertedZ = (T)Convert.ChangeType(z, typeof(T));
+        var convertedX = T.CreateTruncating(x);
+        var convertedY = T.CreateTruncating(y);
+        var convertedZ = T.CreateTruncating(z);
 
         return new Position<T>(convertedX, convertedY, convertedZ);
     }
@@ -258,6 +272,7 @@ public readonly record struct Position<T> where T : INumber<T>
     /// <param name="sideLength">The side length of the 3D grid.</param>
     /// <returns>A <see cref="Position{T}" /> representing the 3D coordinates corresponding to the given 1D index.</returns>
     /// <exception cref="ArgumentException">Thrown when side length is less than or equal to zero.</exception>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Position<T> FromIndex(int index, int sideLength)
     {
         return FromIndex(index, sideLength, sideLength);
@@ -276,8 +291,15 @@ public static class GenericMath
     public static T Sqrt<T>(T value) where T : INumber<T>
     {
         // Avoid (T)(object) where possible
+
+
         if (typeof(T) == typeof(float))
-            return (T)(object)MathF.Sqrt(Unsafe.As<T, float>(ref value));
+        {
+            float val = Unsafe.As<T, float>(ref value);
+            float result = MathF.Sqrt(val);
+            return Unsafe.As<float, T>(ref result);
+        }
+
         if (typeof(T) == typeof(double))
             return (T)(object)System.Math.Sqrt(Unsafe.As<T, double>(ref value));
         if (typeof(T) == typeof(int))

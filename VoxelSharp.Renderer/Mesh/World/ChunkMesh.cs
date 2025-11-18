@@ -18,10 +18,13 @@ public class ChunkMesh : BaseMesh
         Chunk = chunk;
         _voxelWorld = voxelWorld; // Store it
     }
-    
-    private enum MeshType {Opaque, Transparent}
-    
-    
+
+    private enum MeshType
+    {
+        Opaque,
+        Transparent
+    }
+
 
     private Position<int>? Position => Chunk?.Position;
 
@@ -45,7 +48,7 @@ public class ChunkMesh : BaseMesh
         {
             SetupTransparentMesh(8, shaderProgram);
         }
-        
+
         Chunk.IsDirty = false;
 
 
@@ -55,14 +58,14 @@ public class ChunkMesh : BaseMesh
 
         base.RenderTransparent(shaderProgram);
     }
-    
+
     public override void Render(Shader shaderProgram)
     {
         RenderOpaque(shaderProgram);
         RenderTransparent(shaderProgram);
     }
-    
-    
+
+
     /// <summary>
     ///     Uses a memory pool to rent a float buffer to store vertex data.
     ///     Once completed, SetupMesh will store this data in a GPU buffer,
@@ -72,43 +75,63 @@ public class ChunkMesh : BaseMesh
     /// <returns>An IMemoryOwner of float, which you can dispose or return to the pool.</returns>
     private IMemoryOwner<float> BuildVertexDataMemory(out int vertexCount, MeshType meshType)
     {
+        var chunk = Chunk;
+        var chunkSize = chunk.ChunkSize;
+        var chunkPos = chunk.Position;
+
+
+        var cLeft = _voxelWorld.GetChunk(chunkPos - Position<int>.Right);
+        var leftSpan = cLeft != null ? cLeft.GetVoxelSpan() : Span<Voxel>.Empty;
+
+        var cRight = _voxelWorld.GetChunk(chunkPos + Position<int>.Right);
+        var rightSpan = cRight != null ? cRight.GetVoxelSpan() : Span<Voxel>.Empty;
+
+        var cDown = _voxelWorld.GetChunk(chunkPos - Position<int>.Up);
+        var downSpan = cDown != null ? cDown.GetVoxelSpan() : Span<Voxel>.Empty;
+
+        var cUp = _voxelWorld.GetChunk(chunkPos + Position<int>.Up);
+        var upSpan = cUp != null ? cUp.GetVoxelSpan() : Span<Voxel>.Empty;
+
+        var cBack = _voxelWorld.GetChunk(chunkPos - Position<int>.Forward);
+        var backSpan = cBack != null ? cBack.GetVoxelSpan() : Span<Voxel>.Empty;
+
+        var cFront = _voxelWorld.GetChunk(chunkPos + Position<int>.Forward);
+        var frontSpan = cFront != null ? cFront.GetVoxelSpan() : Span<Voxel>.Empty;
+
+
         var estimatedVertexCount = Chunk.ChunkVolume * 6 * 6 * 8;
         var memoryOwner = MemoryPool<float>.Shared.Rent(estimatedVertexCount);
         var span = memoryOwner.Memory.Span;
         var index = 0;
-        var chunkVoxelSpan = Chunk.GetVoxelSpan();
+        var chunkVoxelSpan = chunk.GetVoxelSpan();
+        int voxelIndex = 0; // Track linear index
 
-        for (var x = 0; x < Chunk.ChunkSize; x++)
-        for (var z = 0; z < Chunk.ChunkSize; z++)
-        for (var y = 0; y < Chunk.ChunkSize; y++)
+        for (var y = 0; y < chunkSize; y++)
         {
-            var voxelIndex = Chunk.GetVoxelIndex(new Position<int>(x, y, z));
-            var voxel = chunkVoxelSpan[voxelIndex];
-            var alpha = voxel.Rgba.A;
-            
-            // This is the only logic that changes
-            switch (meshType)
+            for (var z = 0; z < chunkSize; z++)
             {
-                case MeshType.Opaque:
-                    // Skip non-opaque (A != 255) voxels
-                    if (alpha != 255) continue;
-                    break;
-                case MeshType.Transparent:
-                    // Skip opaque (A=255) and fully transparent/air (A=0) voxels
-                    if (alpha is 255 or 0) continue;
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(meshType), meshType, null);
+                for (var x = 0; x < chunkSize; x++)
+                {
+                    var voxel = chunkVoxelSpan[voxelIndex];
+                    var alpha = voxel.Rgba.A;
+
+                    bool process = meshType == MeshType.Opaque ? alpha == 255 : (alpha != 255 && alpha != 0);
+
+                    if (process)
+                    {
+                        AddVisibleFacesToSpan(span, chunkVoxelSpan, ref index, x, y, z, voxelIndex, voxel, chunkSize,
+                            leftSpan, rightSpan, downSpan, upSpan, backSpan, frontSpan);
+                    }
+
+                    voxelIndex++; // Increment linear index
+                }
             }
-            
-            // The rest of the logic is shared
-            AddVisibleFacesToSpan(span, chunkVoxelSpan, ref index, x, y, z, voxel);
         }
 
         vertexCount = index;
         return memoryOwner;
     }
-    
+
     protected override IMemoryOwner<float> GetOpaqueVertexDataMemory(out int vertexCount)
     {
         return BuildVertexDataMemory(out vertexCount, MeshType.Opaque);
@@ -118,8 +141,7 @@ public class ChunkMesh : BaseMesh
     {
         return BuildVertexDataMemory(out vertexCount, MeshType.Transparent);
     }
-    
-   
+
 
     /// <summary>
     ///     Sets up vertex attribute pointers for this mesh.
@@ -167,98 +189,247 @@ public class ChunkMesh : BaseMesh
         );
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private int GetNeighborIndex(int x, int y, int z, int chunkSize)
+    {
+        if (chunkSize == 16)
+        {
+            return x + (z << 4) + (y << 8);
+        }
+
+        return x + (z * chunkSize) + (y * chunkSize * chunkSize);
+    }
+
     /// <summary>
     ///     Checks whether the voxel at the specified coordinates is "void" from the perspective of rendering
     ///     (i.e., out of bounds or transparent).
     /// </summary>
-    /// <param name="x">X coordinate within the chunk.</param>
-    /// <param name="y">Y coordinate within the chunk.</param>
-    /// <param name="z">Z coordinate within the chunk.</param>
-    /// <param name="currentAlpha">Alpha value of the current voxel.</param>
-    /// <param name="voxelSpan">Span of all voxels in this chunk.</param>
-    private bool IsVoid(int x, int y, int z, int currentAlpha, Span<Voxel> voxelSpan)
+    private bool IsVoid(int x, int y, int z, int currentAlpha, Span<Voxel> localSpan, int chunkSize,
+        Span<Voxel> left, Span<Voxel> right,
+        Span<Voxel> down, Span<Voxel> up,
+        Span<Voxel> back, Span<Voxel> front)
     {
-        byte adjacentAlpha;
-        var neighborLocalPos = new Position<int>(x, y, z);
+        if ((uint)x < (uint)chunkSize && (uint)y < (uint)chunkSize && (uint)z < (uint)chunkSize)
+        {
+            var adjacentAlpha = localSpan[GetNeighborIndex(x, y, z, chunkSize)].Rgba.A;
 
-        if (!IsWithinBounds(x, y, z))
-        {
-            // --- NEIGHBOR CHUNK LOGIC ---
-            // 1. Get the global position of this neighbor
-            var neighborGlobalPos = Chunk.LocalToGlobalPosition(neighborLocalPos);            
-            // 2. Ask the world for the voxel at that global position
-            var neighborVoxel = _voxelWorld.GetVoxel(neighborGlobalPos);
-            adjacentAlpha = neighborVoxel.Rgba.A;
-        }
-        else
-        {
-            // --- SAME CHUNK LOGIC ---
-            var idx = Chunk.GetVoxelIndex(neighborLocalPos);
-            adjacentAlpha = voxelSpan[idx].Rgba.A;
+            // Standard transparency check
+            if (adjacentAlpha == 0) return true;
+            return (currentAlpha == 255) != (adjacentAlpha == 255);
         }
 
-        // --- SHARED CULLING LOGIC ---
-        
-        // If adjacent is Air, always draw
-        if (adjacentAlpha == 0) return true;
-        
-        bool isCurrentOpaque = (currentAlpha == 255);
-        bool isAdjacentOpaque = (adjacentAlpha == 255);
 
-        // Draw if one is opaque and the other is not
-        // This correctly handles:
-        //   Solid-Solid (false), Water-Water (false)
-        //   Solid-Water (true), Water-Air (true)
-        return isCurrentOpaque != isAdjacentOpaque;
-    }
+        byte neighborAlpha;
+        if (x < 0)
+        {
+            if (left.IsEmpty) return true;
+            neighborAlpha = left[GetNeighborIndex(chunkSize - 1, y, z, chunkSize)].Rgba.A;
+        }
+        else if (x >= chunkSize)
+        {
+            if (right.IsEmpty) return true;
+            neighborAlpha = right[GetNeighborIndex(0, y, z, chunkSize)].Rgba.A;
+        }
+        else if (y < 0)
+        {
+            if (down.IsEmpty) return true;
+            neighborAlpha = down[GetNeighborIndex(x, chunkSize - 1, z, chunkSize)].Rgba.A;
+        }
+        else if (y >= chunkSize)
+        {
+            if (up.IsEmpty) return true;
+            neighborAlpha = up[GetNeighborIndex(x, 0, z, chunkSize)].Rgba.A;
+        }
+        else if (z < 0)
+        {
+            if (back.IsEmpty) return true;
+            neighborAlpha = back[GetNeighborIndex(x, y, chunkSize - 1, chunkSize)].Rgba.A;
+        }
+        else // if (z >= chunkSize)
+        {
+            if (front.IsEmpty) return true;
+            neighborAlpha = front[GetNeighborIndex(x, y, 0, chunkSize)].Rgba.A;
+        }
 
-    private bool IsWithinBounds(int x, int y, int z)
-    {
-        return x >= 0 && x < Chunk.ChunkSize &&
-               y >= 0 && y < Chunk.ChunkSize &&
-               z >= 0 && z < Chunk.ChunkSize;
+        if (neighborAlpha == 0) return true;
+        return (currentAlpha == 255) != (neighborAlpha == 255);
     }
 
     /// <summary>
     ///     For a given voxel, checks each face to determine if it should be rendered.
     ///     If visible, adds the corresponding vertices to the shared vertex span.
     /// </summary>
-    /// <param name="span">The vertex buffer span.</param>
-    /// <param name="voxelSpan">Span of this chunk's voxels.</param>
-    /// <param name="index">Reference to the current index in the vertex buffer span.</param>
-    /// <param name="x">Voxel X coordinate.</param>
-    /// <param name="y">Voxel Y coordinate.</param>
-    /// <param name="z">Voxel Z coordinate.</param>
-    /// <param name="voxel">The voxel being processed.</param>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private void AddVisibleFacesToSpan(Span<float> span, Span<Voxel> voxelSpan, ref int index,
-        int x, int y, int z, Voxel voxel)
+    private void AddVisibleFacesToSpan(Span<float> span, Span<Voxel> localSpan, ref int index,
+        int x, int y, int z, int currentIdx, Voxel voxel, int size,
+        Span<Voxel> left, Span<Voxel> right,
+        Span<Voxel> down, Span<Voxel> up,
+        Span<Voxel> back, Span<Voxel> front)
     {
-        int alpha = voxel.Rgba.A;
+        int currentAlpha = voxel.Rgba.A;
+        int area = size * size;
+        byte adjacentAlpha;
 
-        // Top face
-        if (IsVoid(x, y + 1, z, alpha, voxelSpan))
-            AddVerticesToSpan(span, ref index, VoxelVertex.CreateFace(x, y, z, voxel, FaceId.Top));
+        // Pre-calculate color floats once per voxel to avoid doing it 6 times per face
+        float r = voxel.Rgba.R / 255f;
+        float g = voxel.Rgba.G / 255f;
+        float b = voxel.Rgba.B / 255f;
+        float a = currentAlpha / 255f;
 
-        // Bottom face
-        if (IsVoid(x, y - 1, z, alpha, voxelSpan))
-            AddVerticesToSpan(span, ref index, VoxelVertex.CreateFace(x, y, z, voxel, FaceId.Bottom));
+        // --- TOP FACE (Y + 1) ---
+        if (y == size - 1)
+        {
+            if (up.IsEmpty) adjacentAlpha = 0;
+            else adjacentAlpha = up[x + z * size].Rgba.A;
+        }
+        else
+        {
+            adjacentAlpha = localSpan[currentIdx + area].Rgba.A;
+        }
 
-        // Right face
-        if (IsVoid(x + 1, y, z, alpha, voxelSpan))
-            AddVerticesToSpan(span, ref index, VoxelVertex.CreateFace(x, y, z, voxel, FaceId.Right));
+        if (adjacentAlpha == 0 || (currentAlpha == 255) != (adjacentAlpha == 255))
+        {
+            // Write 6 vertices directly. No structs. No arrays.
+            // Winding: v0, v3, v2, v0, v2, v1
+            // v0=(x, y+1, z), v1=(x+1, y+1, z), v2=(x+1, y+1, z+1), v3=(x, y+1, z+1)
 
-        // Left face
-        if (IsVoid(x - 1, y, z, alpha, voxelSpan))
-            AddVerticesToSpan(span, ref index, VoxelVertex.CreateFace(x, y, z, voxel, FaceId.Left));
+            WriteVertex(span, ref index, x, y + 1, z, r, g, b, a, 0f); // v0
+            WriteVertex(span, ref index, x, y + 1, z + 1, r, g, b, a, 0f); // v3
+            WriteVertex(span, ref index, x + 1, y + 1, z + 1, r, g, b, a, 0f); // v2
+            WriteVertex(span, ref index, x, y + 1, z, r, g, b, a, 0f); // v0
+            WriteVertex(span, ref index, x + 1, y + 1, z + 1, r, g, b, a, 0f); // v2
+            WriteVertex(span, ref index, x + 1, y + 1, z, r, g, b, a, 0f); // v1
+        }
 
-        // Back face
-        if (IsVoid(x, y, z - 1, alpha, voxelSpan))
-            AddVerticesToSpan(span, ref index, VoxelVertex.CreateFace(x, y, z, voxel, FaceId.Back));
+        // --- BOTTOM FACE (Y - 1) ---
+        if (y == 0)
+        {
+            if (down.IsEmpty) adjacentAlpha = 0;
+            else adjacentAlpha = down[x + z * size + (size - 1) * area].Rgba.A;
+        }
+        else
+        {
+            adjacentAlpha = localSpan[currentIdx - area].Rgba.A;
+        }
 
-        // Front face
-        if (IsVoid(x, y, z + 1, alpha, voxelSpan))
-            AddVerticesToSpan(span, ref index, VoxelVertex.CreateFace(x, y, z, voxel, FaceId.Front));
+        if (adjacentAlpha == 0 || (currentAlpha == 255) != (adjacentAlpha == 255))
+        {
+            // Winding: v0, v1, v2, v0, v2, v3
+            // v0=(x, y, z), v1=(x+1, y, z), v2=(x+1, y, z+1), v3=(x, y, z+1)
+            WriteVertex(span, ref index, x, y, z, r, g, b, a, 1f); // v0
+            WriteVertex(span, ref index, x + 1, y, z, r, g, b, a, 1f); // v1
+            WriteVertex(span, ref index, x + 1, y, z + 1, r, g, b, a, 1f); // v2
+            WriteVertex(span, ref index, x, y, z, r, g, b, a, 1f); // v0
+            WriteVertex(span, ref index, x + 1, y, z + 1, r, g, b, a, 1f); // v2
+            WriteVertex(span, ref index, x, y, z + 1, r, g, b, a, 1f); // v3
+        }
+
+        // --- RIGHT FACE (X + 1) ---
+        if (x == size - 1)
+        {
+            if (right.IsEmpty) adjacentAlpha = 0;
+            else adjacentAlpha = right[z * size + y * area].Rgba.A;
+        }
+        else
+        {
+            adjacentAlpha = localSpan[currentIdx + 1].Rgba.A;
+        }
+
+        if (adjacentAlpha == 0 || (currentAlpha == 255) != (adjacentAlpha == 255))
+        {
+            // Winding: v0, v1, v2, v0, v2, v3
+            // v0=(x+1, y, z), v1=(x+1, y+1, z), v2=(x+1, y+1, z+1), v3=(x+1, y, z+1)
+            WriteVertex(span, ref index, x + 1, y, z, r, g, b, a, 2f); // v0
+            WriteVertex(span, ref index, x + 1, y + 1, z, r, g, b, a, 2f); // v1
+            WriteVertex(span, ref index, x + 1, y + 1, z + 1, r, g, b, a, 2f); // v2
+            WriteVertex(span, ref index, x + 1, y, z, r, g, b, a, 2f); // v0
+            WriteVertex(span, ref index, x + 1, y + 1, z + 1, r, g, b, a, 2f); // v2
+            WriteVertex(span, ref index, x + 1, y, z + 1, r, g, b, a, 2f); // v3
+        }
+
+        // --- LEFT FACE (X - 1) ---
+        if (x == 0)
+        {
+            if (left.IsEmpty) adjacentAlpha = 0;
+            else adjacentAlpha = left[(size - 1) + z * size + y * area].Rgba.A;
+        }
+        else
+        {
+            adjacentAlpha = localSpan[currentIdx - 1].Rgba.A;
+        }
+
+        if (adjacentAlpha == 0 || (currentAlpha == 255) != (adjacentAlpha == 255))
+        {
+            // Winding: v0, v3, v2, v0, v2, v1
+            // v0=(x, y, z), v1=(x, y+1, z), v2=(x, y+1, z+1), v3=(x, y, z+1)
+            WriteVertex(span, ref index, x, y, z, r, g, b, a, 3f); // v0
+            WriteVertex(span, ref index, x, y, z + 1, r, g, b, a, 3f); // v3
+            WriteVertex(span, ref index, x, y + 1, z + 1, r, g, b, a, 3f); // v2
+            WriteVertex(span, ref index, x, y, z, r, g, b, a, 3f); // v0
+            WriteVertex(span, ref index, x, y + 1, z + 1, r, g, b, a, 3f); // v2
+            WriteVertex(span, ref index, x, y + 1, z, r, g, b, a, 3f); // v1
+        }
+
+        // --- FRONT FACE (Z + 1) ---
+        if (z == size - 1)
+        {
+            if (front.IsEmpty) adjacentAlpha = 0;
+            else adjacentAlpha = front[x + y * area].Rgba.A;
+        }
+        else
+        {
+            adjacentAlpha = localSpan[currentIdx + size].Rgba.A;
+        }
+
+        if (adjacentAlpha == 0 || (currentAlpha == 255) != (adjacentAlpha == 255))
+        {
+            // Winding: v0, v2, v1, v0, v3, v2
+            // v0=(x, y, z+1), v1=(x, y+1, z+1), v2=(x+1, y+1, z+1), v3=(x+1, y, z+1)
+            WriteVertex(span, ref index, x, y, z + 1, r, g, b, a, 5f); // v0
+            WriteVertex(span, ref index, x + 1, y + 1, z + 1, r, g, b, a, 5f); // v2
+            WriteVertex(span, ref index, x, y + 1, z + 1, r, g, b, a, 5f); // v1
+            WriteVertex(span, ref index, x, y, z + 1, r, g, b, a, 5f); // v0
+            WriteVertex(span, ref index, x + 1, y, z + 1, r, g, b, a, 5f); // v3
+            WriteVertex(span, ref index, x + 1, y + 1, z + 1, r, g, b, a, 5f); // v2
+        }
+
+        // --- BACK FACE (Z - 1) ---
+        if (z == 0)
+        {
+            if (back.IsEmpty) adjacentAlpha = 0;
+            else adjacentAlpha = back[x + (size - 1) * size + y * area].Rgba.A;
+        }
+        else
+        {
+            adjacentAlpha = localSpan[currentIdx - size].Rgba.A;
+        }
+
+        if (adjacentAlpha == 0 || (currentAlpha == 255) != (adjacentAlpha == 255))
+        {
+            // Winding: v0, v1, v2, v0, v2, v3
+            // v0=(x, y, z), v1=(x, y+1, z), v2=(x+1, y+1, z), v3=(x+1, y, z)
+            WriteVertex(span, ref index, x, y, z, r, g, b, a, 4f); // v0
+            WriteVertex(span, ref index, x, y + 1, z, r, g, b, a, 4f); // v1
+            WriteVertex(span, ref index, x + 1, y + 1, z, r, g, b, a, 4f); // v2
+            WriteVertex(span, ref index, x, y, z, r, g, b, a, 4f); // v0
+            WriteVertex(span, ref index, x + 1, y + 1, z, r, g, b, a, 4f); // v2
+            WriteVertex(span, ref index, x + 1, y, z, r, g, b, a, 4f); // v3
+        }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private void WriteVertex(Span<float> span, ref int index, float x, float y, float z, float r, float g, float b,
+        float a, float faceId)
+    {
+        span[index] = x;
+        span[index + 1] = y;
+        span[index + 2] = z;
+        span[index + 3] = r;
+        span[index + 4] = g;
+        span[index + 5] = b;
+        span[index + 6] = a;
+        span[index + 7] = faceId;
+        index += 8;
     }
 
     /// <summary>

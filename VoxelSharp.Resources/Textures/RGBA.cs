@@ -28,10 +28,10 @@ public readonly struct Rgba : IEquatable<Rgba>
         A = 255;
     }
 
-    public byte R { get; }
-    public byte G { get; }
-    public byte B { get; }
-    public byte A { get; }
+    public readonly byte R;
+    public readonly byte G;
+    public readonly byte B;
+    public readonly byte A;
 
 
     public override bool Equals(object? obj)
