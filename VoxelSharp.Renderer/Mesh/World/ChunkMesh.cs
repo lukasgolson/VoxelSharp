@@ -155,32 +155,18 @@ public class ChunkMesh : BaseMesh
 
     public override void RenderOpaque(Shader shaderProgram)
     {
-        if (Chunk.IsDirty || !IsOpaqueInitialized)
-        {
-            SetupOpaqueMesh(8, shaderProgram);
-        }
-
-        if (OpaqueVertexCount == 0) return;
+       
+        if (!IsOpaqueInitialized || OpaqueVertexCount == 0) return;
 
         shaderProgram.SetUniform("m_model", GetModelMatrix());
-
         base.RenderOpaque(shaderProgram);
     }
 
     public override void RenderTransparent(Shader shaderProgram)
     {
-        if (Chunk.IsDirty || !IsOpaqueInitialized)
-        {
-            SetupTransparentMesh(8, shaderProgram);
-        }
-
-        Chunk.IsDirty = false;
-
-
-        if (TransparentVertexCount == 0) return;
+        if (!IsTransparentInitialized || TransparentVertexCount == 0) return;
 
         shaderProgram.SetUniform("m_model", GetModelMatrix());
-
         base.RenderTransparent(shaderProgram);
     }
 
