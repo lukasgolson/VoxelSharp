@@ -74,14 +74,22 @@ public class BasicWorldGenerator : IWorldGenerator
         {
             if (span[index].IsEmpty)
             {
-                if (voxelPosition.Y <= 30)
+                if (voxelPosition.Y <= 20)
                 {
-                    span[index] = new Voxel(new Rgba(0,0,255,0)); // Set the water
+                    span[index] = new Voxel(new Rgba(0,0,255,128)); // Set the water
                 }
             }
             else
             {
-                span[index] = new Voxel(Rgba.Grey);
+                if (voxelPosition.Y <= 22)
+                {
+                    span[index] = new Voxel(new Rgba(203, 165, 96, 255)); // Set the Sand
+                }
+                else
+                {
+                    span[index] = new Voxel(Rgba.Green);
+
+                }
             }
         }
 

@@ -58,7 +58,10 @@ public interface IMod
     /// Returns <c>true</c> if the post-initialization was successful; otherwise, <c>false</c>.
     /// </returns>
     /// <remarks>The container can be used to retrieve dependencies in this method.</remarks>
-    bool PostInitialize(Container container);
+    bool PostInitialize(Container container)
+    {
+        return true;
+    }
 
   
 }
