@@ -20,7 +20,7 @@ public class WorldRenderer : IRenderer, IUpdatable
 
     private VoxelWorld? _voxelWorld;
 
-    private const int RenderDistance = 4;
+    private const int RenderDistance = 6;
 
 
     private readonly ILogger _logger;
@@ -134,7 +134,7 @@ public class WorldRenderer : IRenderer, IUpdatable
             chunkMesh.RenderTransparent(_chunkShader);
         }
 
-        // --- CLEANUP ---
+    
 
         // Reset GL state
         GL.DepthMask(true);

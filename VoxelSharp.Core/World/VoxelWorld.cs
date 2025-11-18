@@ -50,12 +50,19 @@ public class VoxelWorld
     {
         return ChunkArray.ContainsKey(chunkPos);
     }
-    
+
     public void CommitChunk(Chunk chunk)
     {
         if (ChunkArray.TryAdd(chunk.Position, chunk))
         {
             _pendingChunkRequests.Remove(chunk.Position);
+
+            SetChunkDirty(chunk.Position - Position<int>.Right);
+            SetChunkDirty(chunk.Position + Position<int>.Right);
+            SetChunkDirty(chunk.Position - Position<int>.Up);
+            SetChunkDirty(chunk.Position + Position<int>.Up);
+            SetChunkDirty(chunk.Position - Position<int>.Forward);
+            SetChunkDirty(chunk.Position + Position<int>.Forward);
         }
     }
 
@@ -157,6 +164,15 @@ public class VoxelWorld
 
         // Chunk is loaded, so we can safely get the voxel
         return ChunkArray[chunkCoords].GetVoxel(localCoords);
+    }
+
+    public void RemoveChunk(Position<int> chunkPos)
+    {
+        if (ChunkArray.Remove(chunkPos))
+        {
+            // Optional: If you implement saving later, save to disk here before removing.
+            _logger.LogDebug("Unloaded chunk at {Position}", chunkPos);
+        }
     }
 
    
