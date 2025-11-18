@@ -1,11 +1,9 @@
 ﻿using System.Globalization;
-using System.IO.MemoryMappedFiles;
-using System.Runtime.InteropServices;
+using System.Numerics;
 using VoxelSharp.Core.Structs;
 
 namespace VoxelSegmentation.structs;
 
-[StructLayout(LayoutKind.Sequential)]
 public readonly struct Point(float x, float y, float z, float r, float g, float b)
 {
     public readonly float X = x;
@@ -13,57 +11,30 @@ public readonly struct Point(float x, float y, float z, float r, float g, float 
     public readonly float R = r, G = g, B = b;
 }
 
-public class Pointcloud : IDisposable
+public class Pointcloud
 {
-    private MemoryMappedFile _mmf;
-    private MemoryMappedViewAccessor _accessor;
-    private long _pointCount;
-    private int _pointSize; // Size of a single Point struct
+    private readonly List<Point> _points = new();
+    
+    // Store bounds to help with centering
+    private Vector3 _minBounds = new(float.MaxValue);
 
     public Pointcloud(string filename, char delimiter = ' ')
     {
-        LoadFromTxtToMmf(filename, delimiter);
+        LoadFromTxt(filename, delimiter);
     }
 
-    
-    private void LoadFromTxtToMmf(string filePath, char delimiter = ' ')
+    private void LoadFromTxt(string filePath, char delimiter = ' ')
     {
         try
         {
-            _pointCount = 0;
-            foreach (var line in File.ReadLines(filePath))
+            using var sr = new StreamReader(filePath);
+            while (sr.ReadLine() is { } line)
             {
-                if (!string.IsNullOrWhiteSpace(line) && !line.StartsWith('#'))
-                {
-                    _pointCount++;
-                }
-            }
-
-            if (_pointCount == 0)
-            {
-                Console.WriteLine("Warning: No valid points found in file.");
-                return;
-            }
-
-            _pointSize = Marshal.SizeOf<Point>();
-            long requiredBytes = _pointCount * _pointSize;
-
-            string tempMmfPath = Path.GetTempFileName();
-            Console.WriteLine("Creating {0} points.", tempMmfPath);
-            _mmf = MemoryMappedFile.CreateFromFile(tempMmfPath, FileMode.Create, null, requiredBytes);
-            _accessor = _mmf.CreateViewAccessor();
-
-            long currentByteOffset = 0;
-            foreach (var line in File.ReadLines(filePath))
-            {
-                if (string.IsNullOrWhiteSpace(line) || line.StartsWith('#'))
-                {
-                    continue;
-                }
+                if (string.IsNullOrWhiteSpace(line) || line.StartsWith('#')) continue;
 
                 var parts = line.Split(delimiter, StringSplitOptions.RemoveEmptyEntries);
 
-                if (parts.Length < 6) continue; // Skip malformed
+                if (parts.Length < 6) continue;
 
                 if (float.TryParse(parts[0], NumberStyles.Float, CultureInfo.InvariantCulture, out var x) &&
                     float.TryParse(parts[1], NumberStyles.Float, CultureInfo.InvariantCulture, out var y) &&
@@ -72,102 +43,66 @@ public class Pointcloud : IDisposable
                     float.TryParse(parts[^2], NumberStyles.Float, CultureInfo.InvariantCulture, out var g) &&
                     float.TryParse(parts[^1], NumberStyles.Float, CultureInfo.InvariantCulture, out var b))
                 {
-                    var point = new Point(x, y, z, r, g, b);
-
-                    _accessor.Write(currentByteOffset, ref point);
-                    currentByteOffset += _pointSize;
+                    _points.Add(new Point(x, y, z, r, g, b));
+                    
+                    // Track the minimum values found
+                    if (x < _minBounds.X) _minBounds.X = x;
+                    if (y < _minBounds.Y) _minBounds.Y = y;
+                    if (z < _minBounds.Z) _minBounds.Z = z;
                 }
             }
+            
+            Console.WriteLine($"Successfully loaded {_points.Count} points. Min Bounds: {_minBounds}");
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"An error occurred while loading to MMF: {ex.Message}");
-            _accessor?.Dispose();
-            _mmf?.Dispose();
+            Console.WriteLine($"An error occurred while loading PointCloud: {ex.Message}");
         }
     }
 
-
-    public unsafe List<Point> Quantize(float voxelSize)
+    public List<Point> Quantize(float voxelSize, bool centerAtOrigin = true)
     {
-        switch (_pointCount)
+        if (_points.Count == 0) return [];
+
+        var voxelMap = new Dictionary<Position<int>, (int count, float r, float g, float b)>();
+
+        // If centering, we subtract the min bounds so the model starts at (0,0,0)
+        float offsetX = centerAtOrigin ? _minBounds.X : 0;
+        float offsetY = centerAtOrigin ? _minBounds.Y : 0;
+        float offsetZ = centerAtOrigin ? _minBounds.Z : 0;
+
+        foreach (var point in _points)
         {
-            case 0:
-                return []; // No data
-            case > int.MaxValue:
-                Console.WriteLine(
-                    $"Error: Point count ({_pointCount}) exceeds int.MaxValue. Cannot use unsafe Span. Reverting to safe read.");
-      
-                throw new OverflowException(
-                    "Cannot create a Span larger than int.MaxValue. Implement a chunking or safe-read fallback.");
-        }
+            // Subtract offset BEFORE scaling
+            var x = (int)MathF.Floor((point.X - offsetX) / voxelSize);
+            var y = (int)MathF.Floor((point.Y - offsetY) / voxelSize);
+            var z = (int)MathF.Floor((point.Z - offsetZ) / voxelSize);
+            
+            var key = new Position<int>(x, y, z);
 
-        var points = new Dictionary<(float x, float y, float z), (int count, float r, float g, float b)>();
-        byte* pointer = null;
-
-        try
-        {
-            _accessor.SafeMemoryMappedViewHandle.AcquirePointer(ref pointer);
-
-            var span = new Span<Point>(pointer, (int)_pointCount);
-
-            foreach (var point in span)
+            if (voxelMap.TryGetValue(key, out var val))
             {
-                var x = MathF.Floor(point.X / voxelSize);
-                var y = MathF.Floor(point.Y / voxelSize);
-                var z = MathF.Floor(point.Z / voxelSize);
-                var key = (x, y, z);
-
-                if (points.TryGetValue(key, out var currentVal))
-                {
-                    points[key] = (currentVal.count + 1,
-                        currentVal.r + point.R,
-                        currentVal.g + point.G,
-                        currentVal.b + point.B);
-                }
-                else
-                {
-                    points.Add(key, (1, point.R, point.G, point.B));
-                }
+                voxelMap[key] = (val.count + 1, val.r + point.R, val.g + point.G, val.b + point.B);
             }
-        }
-        finally
-        {
-            if (pointer != null)
+            else
             {
-                _accessor.SafeMemoryMappedViewHandle.ReleasePointer();
+                voxelMap.Add(key, (1, point.R, point.G, point.B));
             }
         }
 
-        var quantizedList = points.AsParallel()
-            .Select(pair =>
-            {
-                var (key, val) = pair;
-                var r = val.r / val.count;
-                var g = val.g / val.count;
-                var b = val.b / val.count;
-                return new Point(key.x, key.y, key.z, r, g, b);
-            })
-            .ToList();
+        var quantizedList = new List<Point>(voxelMap.Count);
+        foreach (var kvp in voxelMap)
+        {
+            var pos = kvp.Key;
+            var val = kvp.Value;
+            
+            var r = val.r / val.count;
+            var g = val.g / val.count;
+            var b = val.b / val.count;
+            
+            quantizedList.Add(new Point(pos.X, pos.Y, pos.Z, r, g, b));
+        }
 
         return quantizedList;
-    }
-
-    // --- IDisposable Implementation ---
-    public void Dispose()
-    {
-        Dispose(true);
-        GC.SuppressFinalize(this);
-    }
-
-    protected virtual void Dispose(bool disposing)
-    {
-        if (disposing)
-        {
-            _accessor?.Dispose();
-            _accessor = null;
-            _mmf?.Dispose();
-            _mmf = null;
-        }
     }
 }

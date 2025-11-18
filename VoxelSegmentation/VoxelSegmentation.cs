@@ -20,6 +20,8 @@ public class VoxelSegmentation : IMod
     public bool PreInitialize(Harmony harmony, Container container)
     {
         container.RegisterSingleton<PointcloudImporter>();
+        container.RegisterSingleton<MainMenuBar>();
+
 
         return true;
     }
@@ -37,9 +39,13 @@ public class VoxelSegmentation : IMod
     public bool PostInitialize(Container container)
     {
         var gameLoop = container.GetInstance<IGameLoop>();
-        gameLoop.RegisterRenderAction(new MainMenuBar(), 20);
-
         var pclImporter = container.GetInstance<PointcloudImporter>();
+        var bar = container.GetInstance<MainMenuBar>();
+
+
+        
+        gameLoop.RegisterRenderAction(bar, 20);
+
         gameLoop.RegisterUpdateAction(pclImporter);
       
 

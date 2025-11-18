@@ -8,4 +8,5 @@ public readonly struct Voxel(Rgba value)
 
 
     public bool IsEmpty => Rgba.IsTransparent;
+    public static Voxel Empty = new(Rgba.Transparent);
 }

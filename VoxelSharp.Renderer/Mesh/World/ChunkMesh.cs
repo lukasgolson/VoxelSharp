@@ -1,4 +1,5 @@
 ﻿using System.Buffers;
+using System.Runtime.CompilerServices;
 using OpenTK.Graphics.OpenGL4;
 using OpenTK.Mathematics;
 using VoxelSharp.Core.Structs;
@@ -229,6 +230,7 @@ public class ChunkMesh : BaseMesh
     /// <param name="y">Voxel Y coordinate.</param>
     /// <param name="z">Voxel Z coordinate.</param>
     /// <param name="voxel">The voxel being processed.</param>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void AddVisibleFacesToSpan(Span<float> span, Span<Voxel> voxelSpan, ref int index,
         int x, int y, int z, Voxel voxel)
     {
