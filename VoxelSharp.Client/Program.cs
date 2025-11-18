@@ -110,10 +110,16 @@ public static class Program
         container.RegisterSingleton<ChunkCommitSystem>();
 
         
+        
+        
         container.RegisterSingleton<GeneratedChunkQueue>();
         container.RegisterSingleton<WorldGenerationSystem>();
         
         container.RegisterSingleton<VoxelWorld>();
+
+        container.RegisterSingleton<GeneratedMeshQueue>();
+        container.RegisterSingleton<ChunkMeshingSystem>();
+        
         container.RegisterSingleton<WorldRenderer>();
         
         

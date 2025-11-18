@@ -30,10 +30,12 @@ public class WorldRenderer : IRenderer, IUpdatable
     
     private readonly ILightSource _lightSource;
 
+    private readonly GeneratedMeshQueue _meshQueue;
+
 
     public WorldRenderer(ICameraMatrices cameraMatrices, ICameraParameters cameraParameters,
         ILogger<WorldRenderer> logger,
-        IGameLoop gameLoop, Arch.Core.World ecsWorld, ILightSource lightSource)
+        IGameLoop gameLoop, Arch.Core.World ecsWorld, ILightSource lightSource, GeneratedMeshQueue meshQueue)
     {
         gameLoop.RegisterRenderAction(this);
         gameLoop.RegisterUpdateAction(this);
@@ -48,6 +50,8 @@ public class WorldRenderer : IRenderer, IUpdatable
         _chunkMeshArray = new Dictionary<Position<int>, ChunkMesh>((int)worldVolume);
         
         _lightSource = lightSource;
+
+        _meshQueue = meshQueue;
     }
 
 
@@ -165,6 +169,18 @@ public class WorldRenderer : IRenderer, IUpdatable
         // convert the camera position to chunk position
         var currentRenderPosition = _voxelWorld.GetChunkCoordinates(currentCameraPosition.RoundToInt());
 
+
+        while (_meshQueue.Queue.TryDequeue(out var meshData))
+        {
+            if (!_chunkMeshArray.TryGetValue(meshData.Chunk.Position, out var chunkMesh))
+            {
+                chunkMesh = new ChunkMesh(meshData.Chunk, _voxelWorld); // Removed VoxelWorld dependency
+                _chunkMeshArray[meshData.Chunk.Position] = chunkMesh;
+            }
+
+            chunkMesh.UploadMeshData(meshData);
+        }
+        
         // the list of chunks to render
         HashSet<Position<int>> chunkPositions = [];
 
@@ -201,13 +217,7 @@ public class WorldRenderer : IRenderer, IUpdatable
                 continue;
             
             var chunk = _voxelWorld.GetChunk(chunkPos);
-            if (chunk != null)
-            {
-                // Data is ready! Create the mesh.
-                var chunkMesh = new ChunkMesh(chunk, _voxelWorld);
-                _chunkMeshArray.Add(chunkPos, chunkMesh);
-            }
-            else
+            if (chunk == null)
             {
                 _voxelWorld.RequestChunk(chunkPos);
             }

@@ -4,6 +4,7 @@ using OpenTK.Graphics.OpenGL4;
 using OpenTK.Mathematics;
 using VoxelSharp.Core.Structs;
 using VoxelSharp.Core.World;
+using VoxelSharp.Renderer.Rendering;
 
 namespace VoxelSharp.Renderer.Mesh.World;
 
@@ -19,12 +20,136 @@ public class ChunkMesh : BaseMesh
         _voxelWorld = voxelWorld; // Store it
     }
 
+
     private enum MeshType
     {
         Opaque,
         Transparent
     }
 
+    public void UploadMeshData(MeshData data)
+    {
+        // Upload Opaque
+        if (data.OpaqueCount > 0)
+            UploadSection(data.OpaqueVertices, data.OpaqueCount, isTransparent: false);
+        else
+            OpaqueVertexCount = 0;
+
+        // Upload Transparent
+        if (data.TransparentCount > 0)
+            UploadSection(data.TransparentVertices, data.TransparentCount, isTransparent: true);
+        else
+            TransparentVertexCount = 0;
+
+        Chunk.IsDirty = false;
+
+        // IMPORTANT: Release memory back to the pool
+        data.OpaqueVertices.Dispose();
+        data.TransparentVertices.Dispose();
+    }
+
+    private void UploadSection(IMemoryOwner<float> memory, int vertexCount, bool isTransparent)
+    {
+        // Mimic BaseMesh setup but with raw data
+        // Note: You might need to change BaseMesh fields (_opaqueVao, etc) to 'protected'
+
+        ref int vao = ref isTransparent ? ref _opaqueVao : ref _opaqueVao; // Just a placeholder, use actual fields
+        ref int vbo = ref isTransparent ? ref _transparentVbo : ref _opaqueVbo;
+
+        // Correct logic for accessing BaseMesh protected fields (assuming you changed them to protected):
+        if (isTransparent)
+        {
+            SetupBuffers(ref _transparentVao, ref _transparentVbo, memory, vertexCount);
+            TransparentVertexCount = vertexCount / 8;
+        }
+        else
+        {
+            SetupBuffers(ref _opaqueVao, ref _opaqueVbo, memory, vertexCount);
+            OpaqueVertexCount = vertexCount / 8;
+        }
+    }
+
+    private void SetupBuffers(ref int vao, ref int vbo, IMemoryOwner<float> memory, int vertexCount)
+    {
+        if (vao == 0) vao = GL.GenVertexArray();
+        if (vbo == 0) vbo = GL.GenBuffer();
+
+        GL.BindVertexArray(vao);
+        GL.BindBuffer(BufferTarget.ArrayBuffer, vbo);
+
+        var span = memory.Memory.Span.Slice(0, vertexCount);
+        GL.BufferData(BufferTarget.ArrayBuffer, span.Length * sizeof(float), ref span[0], BufferUsageHint.StaticDraw);
+
+        // Attributes
+        GL.EnableVertexAttribArray(0); // Pos
+        GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, 8 * sizeof(float), 0);
+        GL.EnableVertexAttribArray(1); // Color
+        GL.VertexAttribPointer(1, 4, VertexAttribPointerType.Float, false, 8 * sizeof(float), 3 * sizeof(float));
+        GL.EnableVertexAttribArray(2); // Face
+        GL.VertexAttribPointer(2, 1, VertexAttribPointerType.Float, false, 8 * sizeof(float), 7 * sizeof(float));
+
+        GL.BindVertexArray(0);
+    }
+    
+    public static unsafe void GenerateMesh(Chunk chunk, 
+        Span<Voxel> left, Span<Voxel> right, Span<Voxel> down, Span<Voxel> up, Span<Voxel> back, Span<Voxel> front,
+        out MeshData meshData)
+    {
+        var chunkSize = chunk.ChunkSize;
+        var chunkVol = chunk.ChunkVolume;
+        var chunkVoxelSpan = chunk.GetVoxelSpan();
+        
+        // Allocate two buffers
+        int estimatedSize = chunkVol * 6 * 6 * 8;
+        var opaqueMem = MemoryPool<float>.Shared.Rent(estimatedSize);
+        var transMem = MemoryPool<float>.Shared.Rent(estimatedSize / 2); // Usually smaller
+
+        var opaqueSpan = opaqueMem.Memory.Span;
+        var transSpan = transMem.Memory.Span;
+        
+        int opaqueIdx = 0;
+        int transIdx = 0;
+        int voxelLinearIdx = 0;
+
+        // SINGLE PASS LOOP
+        for (var y = 0; y < chunkSize; y++)
+        {
+            for (var z = 0; z < chunkSize; z++)
+            {
+                for (var x = 0; x < chunkSize; x++)
+                {
+                    var voxel = chunkVoxelSpan[voxelLinearIdx];
+                    var alpha = voxel.Rgba.A;
+
+                    if (alpha == 255)
+                    {
+                        // Write to Opaque Buffer
+                        AddVisibleFacesToSpan(opaqueSpan, chunkVoxelSpan, ref opaqueIdx, 
+                            x, y, z, voxelLinearIdx, voxel, chunkSize,
+                            left, right, down, up, back, front);
+                    }
+                    else if (alpha != 0)
+                    {
+                        // Write to Transparent Buffer
+                        AddVisibleFacesToSpan(transSpan, chunkVoxelSpan, ref transIdx, 
+                            x, y, z, voxelLinearIdx, voxel, chunkSize,
+                            left, right, down, up, back, front);
+                    }
+
+                    voxelLinearIdx++;
+                }
+            }
+        }
+
+        meshData = new MeshData
+        {
+            Chunk = chunk,
+            OpaqueVertices = opaqueMem,
+            OpaqueCount = opaqueIdx,
+            TransparentVertices = transMem,
+            TransparentCount = transIdx
+        };
+    }
 
     private Position<int>? Position => Chunk?.Position;
 
@@ -260,7 +385,7 @@ public class ChunkMesh : BaseMesh
     ///     If visible, adds the corresponding vertices to the shared vertex span.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private void AddVisibleFacesToSpan(Span<float> span, Span<Voxel> localSpan, ref int index,
+    private static void AddVisibleFacesToSpan(Span<float> span, Span<Voxel> localSpan, ref int index,
         int x, int y, int z, int currentIdx, Voxel voxel, int size,
         Span<Voxel> left, Span<Voxel> right,
         Span<Voxel> down, Span<Voxel> up,
@@ -418,7 +543,7 @@ public class ChunkMesh : BaseMesh
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private void WriteVertex(Span<float> span, ref int index, float x, float y, float z, float r, float g, float b,
+    private static void WriteVertex(Span<float> span, ref int index, float x, float y, float z, float r, float g, float b,
         float a, float faceId)
     {
         span[index] = x;

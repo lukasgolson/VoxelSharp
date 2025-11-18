@@ -8,14 +8,14 @@ namespace VoxelSharp.Renderer.Mesh;
 public abstract class BaseMesh : IDisposable, IRenderable
 {
     // Opaque mesh data
-    private int _opaqueVao;
-    private int _opaqueVbo;
+    protected int _opaqueVao;
+    protected int _opaqueVbo;
     protected int OpaqueVertexCount;
     protected bool IsOpaqueInitialized => _opaqueVao != 0 && _opaqueVbo != 0;
 
     // Transparent mesh data
-    private int _transparentVao;
-    private int _transparentVbo;
+    protected int _transparentVao;
+    protected int _transparentVbo;
     protected int TransparentVertexCount;
     protected bool IsTransparentInitialized => _transparentVao != 0 && _transparentVbo != 0;
     
