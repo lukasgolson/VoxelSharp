@@ -7,6 +7,7 @@ using VoxelSharp.Core.ECS.Jobs;
 using VoxelSharp.Core.Helpers;
 using VoxelSharp.Core.Structs;
 using VoxelSharp.Core.World;
+using VoxelSharp.Renderer.Helpers;
 using VoxelSharp.Renderer.Mesh.World;
 using Vector3 = OpenTK.Mathematics.Vector3;
 
@@ -21,6 +22,10 @@ public class WorldRenderer : IRenderer, IUpdatable
     private VoxelWorld? _voxelWorld;
 
     private const int RenderDistance = 6;
+
+    private readonly List<ChunkMesh> _renderList = new();
+    private Vector3 _lastSortPosition;
+    private const float SortThresholdSq = 16.0f;
 
 
     private readonly ILogger _logger;
@@ -105,7 +110,7 @@ public class WorldRenderer : IRenderer, IUpdatable
         // No blending needed
         GL.Disable(EnableCap.Blend);
 
-        foreach (var chunkMesh in _chunkMeshArray.Values)
+        foreach (var chunkMesh in _renderList)
         {
             chunkMesh.RenderOpaque(_chunkShader);
         }
@@ -117,19 +122,17 @@ public class WorldRenderer : IRenderer, IUpdatable
         GL.DepthMask(false);
 
         var cameraPos = _cameraParameters.Position;
-        var cameraSNNVector = new System.Numerics.Vector3(cameraPos.X, cameraPos.Y, cameraPos.Z);
 
-        var sortedChunks = _chunkMeshArray.Values.OrderByDescending(mesh =>
-            System.Numerics.Vector3.Distance(
-                new System.Numerics.Vector3(
-                    mesh.Chunk.Position.X,
-                    mesh.Chunk.Position.Y,
-                    mesh.Chunk.Position.Z) * mesh.Chunk.ChunkSize,
-                cameraSNNVector
-            )
-        );
 
-        foreach (var chunkMesh in sortedChunks)
+        var cameraVec3 = new Vector3(cameraPos.X, cameraPos.Y, cameraPos.Z);
+        
+        if (Vector3.DistanceSquared(_lastSortPosition, cameraVec3) > SortThresholdSq)
+        {
+            // Allocation-Free Sort using custom struct comparer
+            _renderList.Sort(new ChunkDistanceComparer(cameraVec3, _voxelWorld.ChunkSize));
+            _lastSortPosition = cameraVec3;
+        }
+        foreach (var chunkMesh in _renderList)
         {
             chunkMesh.RenderTransparent(_chunkShader);
         }
@@ -181,6 +184,7 @@ public class WorldRenderer : IRenderer, IUpdatable
             chunkMesh.UploadMeshData(meshData);
         }
         
+        
         // the list of chunks to render
         HashSet<Position<int>> chunkPositions = [];
 
@@ -209,6 +213,14 @@ public class WorldRenderer : IRenderer, IUpdatable
         {
             _chunkMeshArray[key].Dispose();
             _chunkMeshArray.Remove(key);
+        }
+
+
+        if (_renderList.Count != _chunkMeshArray.Count)
+        {
+            _renderList.Clear();
+            _renderList.AddRange(_chunkMeshArray.Values);
+            _lastSortPosition = new Vector3(float.MinValue); // Force resort
         }
 
         foreach (var chunkPos in chunkPositions)
