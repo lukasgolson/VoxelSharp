@@ -95,7 +95,7 @@ public class ChunkMesh : BaseMesh<int>
         var chunkVoxelSpan = chunk.GetVoxelSpan();
         
         // 128 ints per voxel is enough space
-        int estimatedSize = chunkVol * 128;
+        int estimatedSize = chunkVol * 72;
 
         // RENT from custom pool
         int[] opaqueArray = MeshBufferPool.Rent(estimatedSize);

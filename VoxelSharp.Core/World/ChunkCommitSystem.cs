@@ -14,7 +14,7 @@ public class ChunkCommitSystem : IUpdatable
 
     private const int UnloadDistance = 11; 
     private float _unloadTimer; 
-    private const float UnloadCheckInterval = 1.0f; 
+    private const float UnloadCheckInterval = 2f; 
 
     public ChunkCommitSystem(IGameLoop gameLoop, VoxelWorld voxelWorld, 
         ILogger<ChunkCommitSystem> logger, GeneratedChunkQueue mailbox,
