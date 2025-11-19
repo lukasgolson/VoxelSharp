@@ -1,4 +1,5 @@
 ﻿using System.Runtime.CompilerServices;
+using Arch.Core;
 using VoxelSharp.Core.Structs;
 using VoxelSharp.Resources;
 
@@ -9,6 +10,9 @@ namespace VoxelSharp.Core.World;
 /// </summary>
 public class Chunk
 {
+
+    public Entity Entity { get; set; }
+    
     /// <summary>
     ///     Creates a chunk at the given position and initializes a Memory buffer
     ///     for voxel data. The buffer is initialized with transparent voxels.
@@ -32,6 +36,8 @@ public class Chunk
         var transparentVoxel = new Voxel(Rgba.Transparent);
 
         for (var i = 0; i < span.Length; i++) span[i] = transparentVoxel;
+        
+        
     }
 
     /// <summary>

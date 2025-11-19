@@ -27,7 +27,7 @@ public class ExampleMod : IMod
     public bool Initialize(Harmony harmony, Container container)
     {
         container.Options.AllowOverridingRegistrations = true;
-        //container.RegisterSingleton<IWorldGenerator, BasicWorldGenerator>();
+        container.RegisterSingleton<IWorldGenerator, BasicWorldGenerator>();
 
         
         container.RegisterSingleton<ILightSource, SkyRenderer>();

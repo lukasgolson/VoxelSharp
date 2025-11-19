@@ -58,13 +58,17 @@ public class WorldGenerationSystem : IUpdatable
         _world.ParallelQuery(in query,
             (Entity entity, ref ChunkPosition pos, ref ChunkData data, ref NeedsGeneration _) =>
             {
-                var chunk = new Chunk(new Position<int>(pos.X, pos.Y, pos.Z), _voxelWorld.ChunkSize);
+                var chunk = new Chunk(new Position<int>(pos.X, pos.Y, pos.Z), _voxelWorld.ChunkSize)
+                {
+                    Entity = entity
+                };
 
                 _worldGenerator.GenerateChunkHeightmap(chunk);
 
                 _worldGenerator.DecorateChunkHeightmap(chunk);
 
                 data.Chunk = chunk;
+              
 
                 _mailbox.ChunkQueue.Enqueue(chunk);
 

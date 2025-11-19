@@ -1,4 +1,5 @@
 ﻿using System.Collections.Concurrent;
+using Arch.Core;
 using Microsoft.Extensions.Logging;
 using VoxelSharp.Core.ECS.Jobs;
 using VoxelSharp.Core.Interfaces.WorldGen;
@@ -171,8 +172,14 @@ public class VoxelWorld
 
     public void RemoveChunk(Position<int> chunkPos)
     {
-        if (ChunkArray.Remove(chunkPos, out _))
+        if (ChunkArray.TryRemove(chunkPos, out var chunk))
         {
+            // NEW: Destroy the ECS entity to release the reference
+            if (chunk.Entity != Entity.Null)
+            {
+                _ecsWorld.Destroy(chunk.Entity);
+            }
+
             _logger.LogDebug("Unloaded chunk at {Position}", chunkPos);
         }
     }

@@ -12,7 +12,7 @@ public class ChunkCommitSystem : IUpdatable
     private readonly GeneratedChunkQueue _mailbox;
     private readonly ICameraParameters _camera; 
 
-    private const int UnloadDistance = 8; 
+    private const int UnloadDistance = 11; 
     private float _unloadTimer; 
     private const float UnloadCheckInterval = 1.0f; 
 
@@ -37,7 +37,7 @@ public class ChunkCommitSystem : IUpdatable
         }
 
         // 2. UNLOADING: Remove old chunks that are too far away
-        //ProcessUnloading(deltaTime);
+        ProcessUnloading(deltaTime);
     }
 
     private void ProcessUnloading(double deltaTime)

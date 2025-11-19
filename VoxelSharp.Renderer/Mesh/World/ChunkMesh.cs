@@ -100,9 +100,9 @@ public class ChunkMesh : BaseMesh
         var chunkVoxelSpan = chunk.GetVoxelSpan();
         
         // Allocate two buffers
-        int estimatedSize = chunkVol * 6 * 6 * 8;
+        int estimatedSize = chunkVol * 128;
         var opaqueMem = MemoryPool<float>.Shared.Rent(estimatedSize);
-        var transMem = MemoryPool<float>.Shared.Rent(estimatedSize / 2); // Usually smaller
+        var transMem = MemoryPool<float>.Shared.Rent(estimatedSize);
 
         var opaqueSpan = opaqueMem.Memory.Span;
         var transSpan = transMem.Memory.Span;

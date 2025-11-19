@@ -20,8 +20,7 @@ public class WorldRenderer : IRenderer, IUpdatable
 
 
     private VoxelWorld? _voxelWorld;
-
-    private const int RenderDistance = 6;
+    public const int RenderDistance = 10;
 
     private readonly List<ChunkMesh> _renderList = new();
     private Vector3 _lastSortPosition;
@@ -97,6 +96,12 @@ public class WorldRenderer : IRenderer, IUpdatable
         GL.DepthFunc(DepthFunction.Less);
 
 
+        var viewProj = _cameraMatrices.GetViewMatrix() * _cameraMatrices.GetProjectionMatrix();
+        FrustumCuller.UpdateFrustum(viewProj);
+
+        int chunkSize = _voxelWorld?.ChunkSize ?? 16;
+
+
         _chunkShader.Use();
 
         _chunkShader.SetUniform("m_view", _cameraMatrices.GetViewMatrix());
@@ -112,7 +117,11 @@ public class WorldRenderer : IRenderer, IUpdatable
 
         foreach (var chunkMesh in _renderList)
         {
-            chunkMesh.RenderOpaque(_chunkShader);
+            if (chunkMesh.Chunk != null &&
+                FrustumCuller.IsChunkVisible(chunkMesh.Chunk.Position, chunkSize))
+            {
+                chunkMesh.RenderOpaque(_chunkShader);
+            }
         }
 
 
@@ -132,9 +141,14 @@ public class WorldRenderer : IRenderer, IUpdatable
             _renderList.Sort(new ChunkDistanceComparer(cameraVec3, _voxelWorld.ChunkSize));
             _lastSortPosition = cameraVec3;
         }
+
         foreach (var chunkMesh in _renderList)
         {
-            chunkMesh.RenderTransparent(_chunkShader);
+            if (chunkMesh.Chunk != null &&
+                FrustumCuller.IsChunkVisible(chunkMesh.Chunk.Position, chunkSize))
+            {
+                chunkMesh.RenderTransparent(_chunkShader);
+            }
         }
 
     
