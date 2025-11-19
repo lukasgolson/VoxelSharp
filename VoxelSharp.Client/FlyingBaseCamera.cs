@@ -11,7 +11,7 @@ namespace VoxelSharp.Client;
 
 public class FlyingBaseCamera : BaseCamera
 {
-    private const float Speed = 10f;
+    private const float Speed = 15f;
     private const float DampingFactor = 5f; // Controls how quickly movement slows down
 
 
@@ -27,12 +27,13 @@ public class FlyingBaseCamera : BaseCamera
         IWindow window)
         : base(gameLoop)
     {
+        UpdatePosition(new Vector3(0, 45, 0));
         _mouseInput = mouseInput;
         _window = window; // Store the window
 
 
         window.OnWindowResize += (_, aspectRatio) => UpdateAspectRatio((float)aspectRatio);
-        
+
         // --- Handle window focus changes ---
         window.OnFocus += () =>
         {
@@ -41,11 +42,11 @@ public class FlyingBaseCamera : BaseCamera
                 _mouseInput.StartTracking(new IntPtr(_window.WindowHandle));
             }
         };
-        
+
         window.OnUnfocus += () =>
         {
             _mouseInput.StopTracking(); // Always unlock on unfocus
-            _input = Vector3.Zero;      // <-- ADD THIS
+            _input = Vector3.Zero; // <-- ADD THIS
         };
 
         // --- Handle Ctrl key for manual lock/unlock ---
@@ -68,7 +69,7 @@ public class FlyingBaseCamera : BaseCamera
 
         keyboardListener.Subscribe(Key.LeftShift, down_start);
         keyboardListener.Subscribe(Key.LeftShift, down_stop, null, KeyboardEvent.KeyUp);
-        
+
         if (_window.IsFocused && _mouseLocked)
         {
             _mouseInput.StartTracking(new IntPtr(_window.WindowHandle));

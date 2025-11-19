@@ -11,15 +11,15 @@ namespace VoxelSharp.Renderer.Rendering;
 
 public class ChunkMeshingSystem : IUpdatable
 {
-    private readonly Arch.Core.World _ecsWorld;
+    private readonly World _ecsWorld;
     private readonly VoxelWorld _voxelWorld;
     private readonly GeneratedMeshQueue _mailbox;
     private readonly ILogger<ChunkMeshingSystem> _logger;
 
-    private const int MaxChunksPerFrame = 64; // Limit concurrent jobs (keeps RAM usage low)
-    private const int MaxQueueSize = 128;
+    private const int MaxChunksPerFrame = 16;
+    private const int MaxQueueSize = 32;
 
-    public ChunkMeshingSystem(IGameLoop gameLoop, Arch.Core.World ecsWorld, VoxelWorld voxelWorld,
+    public ChunkMeshingSystem(IGameLoop gameLoop, World ecsWorld, VoxelWorld voxelWorld,
         GeneratedMeshQueue mailbox, ILogger<ChunkMeshingSystem> logger)
     {
         _ecsWorld = ecsWorld;
@@ -36,7 +36,12 @@ public class ChunkMeshingSystem : IUpdatable
         // 1. BACKPRESSURE: Check if the mailbox is full
         // If the Main Thread is still uploading previous meshes, pause generation 
         // to prevent memory from exploding.
+        
+        
+        
         if (_mailbox.Queue.Count >= MaxQueueSize) return;
+        
+        
 
         using var commandBuffer = new CommandBuffer();
 

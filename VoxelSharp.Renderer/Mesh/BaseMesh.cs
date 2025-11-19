@@ -1,11 +1,12 @@
 ﻿using System.Buffers;
+using System.Runtime.CompilerServices;
 using OpenTK.Graphics.OpenGL4;
 using OpenTK.Mathematics;
 using VoxelSharp.Renderer.Interfaces;
 
 namespace VoxelSharp.Renderer.Mesh;
 
-public abstract class BaseMesh : IDisposable, IRenderable
+public abstract class BaseMesh<T> : IDisposable, IRenderable where T : unmanaged
 {
     // Opaque mesh data
     protected int _opaqueVao;
@@ -63,7 +64,7 @@ public abstract class BaseMesh : IDisposable, IRenderable
             _opaqueVao = 0;
         }
 
-        // Get vertex data using Memory<float> to minimize heap allocations
+        // Get vertex data using Memory<T> to minimize heap allocations
         using var vertexMemoryOwner = GetOpaqueVertexDataMemory(out var vertexCount);
 
         if (vertexCount == 0)
@@ -84,7 +85,9 @@ public abstract class BaseMesh : IDisposable, IRenderable
 
         // Bind vertex data from Memory<T>
         var vertexSpan = vertexMemoryOwner.Memory.Span[..vertexCount];
-        GL.BufferData(BufferTarget.ArrayBuffer, vertexSpan.Length * sizeof(float), ref vertexSpan[0],
+        
+        // FIX: Use Unsafe.SizeOf<T> to dynamically get the size of int or float
+        GL.BufferData(BufferTarget.ArrayBuffer, vertexSpan.Length * Unsafe.SizeOf<T>(), ref vertexSpan[0],
             BufferUsageHint.StaticDraw);
 
         // Set vertex attributes
@@ -121,7 +124,9 @@ public abstract class BaseMesh : IDisposable, IRenderable
         GL.BindBuffer(BufferTarget.ArrayBuffer, _transparentVbo);
 
         var vertexSpan = vertexMemoryOwner.Memory.Span[..vertexCount];
-        GL.BufferData(BufferTarget.ArrayBuffer, vertexSpan.Length * sizeof(float), ref vertexSpan[0],
+        
+        // FIX: Use Unsafe.SizeOf<T>
+        GL.BufferData(BufferTarget.ArrayBuffer, vertexSpan.Length * Unsafe.SizeOf<T>(), ref vertexSpan[0],
             BufferUsageHint.StaticDraw);
 
         SetVertexAttributes(shaderProgram);
@@ -135,8 +140,14 @@ public abstract class BaseMesh : IDisposable, IRenderable
         return Matrix4.Identity;
     }
 
-    protected abstract IMemoryOwner<float> GetOpaqueVertexDataMemory(out int vertexCount);
-    protected abstract IMemoryOwner<float> GetTransparentVertexDataMemory(out int vertexCount);
+    protected virtual IMemoryOwner<T> GetOpaqueVertexDataMemory(out int vertexCount)
+    {
+        throw new NotImplementedException();}
+
+    protected virtual IMemoryOwner<T> GetTransparentVertexDataMemory(out int vertexCount)
+    {
+        throw new NotImplementedException();
+    }
 
     // Proper disposal to avoid resource leaks
     protected virtual void Dispose(bool disposing)

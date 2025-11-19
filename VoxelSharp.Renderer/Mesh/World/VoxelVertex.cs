@@ -1,124 +1,25 @@
-﻿using VoxelSharp.Core.World;
+﻿using System.Runtime.InteropServices;
+using VoxelSharp.Core.World;
 
 namespace VoxelSharp.Renderer.Mesh.World;
 
+[StructLayout(LayoutKind.Explicit, Size = 8)]
 public readonly struct VoxelVertex
 {
-    public readonly float X;
-    public readonly float Y;
-    public readonly float Z;
-    public readonly float R; // Color components (Red)
-    public readonly float G; // Color components (Green)
-    public readonly float B; // Color components (Blue)
-    public readonly float A; // Alpha (fully opaque)
-    public readonly int FaceId; // Identifier for the face
 
-    public VoxelVertex(int x, int y, int z, Voxel voxel, FaceId faceId, bool debug = false, bool randomColor = false)
+
+    // Word 0: Position + Metadata
+    // X: 5 bits, Y: 5 bits, Z: 5 bits, Face: 3 bits
+    [FieldOffset(0)] public readonly uint Data;
+
+    // Word 1: Color
+    [FieldOffset(4)] public readonly uint Color;
+
+    public VoxelVertex(uint data, uint color)
     {
-        X = x;
-        Y = y;
-        Z = z;
-        FaceId = (int)faceId;
-
-        if (randomColor)
-        {
-            (R, G, B, A) = (1.0f, (float)Random.Shared.NextDouble(),
-                (float)Random.Shared.NextDouble(), 1.0f);
-        }
-        else if (debug)
-            // Assign unique colors based on FaceId for debugging
-            (R, G, B, A) = faceId switch
-            {
-                World.FaceId.Top => (1.0f, 0.0f, 0.0f, 1.0f), // Red
-                World.FaceId.Bottom => (0.0f, 1.0f, 0.0f, 1.0f), // Green
-                World.FaceId.Right => (0.0f, 0.0f, 1.0f, 1.0f), // Blue
-                World.FaceId.Left => (1.0f, 1.0f, 0.0f, 1.0f), // Yellow
-                World.FaceId.Back => (0.0f, 1.0f, 1.0f, 1.0f), // Cyan
-                World.FaceId.Front => (1.0f, 0.0f, 1.0f, 1.0f), // Magenta
-                _ => (1.0f, 1.0f, 1.0f, 1.0f) // White (fallback)
-            };
-        else
-            // Assign the color of the voxel to the vertex
-            (R, G, B, A) = (voxel.Rgba.R / 255f, voxel.Rgba.G / 255f, voxel.Rgba.B / 255f, voxel.Rgba.A / 255f);
+        Data = data;
+        Color = color;
     }
 
 
-    public static IEnumerable<VoxelVertex> CreateFace(int x, int y, int z, Voxel voxel, FaceId faceId)
-    {
-        switch (faceId)
-        {
-            case World.FaceId.Top:
-            {
-                var v0 = new VoxelVertex(x, y + 1, z, voxel, faceId);
-                var v1 = new VoxelVertex(x + 1, y + 1, z, voxel, faceId);
-                var v2 = new VoxelVertex(x + 1, y + 1, z + 1, voxel, faceId);
-                var v3 = new VoxelVertex(x, y + 1, z + 1, voxel, faceId);
-
-                // (Correct) add in order: 0,3,2,0,2,1
-                return [v0, v3, v2, v0, v2, v1];
-            }
-            case World.FaceId.Bottom:
-            {
-                var v0 = new VoxelVertex(x, y, z, voxel, faceId);
-                var v1 = new VoxelVertex(x + 1, y, z, voxel, faceId);
-                var v2 = new VoxelVertex(x + 1, y, z + 1, voxel, faceId);
-                var v3 = new VoxelVertex(x, y, z + 1, voxel, faceId);
-
-                // [FIXED] Flipped from 0,2,3,0,1,2 to 0,1,2,0,2,3
-                return [v0, v1, v2, v0, v2, v3];
-            }
-            case World.FaceId.Right:
-            {
-                var v0 = new VoxelVertex(x + 1, y, z, voxel, faceId);
-                var v1 = new VoxelVertex(x + 1, y + 1, z, voxel, faceId);
-                var v2 = new VoxelVertex(x + 1, y + 1, z + 1, voxel, faceId);
-                var v3 = new VoxelVertex(x + 1, y, z + 1, voxel, faceId);
-
-                // (Correct) add in order: 0, 1, 2, 0, 2, 3
-                return [v0, v1, v2, v0, v2, v3];
-            }
-            case World.FaceId.Left:
-            {
-                var v0 = new VoxelVertex(x, y, z, voxel, faceId);
-                var v1 = new VoxelVertex(x, y + 1, z, voxel, faceId);
-                var v2 = new VoxelVertex(x, y + 1, z + 1, voxel, faceId);
-                var v3 = new VoxelVertex(x, y, z + 1, voxel, faceId);
-
-                // [FIXED] Flipped from 0,2,1,0,3,2 to 0,3,2,0,2,1
-                return [v0, v3, v2, v0, v2, v1];
-            }
-            case World.FaceId.Back:
-            {
-                var v0 = new VoxelVertex(x, y, z, voxel, faceId);
-                var v1 = new VoxelVertex(x, y + 1, z, voxel, faceId);
-                var v2 = new VoxelVertex(x + 1, y + 1, z, voxel, faceId);
-                var v3 = new VoxelVertex(x + 1, y, z, voxel, faceId);
-
-                // [FIXED] Flipped from 0,1,2,0,2,3 to 0,3,2,0,2,1
-                return [v0, v1, v2, v0, v2, v3];
-            }
-            case World.FaceId.Front:
-            {
-                var v0 = new VoxelVertex(x, y, z + 1, voxel, faceId);
-                var v1 = new VoxelVertex(x, y + 1, z + 1, voxel, faceId);
-                var v2 = new VoxelVertex(x + 1, y + 1, z + 1, voxel, faceId);
-                var v3 = new VoxelVertex(x + 1, y, z + 1, voxel, faceId);
-
-                // [FIXED] Flipped from 0,2,1,0,3,2 to 0,1,2,0,2,3
-                return [v0, v2, v1, v0, v3, v2];
-            }
-            default:
-                throw new ArgumentOutOfRangeException(nameof(faceId), faceId, "Invalid face id");
-        }
-    }
-}
-
-public enum FaceId : byte
-{
-    Top = 0,
-    Bottom = 1,
-    Right = 2,
-    Left = 3,
-    Back = 4,
-    Front = 5
 }

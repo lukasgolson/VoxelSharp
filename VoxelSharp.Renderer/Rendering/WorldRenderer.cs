@@ -191,7 +191,7 @@ public class WorldRenderer : IRenderer, IUpdatable
         {
             if (!_chunkMeshArray.TryGetValue(meshData.Chunk.Position, out var chunkMesh))
             {
-                chunkMesh = new ChunkMesh(meshData.Chunk, _voxelWorld); // Removed VoxelWorld dependency
+                chunkMesh = new ChunkMesh(meshData.Chunk); // Removed VoxelWorld dependency
                 _chunkMeshArray[meshData.Chunk.Position] = chunkMesh;
             }
 

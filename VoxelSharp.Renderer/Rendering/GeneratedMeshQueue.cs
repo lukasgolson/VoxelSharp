@@ -8,10 +8,9 @@ public struct MeshData
 {
     public Chunk Chunk;
 
-    // We pass ownership of these memory buffers to the main thread
-    public IMemoryOwner<float> OpaqueVertices;
+    public int[] OpaqueVertices;
     public int OpaqueCount;
-    public IMemoryOwner<float> TransparentVertices;
+    public int[] TransparentVertices;
     public int TransparentCount;
 }
 
