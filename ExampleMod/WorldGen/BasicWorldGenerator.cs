@@ -29,29 +29,29 @@ public class BasicWorldGenerator : IWorldGenerator
         {
             for (int z = 0; z < chunk.ChunkSize; z++)
             {
+                var globalPos = chunk.LocalToGlobalPosition(new Position<int>(x, 0, z));
+
+                var noiseValueA = _noiseGeneratorA.Generate(globalPos.X, 0, globalPos.Z, scale: 0.05) + 1;
+                var noiseValueB = _noiseGeneratorB.Generate(globalPos.X, 0, globalPos.Z, scale: 0.001) + 1;
+                //var noiseValueC = _noiseGeneratorB.Generate(globalPos.X, 0, globalPos.Z, scale: 0.0001) + 1.5;
+
+                noiseValueA *= 10;
+                noiseValueB *= 40;
+
+                var noiseValue = (noiseValueA + noiseValueB) / 2;
+
+                int terrainHeight = (int)noiseValue;
+                //noiseValue *= noiseValueC;
+
+
+                // 2. Fill voxels based on that height
                 for (int y = 0; y < chunk.ChunkSize; y++)
                 {
-                    var globalPos = chunk.LocalToGlobalPosition(new Position<int>(x, y, z));
+                    var currentGlobalY = chunk.Position.Y * chunk.ChunkSize + y;
 
-                    var noiseValueA = _noiseGeneratorA.Generate(globalPos.X, 0, globalPos.Z, scale: 0.05) + 1;
-                    var noiseValueB = _noiseGeneratorB.Generate(globalPos.X, 0, globalPos.Z, scale: 0.001) + 1;
-                    //var noiseValueC = _noiseGeneratorB.Generate(globalPos.X, 0, globalPos.Z, scale: 0.0001) + 1.5;
-
-                    noiseValueA *= 10;
-                    noiseValueB *= 40;
-
-                    var noiseValue = (noiseValueA + noiseValueB) / 2;
-                    //noiseValue *= noiseValueC;
-
-
-                    if (globalPos.Y <= noiseValue)
+                    if (currentGlobalY <= terrainHeight)
                     {
-                        // set voxel value to 1
-
                         var voxelPosition = new Position<int>(x, y, z);
-
-
-
 
                         chunkSpan[chunk.GetVoxelIndex(voxelPosition)] = new Voxel(Rgba.Black);
                     }
@@ -76,7 +76,7 @@ public class BasicWorldGenerator : IWorldGenerator
             {
                 if (voxelPosition.Y <= 20)
                 {
-                    span[index] = new Voxel(new Rgba(0,0,255,128)); // Set the water
+                    span[index] = new Voxel(new Rgba(0, 0, 255, 128)); // Set the water
                 }
             }
             else
@@ -88,7 +88,6 @@ public class BasicWorldGenerator : IWorldGenerator
                 else
                 {
                     span[index] = new Voxel(Rgba.Green);
-
                 }
             }
         }

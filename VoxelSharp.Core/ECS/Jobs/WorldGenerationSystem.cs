@@ -35,6 +35,8 @@ public class WorldGenerationSystem : IUpdatable
 
     private Arch.Core.World _world;
 
+    private const int MaxChunksPerFrame = 16;
+
     public WorldGenerationSystem(IGameLoop gameLoop, Arch.Core.World world, IWorldGenerator worldGenerator,
         ILogger<WorldGenerationSystem> logger, VoxelWorld voxelWorld, GeneratedChunkQueue mailbox)
     {
@@ -44,8 +46,8 @@ public class WorldGenerationSystem : IUpdatable
         _voxelWorld = voxelWorld;
         _mailbox = mailbox;
 
-       // gameLoop.RegisterBackgroundUpdateAction(this, "Test");
-       gameLoop.RegisterUpdateAction(this);
+        // gameLoop.RegisterBackgroundUpdateAction(this, "Test");
+        gameLoop.RegisterUpdateAction(this);
     }
 
 
@@ -54,30 +56,55 @@ public class WorldGenerationSystem : IUpdatable
         using var commandBuffer = new CommandBuffer();
         var query = new QueryDescription().WithAll<ChunkPosition, ChunkData, NeedsGeneration>();
 
+        // 1. COLLECT: Identify the batch of chunks to generate this frame
+        var batch = new List<(Entity Entity, Chunk Chunk)>(MaxChunksPerFrame);
+        int count = 0;
 
-        _world.ParallelQuery(in query,
-            (Entity entity, ref ChunkPosition pos, ref ChunkData data, ref NeedsGeneration _) =>
+        // This part runs on the Main Thread (fast)
+        _world.Query(in query, (Entity entity, ref ChunkPosition pos, ref ChunkData data) =>
+        {
+            // Stop once we fill our batch
+            if (count >= MaxChunksPerFrame) return;
+
+            // Create the chunk instance immediately
+            var chunk = new Chunk(new Position<int>(pos.X, pos.Y, pos.Z), _voxelWorld.ChunkSize)
             {
-                var chunk = new Chunk(new Position<int>(pos.X, pos.Y, pos.Z), _voxelWorld.ChunkSize)
-                {
-                    Entity = entity
-                };
+                Entity = entity
+            };
 
-                _worldGenerator.GenerateChunkHeightmap(chunk);
+            // Assign the chunk to the ECS component now
+            data.Chunk = chunk;
 
-                _worldGenerator.DecorateChunkHeightmap(chunk);
+            batch.Add((entity, chunk));
+            count++;
+        });
 
-                data.Chunk = chunk;
-              
+        // If no chunks need generation, exit early
+        if (batch.Count == 0) return;
 
-                _mailbox.ChunkQueue.Enqueue(chunk);
+        // 2. PROCESS: Run heavy calculations in parallel
+        // This blocks the main thread until done, but distributes work across all CPU cores.
+        Parallel.ForEach(batch, item =>
+        {
+            var chunk = item.Chunk;
 
+            // These are the heavy CPU operations (Perlin noise)
+            _worldGenerator.GenerateChunkHeightmap(chunk);
+            _worldGenerator.DecorateChunkHeightmap(chunk);
 
-                commandBuffer.Remove<NeedsGeneration>(entity);
-                commandBuffer.Add<NeedsMeshing>(entity);
-            });
+            // GeneratedChunkQueue is a ConcurrentQueue, so this is thread-safe
+            _mailbox.ChunkQueue.Enqueue(chunk);
+        });
 
+        // 3. CLEANUP: Update ECS components on the Main Thread
+        // We cannot do this inside Parallel.ForEach because CommandBuffer is not thread-safe
+        foreach (var item in batch)
+        {
+            commandBuffer.Remove<NeedsGeneration>(item.Entity);
+            commandBuffer.Add<NeedsMeshing>(item.Entity);
+        }
 
+        // Apply changes
         commandBuffer.Playback(_world);
     }
 }
