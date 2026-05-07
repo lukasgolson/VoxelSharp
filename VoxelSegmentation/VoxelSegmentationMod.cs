@@ -1,4 +1,5 @@
 ﻿using HarmonyLib;
+using JetBrains.Annotations;
 using SimpleInjector;
 using VoxelSharp.Abstractions.Client;
 using VoxelSharp.Abstractions.Window;
@@ -7,7 +8,8 @@ using VoxelSharp.Modding.Structs;
 
 namespace VoxelSegmentation;
 
-public class VoxelSegmentation : IMod
+[UsedImplicitly]
+public class VoxelSegmentationMod : IMod
 {
     public static Container ModContainer { get; private set; }
     public ModInfo ModInfo { get; } = new(

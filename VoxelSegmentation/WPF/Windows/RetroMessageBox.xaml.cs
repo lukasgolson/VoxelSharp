@@ -1,10 +1,11 @@
 ﻿using System.Windows;
 using System.Windows.Controls;
+using VoxelSegmentation.WPF;
 using Button = System.Windows.Controls.Button;
 
 namespace Downloader;
 
-public partial class RetroMessageBox : Window
+public partial class RetroMessageBox : ThemedWindow
 {
     public enum MessageBoxButtons
     {

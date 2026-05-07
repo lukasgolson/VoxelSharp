@@ -27,7 +27,7 @@ public class ImGuiController : IRendererProcessing, IDisposable
         io.ConfigFlags |= ImGuiConfigFlags.NavEnableKeyboard;
         io.ConfigFlags |= ImGuiConfigFlags.NavEnableGamepad;
         io.ConfigFlags |= ImGuiConfigFlags.DockingEnable;
-        io.ConfigFlags |= ImGuiConfigFlags.ViewportsEnable;
+        //io.ConfigFlags |= ImGuiConfigFlags.ViewportsEnable;
 
         ImGui.StyleColorsClassic();
 

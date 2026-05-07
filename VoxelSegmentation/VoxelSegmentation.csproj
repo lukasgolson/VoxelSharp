@@ -21,6 +21,7 @@
 
     <ItemGroup>
         <PackageReference Include="ImGui.NET" Version="1.91.6.1" />
+        <PackageReference Include="JetBrains.Annotations" Version="2025.2.4" />
         <PackageReference Include="OpenTK.GLWpfControl" Version="4.*" />
     </ItemGroup>
 
@@ -34,6 +35,12 @@
         <XamlRuntime>Wpf</XamlRuntime>
         <SubType>Designer</SubType>
       </Page>
+    </ItemGroup>
+
+    <ItemGroup>
+        <Resource Include="WPF\Icons\icon.ico" />
+        <None Remove="WPF\Icons\config.ico" />
+        <Resource Include="WPF\Icons\config.ico" />
     </ItemGroup>
 
     <Target Name="PostBuild" AfterTargets="Build">

@@ -1,9 +1,10 @@
 ﻿using System.Reflection;
 using System.Windows;
+using VoxelSegmentation.WPF;
 
 namespace Downloader;
 
-public partial class AboutWindow : Window
+public partial class AboutWindow : ThemedWindow
 {
     public AboutWindow()
     {

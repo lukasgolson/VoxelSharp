@@ -4,12 +4,15 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Interop;
+using Downloader;
 using ImGUIMod;
 using ImGuiNET;
 using Microsoft.Extensions.Logging;
 using OpenTK.Graphics.OpenGL4;
 using OpenTK.Wpf;
 using SimpleInjector;
+using VoxelSegmentation.WPF;
+using VoxelSegmentation.WPF.Windows;
 using VoxelSharp.Abstractions.Loop;
 using VoxelSharp.Abstractions.Window;
 using VoxelSharp.Core.World;
@@ -21,7 +24,7 @@ namespace VoxelSegmentation;
 /// The WPF Host Window. 
 /// Acts as the Master Scheduler and Input Translator for the engine.
 /// </summary>
-public partial class MainWindow : Window
+public partial class MainWindow
 {
     private readonly Container _container;
     private ImGuiController? _imGuiController;
@@ -34,6 +37,7 @@ public partial class MainWindow : Window
     {
         _container = container;
         InitializeComponent();
+     
 
         // Configure OpenGL Settings for the Viewport
         var settings = new GLWpfControlSettings
@@ -151,13 +155,14 @@ public partial class MainWindow : Window
     /// </summary>
     private void OpenTkControl_OnMouseDown(object sender, MouseButtonEventArgs e)
     {
-        // Focus the control to capture keyboard events
+        // 1. Explicitly activate the main window to ensure the title bar turns "Active"
+        this.Activate(); 
+
+        // 2. Focus the control for keyboard events
         OpenTkControl.Focus();
 
-        // Do nothing if ImGui is being interacted with
         if (ImGui.GetIO().WantCaptureMouse) return;
 
-        // Unity-style: Hold Right-Click to look around
         if (e.RightButton == MouseButtonState.Pressed)
         {
             var camera = _container.GetInstance<VoxelSharp.Abstractions.Renderer.ICameraParameters>() as VoxelSharp.Client.FlyingBaseCamera;
@@ -196,4 +201,9 @@ public partial class MainWindow : Window
     {
         throw new NotImplementedException();
     }
+
+    private void MenuSettings_Click(object sender, RoutedEventArgs e)
+    {
+        SettingsWindow settingsWin = new SettingsWindow { Owner = this };
+        settingsWin.ShowDialog();    }
 }

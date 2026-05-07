@@ -1,133 +1,38 @@
+using System;
+using System.Collections;
 using System.IO;
 using System.Reflection;
+using System.Resources;
 using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Media;
-using System.Windows.Threading;
 using Microsoft.Win32;
-using Application = System.Windows.Application;
-using Color = System.Windows.Media.Color;
-using ColorConverter = System.Windows.Media.ColorConverter;
-using MessageBox = System.Windows.MessageBox;
-using Point = System.Windows.Point;
-using SystemColors = System.Windows.SystemColors;
 
 namespace VoxelSegmentation.WPF;
 
-/// <summary>
-/// Interaction logic for App.xaml
-/// </summary>
 public partial class App : Application
 {
-    private string _currentManualTheme = "System Auto";
-
-    // ADD THIS PROPERTY:
-    public string CurrentManualTheme => _currentManualTheme;
-
-
+    private string _currentTheme = "System Auto";
+    public string CurrentManualTheme => _currentTheme;
     private string AppRegistryPath => $@"Software\{GetSanitizedAppName()}\Settings";
 
     protected override void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
 
-        this.DispatcherUnhandledException += App_DispatcherUnhandledException;
-
-        // 2. Catch unhandled background thread exceptions
-        AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
-
-        // 3. Catch unhandled exceptions from asynchronous Tasks
-        TaskScheduler.UnobservedTaskException += TaskScheduler_UnobservedTaskException;
-
+        // 1. Load preference from Registry
         LoadThemePreference();
 
-        ChangeUserTheme(_currentManualTheme, saveToRegistry: false);
+        // 2. Apply the theme (initial load)
+        ChangeUserTheme(_currentTheme, saveToRegistry: false);
 
+        // 3. Listen for Windows System theme changes
         SystemEvents.UserPreferenceChanged += SystemEvents_UserPreferenceChanged;
     }
 
-    private void App_DispatcherUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)
+    public void ChangeUserTheme(string themeName, Uri themeUri = null, bool saveToRegistry = true)
     {
-        LogCrashAndShowMessage(e.Exception, "UI Thread Crash");
-        e.Handled = true; // Prevents the default Windows crash dialog
-        Environment.Exit(1); // Force close
-    }
-
-    private void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
-    {
-        if (e.ExceptionObject is Exception ex)
-        {
-            LogCrashAndShowMessage(ex, "Background Thread Crash");
-        }
-
-        Environment.Exit(1);
-    }
-
-    private void TaskScheduler_UnobservedTaskException(object sender, UnobservedTaskExceptionEventArgs e)
-    {
-        LogCrashAndShowMessage(e.Exception, "Async Task Crash");
-        e.SetObserved();
-        Environment.Exit(1);
-    }
-
-    private void LogCrashAndShowMessage(Exception ex, string crashType)
-    {
-        try
-        {
-            // Write the crash log to the same folder as the .exe
-            string logPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "crash.log");
-
-            string logContent = $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] FATAL ERROR ({crashType})\n" +
-                                $"Message: {ex.Message}\n\n" +
-                                $"Stack Trace:\n{ex.StackTrace}\n" +
-                                $"------------------------------------------------------\n\n";
-
-            File.AppendAllText(logPath, logContent);
-
-            // Show a final message to the user
-            MessageBox.Show($"The application encountered a fatal error and must close.\n\n" +
-                            $"Error: {ex.Message}\n\n" +
-                            $"A detailed log has been saved to:\n{logPath}",
-                "Fatal Error",
-                MessageBoxButton.OK,
-                MessageBoxImage.Error);
-        }
-        catch
-        {
-            // If the logger itself fails, there's nothing we can do but let it die.
-        }
-    }
-
-
-    private void LoadThemePreference()
-    {
-        try
-        {
-            using (RegistryKey key = Registry.CurrentUser.OpenSubKey(AppRegistryPath))
-            {
-                if (key != null && key.GetValue("Theme") is string savedTheme)
-                {
-                    _currentManualTheme = savedTheme;
-                }
-            }
-        }
-        catch
-        {
-        } // Fails gracefully to "System Auto" if no key exists
-    }
-
-    private void SystemEvents_UserPreferenceChanged(object sender, UserPreferenceChangedEventArgs e)
-    {
-        // Only auto-update if the user is using the "System Auto" setting!
-        if (e.Category == UserPreferenceCategory.General && _currentManualTheme == "System Auto")
-        {
-            ApplySystemThemeAndAccent();
-        }
-    }
-
-    public void ChangeUserTheme(string themeName, bool saveToRegistry = true)
-    {
-        _currentManualTheme = themeName;
+        _currentTheme = themeName;
 
         if (saveToRegistry)
         {
@@ -138,142 +43,179 @@ public partial class App : Application
                     key.SetValue("Theme", themeName);
                 }
             }
-            catch
-            {
-            }
+            catch { }
         }
 
         if (themeName == "System Auto")
         {
-            ApplySystemThemeAndAccent();
+            ApplySystemTheme();
             return;
         }
 
-        // 1. Determine the correct Resource Dictionary
-        string themeFileName = "/WPF/Themes/Theme.Light.xaml"; // Fallback
-        switch (themeName)
+        // If URI isn't provided (e.g. on startup), find it by the string name
+        if (themeUri == null)
         {
-            case "Classic Light": themeFileName = "/WPF/Themes/Theme.Light.xaml"; break;
-            case "Charcoal Dark": themeFileName = "/WPF/Themes/Theme.Dark.xaml"; break;
-            case "CRT Matrix": themeFileName = "/WPF/Themes/Theme.CRT.xaml"; break;
-            case "Olive": themeFileName = "/WPF/Themes/Theme.Steam.xaml"; break;
-            case "Rugged Military": themeFileName = "/WPF/Themes/Theme.Rugged.xaml"; break;
-            case "Hot Dog Stand": themeFileName = "/WPF/Themes/Theme.Hotdog.xaml"; break;
+            themeUri = FindThemeUriByName(themeName);
         }
 
-        // 2. Apply it on the UI thread
+        if (themeUri != null)
+        {
+            UpdateResources(themeUri, isSystemAuto: false);
+        }
+    }
+
+    private void UpdateResources(Uri uri, bool isSystemAuto)
+    {
         Application.Current.Dispatcher.Invoke(() =>
         {
-            Current.Resources.MergedDictionaries[1] = new ResourceDictionary
-                { Source = new Uri(themeFileName, UriKind.Relative) };
-            ResetToThemeAccent();
+            var newDict = new ResourceDictionary { Source = uri };
+            
+            // We assume index 0 is Controls.xaml and index 1 is the Theme
+            if (Resources.MergedDictionaries.Count > 1)
+                Resources.MergedDictionaries[1] = newDict;
+            else
+                Resources.MergedDictionaries.Add(newDict);
+
+            if (isSystemAuto)
+            {
+                Color systemAccentColor = GetWindowsAccentColor();
+                Color readableTextColor = GetReadableTextColor(systemAccentColor);
+                SetCustomAccentColor(systemAccentColor, readableTextColor);
+            }
+            else
+            {
+                ResetToThemeAccent();
+            }
         });
     }
 
-    /// <summary>
-    /// Returns the assembly name with all non-alphanumeric characters removed.
-    /// This ensures the Registry path is always valid.
-    /// </summary>
-    public static string GetSanitizedAppName()
+    private void LoadThemePreference()
     {
-        string? rawName = Assembly.GetExecutingAssembly().GetName().Name;
-        if (string.IsNullOrEmpty(rawName)) return "WpfApp";
-
-        // Regex: Remove anything that isn't a word character (A-Z, 0-9, _) or a hyphen
-        return OnlyWordCharHyph().Replace(rawName, "");
+        try
+        {
+            using (RegistryKey key = Registry.CurrentUser.OpenSubKey(AppRegistryPath))
+            {
+                if (key != null && key.GetValue("Theme") is string savedTheme)
+                {
+                    _currentTheme = savedTheme;
+                }
+            }
+        }
+        catch { }
     }
 
-    private void ApplySystemThemeAndAccent()
+    private void SystemEvents_UserPreferenceChanged(object sender, UserPreferenceChangedEventArgs e)
+    {
+        if (e.Category == UserPreferenceCategory.General && _currentTheme == "System Auto")
+        {
+            ApplySystemTheme();
+        }
+    }
+
+    private Uri FindThemeUriByName(string targetThemeName)
+    {
+        foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
+        {
+            string assemblyName = assembly.GetName().Name;
+            if (assemblyName.StartsWith("System") || assemblyName.StartsWith("Microsoft")) continue;
+
+            string resourceName = assemblyName + ".g.resources";
+            using (var stream = assembly.GetManifestResourceStream(resourceName))
+            {
+                if (stream == null) continue;
+                using (var reader = new ResourceReader(stream))
+                {
+                    foreach (DictionaryEntry entry in reader)
+                    {
+                        string key = entry.Key.ToString();
+                        if (key.EndsWith(".baml") && Path.GetFileName(key).StartsWith("theme."))
+                        {
+                            Uri uri = new Uri($"pack://application:,,,/{assemblyName};component/{key.Replace(".baml", ".xaml")}");
+                            try
+                            {
+                                var dict = new ResourceDictionary { Source = uri };
+                                if (dict.Contains("ThemeDisplayName") && dict["ThemeDisplayName"].ToString() == targetThemeName)
+                                    return uri;
+                            }
+                            catch { }
+                        }
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
+    private void ApplySystemTheme()
     {
         bool isDarkTheme = false;
         try
         {
-            using (RegistryKey key =
-                   Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize"))
+            using (RegistryKey key = Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize"))
             {
                 if (key != null && key.GetValue("AppsUseLightTheme") is int registryValue)
-                {
                     isDarkTheme = (registryValue == 0);
-                }
             }
         }
-        catch
-        {
-        }
+        catch { }
 
-        string themeFileName = isDarkTheme ? "/WPF/Themes/Theme.Dark.xaml" : "/WPF/Themes/Theme.Light.xaml";
+        // Adjust these paths to your actual file locations
+        string themePath = isDarkTheme 
+            ? "pack://application:,,,/VoxelSegmentation;component/WPF/Themes/Theme.Dark.xaml" 
+            : "pack://application:,,,/VoxelSegmentation;component/WPF/Themes/Theme.Light.xaml";
 
-        Color systemAccentColor = GetWindowsAccentColor();
-        Color readableTextColor = GetReadableTextColor(systemAccentColor);
-
-        Application.Current.Dispatcher.Invoke(() =>
-        {
-            Current.Resources.MergedDictionaries[1] = new ResourceDictionary
-                { Source = new Uri(themeFileName, UriKind.Relative) };
-            SetCustomAccentColor(systemAccentColor, readableTextColor);
-        });
+        UpdateResources(new Uri(themePath, UriKind.Absolute), isSystemAuto: true);
     }
 
-    public void SetCustomAccentColor(Color accentColor, Color textColor)
+    private void SetCustomAccentColor(Color accentColor, Color textColor)
     {
-        SolidColorBrush newHighlightBrush = new SolidColorBrush(accentColor);
-        SolidColorBrush newHighlightTextBrush = new SolidColorBrush(textColor);
-
-        LinearGradientBrush newTitleBarGradient = new LinearGradientBrush
-        {
-            StartPoint = new Point(0, 0),
-            EndPoint = new Point(1, 0)
-        };
-
-        newTitleBarGradient.GradientStops.Add(new GradientStop(accentColor, 0.0));
-        Color darkerAccent = Color.FromRgb((byte)Math.Max(0, accentColor.R - 40), (byte)Math.Max(0, accentColor.G - 40),
-            (byte)Math.Max(0, accentColor.B - 40));
-        newTitleBarGradient.GradientStops.Add(new GradientStop(darkerAccent, 1.0));
-
-        Current.Resources[SystemColors.HighlightBrushKey] = newHighlightBrush;
-        Current.Resources[SystemColors.HighlightTextBrushKey] = newHighlightTextBrush;
-        Current.Resources[SystemColors.ActiveCaptionBrushKey] = newTitleBarGradient;
-        Current.Resources[SystemColors.ActiveCaptionTextBrushKey] = newHighlightTextBrush;
+        var res = Application.Current.Resources;
+        res[SystemColors.HighlightBrushKey] = new SolidColorBrush(accentColor);
+        res[SystemColors.HighlightTextBrushKey] = new SolidColorBrush(textColor);
+        
+        var titleGradient = new LinearGradientBrush { StartPoint = new Point(0,0), EndPoint = new Point(1,0) };
+        titleGradient.GradientStops.Add(new GradientStop(accentColor, 0.0));
+        titleGradient.GradientStops.Add(new GradientStop(Color.FromRgb((byte)Math.Max(0, accentColor.R - 40), (byte)Math.Max(0, accentColor.G - 40), (byte)Math.Max(0, accentColor.B - 40)), 1.0));
+        
+        res[SystemColors.ActiveCaptionBrushKey] = titleGradient;
+        res[SystemColors.ActiveCaptionTextBrushKey] = new SolidColorBrush(textColor);
     }
 
-    /// <summary>
-    /// Clears the custom accent color injections to allow native theme colors to display.
-    /// </summary>
-    public void ResetToThemeAccent()
+    private void ResetToThemeAccent()
     {
-        Current.Resources.Remove(SystemColors.HighlightBrushKey);
-        Current.Resources.Remove(SystemColors.HighlightTextBrushKey);
-        Current.Resources.Remove(SystemColors.ActiveCaptionBrushKey);
-        Current.Resources.Remove(SystemColors.ActiveCaptionTextBrushKey);
+        var res = Application.Current.Resources;
+        res.Remove(SystemColors.HighlightBrushKey);
+        res.Remove(SystemColors.HighlightTextBrushKey);
+        res.Remove(SystemColors.ActiveCaptionBrushKey);
+        res.Remove(SystemColors.ActiveCaptionTextBrushKey);
     }
 
     private Color GetWindowsAccentColor()
     {
-        Color fallbackColor = (Color)ColorConverter.ConvertFromString("#0078D7");
         try
         {
             using (RegistryKey key = Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\DWM"))
             {
-                if (key != null && key.GetValue("ColorizationColor") is int colorInt)
+                if (key?.GetValue("ColorizationColor") is int colorInt)
                 {
-                    byte r = (byte)((colorInt >> 16) & 0xFF);
-                    byte g = (byte)((colorInt >> 8) & 0xFF);
-                    byte b = (byte)(colorInt & 0xFF);
-                    return Color.FromArgb(255, r, g, b);
+                    return Color.FromArgb(255, (byte)((colorInt >> 16) & 0xFF), (byte)((colorInt >> 8) & 0xFF), (byte)(colorInt & 0xFF));
                 }
             }
         }
-        catch
-        {
-        }
-
-        return fallbackColor;
+        catch { }
+        return Color.FromRgb(0, 120, 215); // Fallback Blue
     }
 
     private Color GetReadableTextColor(Color backgroundColor)
     {
         double luminance = (0.299 * backgroundColor.R + 0.587 * backgroundColor.G + 0.114 * backgroundColor.B) / 255;
         return luminance > 0.5 ? Colors.Black : Colors.White;
+    }
+
+    public static string GetSanitizedAppName()
+    {
+        string rawName = Assembly.GetExecutingAssembly().GetName().Name ?? "VoxelSharp";
+        return OnlyWordCharHyph().Replace(rawName, "");
     }
 
     [GeneratedRegex(@"[^\w\-]")]
