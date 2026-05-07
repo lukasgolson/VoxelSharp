@@ -28,6 +28,14 @@
       <Folder Include="Patches\" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Page Update="WPF\Windows\RetroMessageBox.xaml">
+        <Generator>MSBuild:Compile</Generator>
+        <XamlRuntime>Wpf</XamlRuntime>
+        <SubType>Designer</SubType>
+      </Page>
+    </ItemGroup>
+
     <Target Name="PostBuild" AfterTargets="Build">
         <PropertyGroup>
             <ModsDirectory>..\.mods</ModsDirectory>

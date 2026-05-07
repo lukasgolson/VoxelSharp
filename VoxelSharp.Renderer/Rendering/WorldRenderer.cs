@@ -16,7 +16,7 @@ namespace VoxelSharp.Renderer.Rendering;
 
 public class WorldRenderer : IRenderer, IUpdatable
 {
-    private readonly Dictionary<Position<int>, ChunkMesh> _chunkMeshArray;
+    private readonly ConcurrentDictionary<Position<int>, ChunkMesh> _chunkMeshArray;
     private Shader _chunkShader;
 
 
@@ -52,7 +52,7 @@ public class WorldRenderer : IRenderer, IUpdatable
         _ecsWorld = ecsWorld;
         
         var worldVolume = Math.Pow(RenderDistance, 3);
-        _chunkMeshArray = new Dictionary<Position<int>, ChunkMesh>((int)worldVolume);
+        _chunkMeshArray = new ConcurrentDictionary<Position<int>, ChunkMesh>();
         
         _lightSource = lightSource;
 
@@ -117,9 +117,10 @@ public class WorldRenderer : IRenderer, IUpdatable
         var keysToRemove = _chunkMeshArray.Keys.Except(chunkPositions).ToList();
         foreach (var key in keysToRemove)
         {
-            // Don't dispose here! Send it to the UI thread.
-            _disposalQueue.Enqueue(_chunkMeshArray[key]);
-            _chunkMeshArray.Remove(key);
+            if (_chunkMeshArray.TryRemove(key, out var oldMesh))
+            {
+                _disposalQueue.Enqueue(oldMesh);
+            }
         }
 
         // 2. Safely rebuild the render list

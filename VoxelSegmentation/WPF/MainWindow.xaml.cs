@@ -6,6 +6,7 @@ using System.Windows.Input;
 using System.Windows.Interop;
 using ImGUIMod;
 using ImGuiNET;
+using Microsoft.Extensions.Logging;
 using OpenTK.Graphics.OpenGL4;
 using OpenTK.Wpf;
 using SimpleInjector;
@@ -52,6 +53,9 @@ public partial class MainWindow : Window
         {
             var gameLoop = _container.GetInstance<IGameLoop>();
             
+            var logger = _container.GetInstance<ILogger<MainWindow>>();
+
+            
             // --- ADD THESE 3 LINES ---
             // Resolve the renderer and the world, then introduce them to each other
             _worldRenderer = _container.GetInstance<WorldRenderer>();
@@ -62,6 +66,8 @@ public partial class MainWindow : Window
             // TELL THE ENGINE WE ARE TAKING OVER RENDERING
             gameLoop.IsRenderDecoupled = true; 
             
+            
+            
             // Start the background logic thread
             Task.Run(() => 
             {
@@ -71,8 +77,8 @@ public partial class MainWindow : Window
                 }
                 catch (Exception ex)
                 {
-                    // If the background thread dies, tell us why!
-                    MessageBox.Show(ex.ToString(), "Background Thread Fatal Crash");
+                    // --- REPLACE MESSAGEBOX WITH LOGGER ---
+                    logger.LogCritical(ex, "Background Thread Fatal Crash in GameLoop");
                 }
             });
 
@@ -148,10 +154,24 @@ public partial class MainWindow : Window
         // Focus the control to capture keyboard events
         OpenTkControl.Focus();
 
-        // Optional: Trigger the engine's camera lock if the mouse is over the scene
-        if (e.LeftButton == MouseButtonState.Pressed)
+        // Do nothing if ImGui is being interacted with
+        if (ImGui.GetIO().WantCaptureMouse) return;
+
+        // Unity-style: Hold Right-Click to look around
+        if (e.RightButton == MouseButtonState.Pressed)
         {
-            // You can resolve your camera here to call camera.LockMouse();
+            var camera = _container.GetInstance<VoxelSharp.Abstractions.Renderer.ICameraParameters>() as VoxelSharp.Client.FlyingBaseCamera;
+            camera?.LockMouse();
+        }
+    }
+
+    private void OpenTkControl_OnMouseUp(object sender, MouseButtonEventArgs e)
+    {
+        // Unlock the camera when the Right-Click is released
+        if (e.ChangedButton == MouseButton.Right)
+        {
+            var camera = _container.GetInstance<VoxelSharp.Abstractions.Renderer.ICameraParameters>() as VoxelSharp.Client.FlyingBaseCamera;
+            camera?.UnlockMouse();
         }
     }
     
@@ -170,5 +190,10 @@ public partial class MainWindow : Window
             // FlyingBaseCamera is listening to, automatically recalculating the projection matrix!
             windowWrapper.TriggerResize((int)e.NewSize.Width, (int)e.NewSize.Height);
         }
+    }
+
+    private void FileViewerTree_SelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
+    {
+        throw new NotImplementedException();
     }
 }

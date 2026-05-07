@@ -1,0 +1,37 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <SolidColorBrush x:Key="{x:Static SystemColors.ControlBrushKey}" Color="#FF0000" />
+    <SolidColorBrush x:Key="{x:Static SystemColors.ControlLightLightBrushKey}" Color="#FF6666" />
+    <SolidColorBrush x:Key="{x:Static SystemColors.ControlLightBrushKey}" Color="#FF3333" />
+    <SolidColorBrush x:Key="{x:Static SystemColors.ControlDarkBrushKey}" Color="#990000" />
+    <SolidColorBrush x:Key="{x:Static SystemColors.ControlDarkDarkBrushKey}" Color="#4D0000" />
+    
+    <SolidColorBrush x:Key="{x:Static SystemColors.ControlTextBrushKey}" Color="#000000" />
+    <SolidColorBrush x:Key="{x:Static SystemColors.GrayTextBrushKey}" Color="#800000" />
+    
+    <SolidColorBrush x:Key="{x:Static SystemColors.WindowBrushKey}" Color="#FFFF00" />
+    <SolidColorBrush x:Key="{x:Static SystemColors.WindowTextBrushKey}" Color="#000000" />
+    
+    <SolidColorBrush x:Key="{x:Static SystemColors.HighlightBrushKey}" Color="#000000" />
+    <SolidColorBrush x:Key="{x:Static SystemColors.HighlightTextBrushKey}" Color="#FFFF00" />
+    
+    <SolidColorBrush x:Key="{x:Static SystemColors.MenuBrushKey}" Color="#FF0000" />
+    <SolidColorBrush x:Key="{x:Static SystemColors.MenuBarBrushKey}" Color="#FF0000" />
+    <SolidColorBrush x:Key="{x:Static SystemColors.MenuTextBrushKey}" Color="#000000" />
+
+    <LinearGradientBrush x:Key="{x:Static SystemColors.ActiveCaptionBrushKey}" StartPoint="0,0" EndPoint="1,0">
+        <GradientStop Color="#000000" Offset="0.0" /><GradientStop Color="#000000" Offset="1.0" />
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="{x:Static SystemColors.InactiveCaptionBrushKey}" StartPoint="0,0" EndPoint="1,0">
+        <GradientStop Color="#FFFFFF" Offset="0.0" /><GradientStop Color="#FFFFFF" Offset="1.0" />
+    </LinearGradientBrush>
+
+    <SolidColorBrush x:Key="{x:Static SystemColors.ActiveCaptionTextBrushKey}" Color="#FFFF00" />
+    <SolidColorBrush x:Key="{x:Static SystemColors.InactiveCaptionTextBrushKey}" Color="#000000" />
+    <SolidColorBrush x:Key="ButtonHoverBrush" Color="#FF3333" />
+
+    <StaticResource x:Key="DefragPendingBrush" ResourceKey="{x:Static SystemColors.WindowBrushKey}" />
+    <StaticResource x:Key="DefragCompleteBrush" ResourceKey="{x:Static SystemColors.HighlightBrushKey}" />
+
+    <SolidColorBrush x:Key="DefragActiveBrush" Color="Red" />
+    <SolidColorBrush x:Key="DefragErrorBrush" Color="Black" />
+</ResourceDictionary>

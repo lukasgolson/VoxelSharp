@@ -50,11 +50,6 @@ public class FlyingBaseCamera : BaseCamera
         };
 
         // --- Handle Ctrl key for manual lock/unlock ---
-        keyboardListener.Subscribe(Key.LeftCtrl, UnlockMouse, null, KeyboardEvent.KeyDown);
-        keyboardListener.Subscribe(Key.LeftCtrl, LockMouse, null, KeyboardEvent.KeyUp);
-        
-        keyboardListener.Subscribe(Key.Escape, UnlockMouse, null, KeyboardEvent.KeyDown);
-
         keyboardListener.Subscribe(Key.W, forward_start);
         keyboardListener.Subscribe(Key.W, forward_stop, null, KeyboardEvent.KeyUp);
         keyboardListener.Subscribe(Key.S, backward_start);
