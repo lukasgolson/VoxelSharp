@@ -24,6 +24,10 @@
         <PackageReference Include="OpenTK.GLWpfControl" Version="4.*" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Folder Include="Patches\" />
+    </ItemGroup>
+
     <Target Name="PostBuild" AfterTargets="Build">
         <PropertyGroup>
             <ModsDirectory>..\.mods</ModsDirectory>

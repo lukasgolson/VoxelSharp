@@ -10,6 +10,7 @@ using OpenTK.Graphics.OpenGL4;
 using OpenTK.Wpf;
 using SimpleInjector;
 using VoxelSharp.Abstractions.Loop;
+using VoxelSharp.Core.World;
 using VoxelSharp.Renderer.Rendering;
 
 namespace VoxelSegmentation;
@@ -24,6 +25,8 @@ public partial class MainWindow : Window
     private ImGuiController? _imGuiController;
     private WorldRenderer? _worldRenderer;
     private bool _engineStarted;
+    
+    private bool _isReady = false; 
 
     public MainWindow(Container container)
     {
@@ -42,34 +45,43 @@ public partial class MainWindow : Window
         OpenTkControl.Start(settings);
     }
 
-    /// <summary>
-    /// Triggered when the OpenGL context is created and ready for use.
-    /// </summary>
     private void OpenTkControl_OnReady()
     {
-        // 1. Resolve core engine renderers
-        _worldRenderer = _container.GetInstance<WorldRenderer>();
-        
-        // 2. Resolve ImGui if the mod is present in the mods folder
         try 
-        { 
-            _imGuiController = _container.GetInstance<ImGuiController>(); 
-        } 
-        catch (ActivationException) 
-        { 
-            // ImGuiMod is not loaded; this is fine.
-        }
-
-        // 3. Start the background GameLoop (Ticks/Logic only)
-        // Our Harmony patch ensures this background thread doesn't touch OpenGL.
-        if (!_engineStarted)
         {
             var gameLoop = _container.GetInstance<IGameLoop>();
-            Task.Run(() => gameLoop.Start());
-            _engineStarted = true;
-        }
+            
+            // --- ADD THESE 3 LINES ---
+            // Resolve the renderer and the world, then introduce them to each other
+            _worldRenderer = _container.GetInstance<WorldRenderer>();
+            var voxelWorld = _container.GetInstance<VoxelWorld>();
+            _worldRenderer.AssociateWorld(voxelWorld);
+            // -------------------------
 
-        // 4. Initial GL State setup
+            // TELL THE ENGINE WE ARE TAKING OVER RENDERING
+            gameLoop.IsRenderDecoupled = true; 
+            
+            // Start the background logic thread
+            Task.Run(() => 
+            {
+                try 
+                {
+                    gameLoop.Start();
+                }
+                catch (Exception ex)
+                {
+                    // If the background thread dies, tell us why!
+                    MessageBox.Show(ex.ToString(), "Background Thread Fatal Crash");
+                }
+            });
+
+            _isReady = true; 
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Initialization Failed: {ex.Message}");
+        }
+        
         GL.Enable(EnableCap.DepthTest);
         GL.DepthFunc(DepthFunction.Less);
         GL.Enable(EnableCap.CullFace);
@@ -77,29 +89,23 @@ public partial class MainWindow : Window
         GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
         GL.ClearColor(0.1f, 0.1f, 0.12f, 1.0f);
     }
-
-    /// <summary>
-    /// The Master Render Sequence. 
-    /// Executed on the WPF UI thread to ensure thread-safe OpenGL access.
-    /// </summary>
+    
     private void OpenTkControl_OnRender(TimeSpan deltaTime)
     {
-        if (_worldRenderer == null) return;
+        if (!_isReady) return;
 
-        // A. Update ImGui's internal state with WPF Input data
-        UpdateImGuiInput(deltaTime);
+        // Feed input to ImGui
+        UpdateImGuiInput(deltaTime); 
 
-        // B. Signal ImGui that a new frame is starting
-        _imGuiController?.PreRender();
-
-        // C. Clear the buffer and render the 3D Engine scene
+        // Clear the screen for the new frame
         GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
-        _worldRenderer.Render(1.0);
-
-        // D. Render ImGui on top of the 3D scene
-        _imGuiController?.PostRender();
+        
+        // Command the engine to fire its rendering pipeline!
+        // This will automatically run ImGui.PreRender -> WorldRenderer -> ImGui.PostRender
+        var gameLoop = _container.GetInstance<IGameLoop>();
+        gameLoop.RenderFrame(1.0); 
     }
-
+    
     /// <summary>
     /// Translates WPF Mouse/Keyboard and DPI state into ImGui's IO structure.
     /// </summary>

@@ -112,6 +112,8 @@ public class GameLoop : IGameLoop
 
     public double CurrentUpdateFrequency { get; private set; }
     public double CurrentRenderFrequency { get; private set; }
+    public bool IsRenderDecoupled { get; set; }
+
 
 
     public void Start()
@@ -134,25 +136,26 @@ public class GameLoop : IGameLoop
             if (!_isPaused)
             {
                 accumulatedTime += deltaTime;
-
-                if (accumulatedTime > MaxCatchUpTime) accumulatedTime = MaxCatchUpTime; // Prevent spiral of death
+                if (accumulatedTime > MaxCatchUpTime) accumulatedTime = MaxCatchUpTime;
 
                 tickAccumulator += deltaTime;
-                frameAccumulator += deltaTime;
 
-                // Interlace updates and frames
-                while (tickAccumulator >= _tickDuration || frameAccumulator >= _frameDuration)
+                // 1. Always run Logic/Physics
+                while (tickAccumulator >= _tickDuration)
                 {
-                    if (tickAccumulator >= _tickDuration)
-                    {
-                        RunTick(_tickDuration);
-                        tickAccumulator -= _tickDuration;
-                    }
+                    RunTick(_tickDuration);
+                    tickAccumulator -= _tickDuration;
+                }
 
-                    if (!(frameAccumulator >= _frameDuration)) continue;
-                    RunRender(frameAccumulator /
-                              _frameDuration); // Use interpolation factor for smooth rendering
-                    frameAccumulator -= _frameDuration;
+                // 2. Only run Rendering if we own the render loop!
+                if (!IsRenderDecoupled)
+                {
+                    frameAccumulator += deltaTime;
+                    while (frameAccumulator >= _frameDuration)
+                    {
+                        RenderFrame(frameAccumulator / _frameDuration);
+                        frameAccumulator -= _frameDuration;
+                    }
                 }
 
                 UpdatePerformanceMetrics();
@@ -360,7 +363,7 @@ public class GameLoop : IGameLoop
         _tickTimeAccumulator += deltaTime;
     }
 
-    private void RunRender(double interpolationFactor)
+    public void RenderFrame(double interpolationFactor)
     {
         // Run PreRender in ASCENDING order (low to high)
         foreach (var action in _processingActions)

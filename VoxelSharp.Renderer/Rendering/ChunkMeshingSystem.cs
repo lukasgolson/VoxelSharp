@@ -34,19 +34,11 @@ public class ChunkMeshingSystem : IUpdatable
     public void Update(double deltaTime)
     {
         // 1. BACKPRESSURE: Check if the mailbox is full
-        // If the Main Thread is still uploading previous meshes, pause generation 
-        // to prevent memory from exploding.
-        
-        
-        
         if (_mailbox.Queue.Count >= MaxQueueSize) return;
-        
-        
 
         using var commandBuffer = new CommandBuffer();
 
         int scheduledCount = 0;
-
         var dirtyQuery = new QueryDescription().WithAll<ChunkData>().WithNone<NeedsMeshing>();
 
         _ecsWorld.Query(in dirtyQuery, (Entity entity, ref ChunkData data) =>
@@ -64,18 +56,29 @@ public class ChunkMeshingSystem : IUpdatable
         // Apply the 'NeedsMeshing' component to the chosen batch
         commandBuffer.Playback(_ecsWorld);
 
-        // 3. MESH CHUNKS (PARALLEL)
-        // This only processes the entities we just tagged in Step 2
+        // ==========================================================
+        // 3. MESH CHUNKS (STANDARD PARALLELIZATION)
+        // Bypass ParallelQuery to avoid JobScheduler thread crashes
+        // ==========================================================
         var meshQuery = new QueryDescription().WithAll<ChunkData, NeedsMeshing>();
+        var batch = new List<(Entity Entity, Core.World.Chunk Chunk)>();
 
-        _ecsWorld.ParallelQuery(in meshQuery, (Entity entity, ref ChunkData chunkData) =>
+        // Collect the batch synchronously
+        _ecsWorld.Query(in meshQuery, (Entity entity, ref ChunkData chunkData) =>
         {
-            var chunk = chunkData.Chunk;
-            if (chunk == null) return;
+            if (chunkData.Chunk != null)
+            {
+                batch.Add((entity, chunkData.Chunk));
+            }
+        });
 
-            // Pre-fetch neighbors
+        // Process heavy lifting on standard ThreadPool
+        Parallel.ForEach(batch, item =>
+        {
+            var chunk = item.Chunk;
             var chunkPos = chunk.Position;
 
+            // Pre-fetch neighbors
             var cLeft = _voxelWorld.GetChunk(chunkPos - Position<int>.Right);
             var leftSpan = cLeft != null ? cLeft.GetVoxelSpan() : Span<Voxel>.Empty;
 
@@ -99,10 +102,13 @@ public class ChunkMeshingSystem : IUpdatable
 
             // Send to Main Thread
             _mailbox.Queue.Enqueue(meshData);
-
-            // Mark done
-            commandBuffer.Remove<NeedsMeshing>(entity);
         });
+
+        // Cleanup ECS synchronously
+        foreach (var item in batch)
+        {
+            commandBuffer.Remove<NeedsMeshing>(item.Entity);
+        }
 
         commandBuffer.Playback(_ecsWorld);
     }

@@ -11,6 +11,11 @@ public interface IGameLoop
     public double CurrentUpdateFrequency { get; }
     public double CurrentRenderFrequency { get; }
     
+    bool IsRenderDecoupled { get; set; }
+
+    void RenderFrame(double interpolationFactor);
+
+    
     /// <summary>
     ///     Starts the game loop.
     /// </summary>
