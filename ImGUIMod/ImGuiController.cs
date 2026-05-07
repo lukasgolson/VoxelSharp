@@ -11,13 +11,14 @@ namespace ImGUIMod;
 
 public class ImGuiController : IRendererProcessing, IDisposable
 {
-    private readonly NativeWindow _window;
-
+    private readonly IWindow _window;
     public ImGuiController(IWindow window)
     {
+        // 2. ASSIGN IT!
+        _window = window; 
+        
         ImGui.CreateContext();
         var io = ImGui.GetIO();
-
 
         unsafe
         {
@@ -30,7 +31,6 @@ public class ImGuiController : IRendererProcessing, IDisposable
 
         ImGui.StyleColorsClassic();
 
-
         var style = ImGui.GetStyle();
         if ((io.ConfigFlags & ImGuiConfigFlags.ViewportsEnable) != 0)
         {
@@ -38,27 +38,21 @@ public class ImGuiController : IRendererProcessing, IDisposable
             style.Colors[(int)ImGuiCol.WindowBg].W = 1f;
         }
 
-        // TODO: Add support for multiple windows, non-native windowing, and better control over the window.
-        // 1. Check if we are running in a native window or a wrapper (WPF)
         if (window is NativeWindow nativeWindow)
         {
-            // Use the original OpenTK native backend
             ImguiImplOpenTk4.Init(nativeWindow);
         }
         else
         {
-            // If it's a wrapper, we tell ImGui the host will provide input manually
             unsafe {
                 io.NativePtr->BackendPlatformName = (byte*)Unsafe.AsPointer(ref MemoryMarshal.GetReference("wpf_manual_bridge"u8));
             }
             io.BackendFlags |= ImGuiBackendFlags.HasMouseCursors;
         }
         
-        ImguiImplOpenGl3.Init();
-
-        ImguiImplOpenGl3.Init();
+        // Note: You had a duplicate Init() call here, I removed the extra one.
+        ImguiImplOpenGl3.Init(); 
     }
-
 
     public void PreRender()
     {
@@ -109,8 +103,11 @@ public class ImGuiController : IRendererProcessing, IDisposable
         ImGui.UpdatePlatformWindows();
         ImGui.RenderPlatformWindowsDefault();
 
-
-        _window.Context.MakeCurrent();
+        // FIX: Only NativeWindow has a Context!
+        if (_window is NativeWindow nativeWindow)
+        {
+            nativeWindow.Context.MakeCurrent();
+        }
     }
     
     
@@ -127,6 +124,5 @@ public class ImGuiController : IRendererProcessing, IDisposable
         
         ImGui.DestroyContext();
         
-        _window.Dispose();
     }
 }

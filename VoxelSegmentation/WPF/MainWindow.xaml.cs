@@ -10,6 +10,7 @@ using OpenTK.Graphics.OpenGL4;
 using OpenTK.Wpf;
 using SimpleInjector;
 using VoxelSharp.Abstractions.Loop;
+using VoxelSharp.Abstractions.Window;
 using VoxelSharp.Core.World;
 using VoxelSharp.Renderer.Rendering;
 
@@ -151,6 +152,23 @@ public partial class MainWindow : Window
         if (e.LeftButton == MouseButtonState.Pressed)
         {
             // You can resolve your camera here to call camera.LockMouse();
+        }
+    }
+    
+    private void OpenTkControl_OnSizeChanged(object sender, SizeChangedEventArgs e)
+    {
+        // Don't try to resize if the container/engine isn't ready yet
+        if (!_isReady) return;
+
+        // Resolve the wrapper from the container
+        var windowWrapper = _container.GetInstance<IWindow>() as WpfWindowWrapper;
+        
+        if (windowWrapper != null)
+        {
+            // Pass the new WPF dimensions to the wrapper.
+            // This will trigger windowWrapper.OnWindowResize, which the 
+            // FlyingBaseCamera is listening to, automatically recalculating the projection matrix!
+            windowWrapper.TriggerResize((int)e.NewSize.Width, (int)e.NewSize.Height);
         }
     }
 }

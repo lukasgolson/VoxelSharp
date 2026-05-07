@@ -14,7 +14,9 @@
                 <glWpfControl:GLWpfControl x:Name="OpenTkControl" 
                                            Render="OpenTkControl_OnRender" 
                                            Ready="OpenTkControl_OnReady" 
-                                           MouseDown="OpenTkControl_OnMouseDown" /> </Border>
+                                           MouseDown="OpenTkControl_OnMouseDown"
+                                           SizeChanged="OpenTkControl_OnSizeChanged" />
+            </Border>
         </Border>
 
         <GridSplitter Grid.Column="1" Width="5" HorizontalAlignment="Stretch" Background="#222222"/>
