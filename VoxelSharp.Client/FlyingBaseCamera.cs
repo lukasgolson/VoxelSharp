@@ -18,7 +18,7 @@ public class FlyingBaseCamera : BaseCamera
     private readonly IMouseRelative _mouseInput;
 
     private readonly IWindow _window; // Store the window interface
-    private bool _mouseLocked = true; // Track our lock state
+    private bool _mouseLocked = false; 
 
     private Vector3 _input = Vector3.Zero;
     private Vector3 _velocity = Vector3.Zero;
@@ -52,6 +52,8 @@ public class FlyingBaseCamera : BaseCamera
         // --- Handle Ctrl key for manual lock/unlock ---
         keyboardListener.Subscribe(Key.LeftCtrl, UnlockMouse, null, KeyboardEvent.KeyDown);
         keyboardListener.Subscribe(Key.LeftCtrl, LockMouse, null, KeyboardEvent.KeyUp);
+        
+        keyboardListener.Subscribe(Key.Escape, UnlockMouse, null, KeyboardEvent.KeyDown);
 
         keyboardListener.Subscribe(Key.W, forward_start);
         keyboardListener.Subscribe(Key.W, forward_stop, null, KeyboardEvent.KeyUp);
@@ -69,21 +71,16 @@ public class FlyingBaseCamera : BaseCamera
 
         keyboardListener.Subscribe(Key.LeftShift, down_start);
         keyboardListener.Subscribe(Key.LeftShift, down_stop, null, KeyboardEvent.KeyUp);
-
-        if (_window.IsFocused && _mouseLocked)
-        {
-            _mouseInput.StartTracking(new IntPtr(_window.WindowHandle));
-        }
     }
 
-    private void UnlockMouse()
+    public void UnlockMouse()
     {
         _mouseLocked = false;
         _mouseInput.StopTracking();
         _input = Vector3.Zero; // Instantly stop movement
     }
 
-    private void LockMouse()
+    public void LockMouse()
     {
         _mouseLocked = true; // Set the desired state
 

@@ -5,18 +5,24 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+        <UseWPF>true</UseWPF>
+
+        <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
     </PropertyGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\VoxelSharp.Abstractions\VoxelSharp.Abstractions.csproj" />
-      <ProjectReference Include="..\VoxelSharp.Core\VoxelSharp.Core.csproj" />
-      <ProjectReference Include="..\VoxelSharp.Modding\VoxelSharp.Modding.csproj" />
+        <ProjectReference Include="..\ImGUIMod\ImGUIMod.csproj" />
+        <ProjectReference Include="..\VoxelSharp.Abstractions\VoxelSharp.Abstractions.csproj" />
+        <ProjectReference Include="..\VoxelSharp.Client\VoxelSharp.Client.csproj" />
+        <ProjectReference Include="..\VoxelSharp.Core\VoxelSharp.Core.csproj" />
+        <ProjectReference Include="..\VoxelSharp.Modding\VoxelSharp.Modding.csproj" />
+        <ProjectReference Include="..\VoxelSharp.Renderer\VoxelSharp.Renderer.csproj" />
     </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Include="ImGui.NET" Version="1.91.6.1" />
+        <PackageReference Include="ImGui.NET" Version="1.91.6.1" />
+        <PackageReference Include="OpenTK.GLWpfControl" Version="4.*" />
     </ItemGroup>
-
 
     <Target Name="PostBuild" AfterTargets="Build">
         <PropertyGroup>
@@ -27,6 +33,8 @@
         <MakeDir Directories="$(ModsDirectory)" Condition="!Exists('$(ModsDirectory)')"/>
 
         <Copy SourceFiles="$(OutputPath)\$(AssemblyName).dll" DestinationFolder="$(ModsDirectory)"/>
+
+        <Copy SourceFiles="$(OutputPath)\GLWpfControl.dll" DestinationFolder="$(ModsDirectory)" Condition="Exists('$(OutputPath)\GLWpfControl.dll')"/>
 
         <Exec Command="robocopy &quot;$(OutputPath)\Resources&quot; &quot;$(ResourcesDirectory)&quot; /E /COPY:DAT || exit 0" Condition="Exists('$(OutputPath)\Resources\')"/>
     </Target>

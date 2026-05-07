@@ -1,4 +1,6 @@
 ﻿using System.Numerics;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using ImGuiNET;
 using VoxelSharp.Renderer.UI;
 using OpenTK.Windowing.Desktop;
@@ -36,9 +38,24 @@ public class ImGuiController : IRendererProcessing, IDisposable
             style.Colors[(int)ImGuiCol.WindowBg].W = 1f;
         }
 
-        _window = (NativeWindow)window;
+        // TODO: Add support for multiple windows, non-native windowing, and better control over the window.
+        // 1. Check if we are running in a native window or a wrapper (WPF)
+        if (window is NativeWindow nativeWindow)
+        {
+            // Use the original OpenTK native backend
+            ImguiImplOpenTk4.Init(nativeWindow);
+        }
+        else
+        {
+            // If it's a wrapper, we tell ImGui the host will provide input manually
+            unsafe {
+                io.NativePtr->BackendPlatformName = (byte*)Unsafe.AsPointer(ref MemoryMarshal.GetReference("wpf_manual_bridge"u8));
+            }
+            io.BackendFlags |= ImGuiBackendFlags.HasMouseCursors;
+        }
+        
+        ImguiImplOpenGl3.Init();
 
-        ImguiImplOpenTk4.Init(_window);
         ImguiImplOpenGl3.Init();
     }
 
@@ -46,7 +63,10 @@ public class ImGuiController : IRendererProcessing, IDisposable
     public void PreRender()
     {
         ImguiImplOpenGl3.NewFrame();
-        ImguiImplOpenTk4.NewFrame();
+        if (_window is NativeWindow)
+        {
+            ImguiImplOpenTk4.NewFrame();
+        }
         ImGui.NewFrame();
 
 
@@ -92,12 +112,19 @@ public class ImGuiController : IRendererProcessing, IDisposable
 
         _window.Context.MakeCurrent();
     }
+    
+    
 
     public void Dispose()
     {
         
         ImguiImplOpenGl3.Shutdown();
-        ImguiImplOpenTk4.Shutdown();
+        if (_window is NativeWindow nativeWindow)
+        {
+            ImguiImplOpenTk4.Shutdown();
+            nativeWindow.Dispose();
+        }
+        
         ImGui.DestroyContext();
         
         _window.Dispose();

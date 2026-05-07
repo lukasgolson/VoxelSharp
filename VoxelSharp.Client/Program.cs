@@ -29,6 +29,7 @@ public static class Program
 
     private static Ecs Ecs { get; } = new();
 
+    [STAThread] 
     public static void Main(string[] args)
     {
         var loggerFactory = ConfigureLogging(Container);
@@ -97,7 +98,7 @@ public static class Program
         
         container.RegisterSingleton<IGameLoop, GameLoop>();
 
-        container.RegisterSingleton<IMouseRelative, MouseInput>();
+        //container.RegisterSingleton<IMouseRelative, MouseInput>();
         container.RegisterSingleton<IKeyboardListener, KeyboardListener>();
 
         var cameraService = Lifestyle.Singleton.CreateRegistration<FlyingBaseCamera>(container);
@@ -105,7 +106,7 @@ public static class Program
         container.AddRegistration<ICameraMatrices>(cameraService);
         container.AddRegistration<ICameraParameters>(cameraService);
 
-        container.RegisterSingleton<IWindow, Window>();
+        //container.RegisterSingleton<IWindow, Window>();
         
         container.RegisterSingleton<ChunkCommitSystem>();
 
@@ -123,7 +124,7 @@ public static class Program
         container.RegisterSingleton<WorldRenderer>();
         
         
-        container.RegisterSingleton<IClient, Client>();
+        //container.RegisterSingleton<IClient, Client>();
         
         container.RegisterSingleton<IWorldGenerator, EmptyWorldGenerator>();
         

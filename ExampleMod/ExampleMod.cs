@@ -23,16 +23,20 @@ public class ExampleMod : IMod
         "VoxelSharp"
     );
 
-
     public bool Initialize(Harmony harmony, Container container)
     {
+        // ONLY REGISTRATIONS HERE
         container.Options.AllowOverridingRegistrations = true;
         container.RegisterSingleton<IWorldGenerator, BasicWorldGenerator>();
-
-        
         container.RegisterSingleton<ILightSource, SkyRenderer>();
+        container.Options.AllowOverridingRegistrations = false;
 
+        return true;
+    }
 
+    public bool PostInitialize(Container container)
+    {
+        // GET INSTANCES HERE
         var resourceDictionary = container.GetInstance<ResourceDictionary>();
 
         var assemblyPath = System.Reflection.Assembly.GetExecutingAssembly().Location;
@@ -43,27 +47,12 @@ public class ExampleMod : IMod
         resourceDictionary.AddTextResource("ExampleMod:Shaders/Sky.vert",
             Path.Combine(resourcePath, "Shaders/Sky.vert"));
 
-
-     
-        
-        
-
-        return true;
-    }
-
-
-    public bool PostInitialize(Container container)
-    {
-        // Get the Resource dictionary from the container
-
-
         _skyRenderer = container.GetInstance<ILightSource>() as SkyRenderer;
         var gameLoop = container.GetInstance<IGameLoop>();
         
         gameLoop.RegisterRenderAction(_skyRenderer, 1);
         gameLoop.RegisterUpdateAction(_skyRenderer);
         
-
         return true;
     }
 }

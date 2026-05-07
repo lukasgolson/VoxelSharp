@@ -1,0 +1,44 @@
+﻿<Window x:Class="VoxelSegmentation.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:glWpfControl="clr-namespace:OpenTK.Wpf;assembly=GLWpfControl"
+        Title="Voxel Segmentation Editor" Height="720" Width="1080"
+        Background="#383838" Foreground="#CCCCCC">
+    
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>   <ColumnDefinition Width="5"/>   <ColumnDefinition Width="300"/> </Grid.ColumnDefinitions>
+
+        <Border Grid.Column="0" Background="#111111">
+            <Border Grid.Column="0" Background="#111111">
+                <glWpfControl:GLWpfControl x:Name="OpenTkControl" 
+                                           Render="OpenTkControl_OnRender" 
+                                           Ready="OpenTkControl_OnReady" 
+                                           MouseDown="OpenTkControl_OnMouseDown" /> </Border>
+        </Border>
+
+        <GridSplitter Grid.Column="1" Width="5" HorizontalAlignment="Stretch" Background="#222222"/>
+
+        <Border Grid.Column="2" Background="#2d2d2d">
+            <DockPanel>
+                <Border DockPanel.Dock="Top" Background="#3c3c3c" Padding="5">
+                    <TextBlock Text="Inspector" FontWeight="Bold" Foreground="White"/>
+                </Border>
+                
+                <StackPanel Margin="10">
+                    <TextBlock Text="Point Cloud Importer" FontWeight="Bold" Margin="0,0,0,10" Foreground="White"/>
+                    
+                    <TextBlock Text="File Path:" Margin="0,5,0,2"/>
+                    <TextBox x:Name="InputFilePath" Text="D:\cloud.txt" Background="#1a1a1a" Foreground="White" BorderThickness="0" Padding="4" Margin="0,0,0,10"/>
+                    
+                    <TextBlock Text="Voxel Size:" Margin="0,5,0,2"/>
+                    <TextBox x:Name="InputVoxelSize" Text="1.0" Background="#1a1a1a" Foreground="White" BorderThickness="0" Padding="4" Margin="0,0,0,15"/>
+                    
+
+                    <TextBlock x:Name="TxtStatus" Text="Status: Idle" Margin="0,20,0,5" Foreground="#AAAAAA"/>
+                    <ProgressBar x:Name="ProgImport" Height="15" Minimum="0" Maximum="1" Background="#1a1a1a" Foreground="#3A72B5" BorderThickness="0"/>
+                </StackPanel>
+            </DockPanel>
+        </Border>
+    </Grid>
+</Window>

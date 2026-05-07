@@ -1,4 +1,5 @@
-﻿using System.Numerics;
+﻿using System.IO;
+using System.Numerics;
 using VoxelSegmentation.structs;
 using VoxelSharp.Abstractions.Loop;
 using VoxelSharp.Core.Structs;
@@ -11,12 +12,10 @@ public class PointcloudImporter : IUpdatable
 {
     private readonly VoxelWorld _voxelWorld;
     
-    // Update queue to store parameters
     private readonly Queue<(string Path, Vector3 Rotation, float VoxelSize)> _importQueue = new();
     
     private Dictionary<Position<int>, List<(int Index, Voxel Voxel)>>? _pendingChunks;
     
-    // State for UI
     public bool IsProcessing { get; private set; }
     public float ImportProgress { get; private set; }
     public string StatusMessage { get; private set; } = "";

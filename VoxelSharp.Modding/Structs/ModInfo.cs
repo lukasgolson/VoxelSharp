@@ -5,7 +5,8 @@ public readonly struct ModInfo(
     string id,
     Version version,
     string author,
-    Dependency[]? dependencies = null)
+    Dependency[]? dependencies = null,
+    int priority = 0)
     : IEquatable<ModInfo>
 {
     public string Name { get; } = name;
@@ -14,6 +15,8 @@ public readonly struct ModInfo(
 
     public Dependency[] Dependencies { get; } = dependencies ?? [];
     public string Author { get; } = author;
+    
+    public int Priority { get; } = priority;
 
     public bool Equals(ModInfo other)
     {

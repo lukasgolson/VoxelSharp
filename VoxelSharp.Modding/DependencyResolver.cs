@@ -16,8 +16,10 @@ public class DependencyResolver
     {
         var resolved = new List<ModInfo>();
         var seen = new HashSet<string>();
+        
+        var sortedMods = _mods.Values.OrderBy(m => m.Priority).ToList();
 
-        foreach (var mod in _mods.Values)
+        foreach (var mod in sortedMods)
         {
             Resolve(mod, resolved, seen, []);
         }
