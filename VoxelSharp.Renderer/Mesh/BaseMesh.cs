@@ -11,13 +11,14 @@ public abstract class BaseMesh : IDisposable, IRenderable
     private int _opaqueVao;
     private int _opaqueVbo;
     protected int OpaqueVertexCount;
-    protected bool IsOpaqueInitialized => _opaqueVao != 0 && _opaqueVbo != 0;
+    // Tracked separately from the buffers, as an empty mesh is built but has no buffers
+    protected bool IsOpaqueInitialized { get; private set; }
 
     // Transparent mesh data
     private int _transparentVao;
     private int _transparentVbo;
     protected int TransparentVertexCount;
-    protected bool IsTransparentInitialized => _transparentVao != 0 && _transparentVbo != 0;
+    protected bool IsTransparentInitialized { get; private set; }
     
     public void Dispose()
     {
@@ -57,11 +58,8 @@ public abstract class BaseMesh : IDisposable, IRenderable
 
     protected virtual void SetupOpaqueMesh(int elementsPerVertex, Shader shaderProgram)
     {
-        if (_opaqueVao != 0)
-        {
-            GL.DeleteVertexArray(_opaqueVao);
-            _opaqueVao = 0;
-        }
+        DeleteOpaqueBuffers();
+        IsOpaqueInitialized = true;
 
         // Get vertex data using Memory<float> to minimize heap allocations
         using var vertexMemoryOwner = GetOpaqueVertexDataMemory(out var vertexCount);
@@ -98,11 +96,8 @@ public abstract class BaseMesh : IDisposable, IRenderable
     
     protected virtual void SetupTransparentMesh(int elementsPerVertex, Shader shaderProgram)
     {
-        if (_transparentVao != 0)
-        {
-            GL.DeleteVertexArray(_transparentVao);
-            _transparentVao = 0;
-        }
+        DeleteTransparentBuffers();
+        IsTransparentInitialized = true;
 
         using var vertexMemoryOwner = GetTransparentVertexDataMemory(out var vertexCount);
 
@@ -142,8 +137,13 @@ public abstract class BaseMesh : IDisposable, IRenderable
     protected virtual void Dispose(bool disposing)
     {
         if (!disposing) return;
-        
-        // Dispose opaque buffers
+
+        DeleteOpaqueBuffers();
+        DeleteTransparentBuffers();
+    }
+
+    private void DeleteOpaqueBuffers()
+    {
         if (_opaqueVao != 0)
         {
             GL.DeleteVertexArray(_opaqueVao);
@@ -154,8 +154,10 @@ public abstract class BaseMesh : IDisposable, IRenderable
             GL.DeleteBuffer(_opaqueVbo);
             _opaqueVbo = 0;
         }
-        
-        // Dispose transparent buffers
+    }
+
+    private void DeleteTransparentBuffers()
+    {
         if (_transparentVao != 0)
         {
             GL.DeleteVertexArray(_transparentVao);

@@ -22,7 +22,7 @@ public class EmptyWorldGenerator : IWorldGenerator
         
         chunk.IsDirty = true;
         
-        _logger.LogInformation("Generated chunk at position {0}", chunk.Position);
+        _logger.LogDebug("Generated chunk at position {0}", chunk.Position);
 
 
         return true;

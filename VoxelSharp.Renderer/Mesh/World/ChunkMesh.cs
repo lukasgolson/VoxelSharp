@@ -24,13 +24,24 @@ public class ChunkMesh : BaseMesh
 
     private Position<int>? Position => Chunk?.Position;
 
+    /// <summary>
+    ///     Whether the mesh has never been built, or its chunk has changed since it was last built.
+    /// </summary>
+    public bool NeedsRebuild => Chunk.IsDirty || !IsOpaqueInitialized || !IsTransparentInitialized;
+
+    /// <summary>
+    ///     Rebuilds the opaque and transparent meshes from the chunk's current voxels.
+    /// </summary>
+    public void Rebuild(Shader shaderProgram)
+    {
+        SetupOpaqueMesh(8, shaderProgram);
+        SetupTransparentMesh(8, shaderProgram);
+
+        Chunk.IsDirty = false;
+    }
+
     public override void RenderOpaque(Shader shaderProgram)
     {
-        if (Chunk.IsDirty || !IsOpaqueInitialized)
-        {
-            SetupOpaqueMesh(8, shaderProgram);
-        }
-
         if (OpaqueVertexCount == 0) return;
 
         shaderProgram.SetUniform("m_model", GetModelMatrix());
@@ -40,14 +51,6 @@ public class ChunkMesh : BaseMesh
 
     public override void RenderTransparent(Shader shaderProgram)
     {
-        if (Chunk.IsDirty || !IsOpaqueInitialized)
-        {
-            SetupTransparentMesh(8, shaderProgram);
-        }
-        
-        Chunk.IsDirty = false;
-
-
         if (TransparentVertexCount == 0) return;
 
         shaderProgram.SetUniform("m_model", GetModelMatrix());
