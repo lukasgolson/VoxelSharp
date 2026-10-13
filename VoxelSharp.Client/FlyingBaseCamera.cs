@@ -1,9 +1,9 @@
 ﻿using System.Numerics;
-using System.Windows.Input;
-using DeftSharp.Windows.Input.Keyboard;
+using OpenTK.Windowing.GraphicsLibraryFramework;
 using VoxelSharp.Abstractions.Input;
 using VoxelSharp.Abstractions.Loop;
 using VoxelSharp.Abstractions.Window;
+using VoxelSharp.Client.Input;
 using VoxelSharp.Core.Camera;
 using VoxelSharp.Core.Helpers;
 
@@ -49,25 +49,25 @@ public class FlyingBaseCamera : BaseCamera
         };
 
         // --- Handle Ctrl key for manual lock/unlock ---
-        keyboardListener.Subscribe(Key.LeftCtrl, UnlockMouse, null, KeyboardEvent.KeyDown);
-        keyboardListener.Subscribe(Key.LeftCtrl, LockMouse, null, KeyboardEvent.KeyUp);
+        keyboardListener.Subscribe(Keys.LeftControl, UnlockMouse, KeyboardEvent.KeyDown);
+        keyboardListener.Subscribe(Keys.LeftControl, LockMouse, KeyboardEvent.KeyUp);
 
-        keyboardListener.Subscribe(Key.W, forward_start);
-        keyboardListener.Subscribe(Key.W, forward_stop, null, KeyboardEvent.KeyUp);
-        keyboardListener.Subscribe(Key.S, backward_start);
-        keyboardListener.Subscribe(Key.S, backward_stop, null, KeyboardEvent.KeyUp);
+        keyboardListener.Subscribe(Keys.W, forward_start);
+        keyboardListener.Subscribe(Keys.W, forward_stop, KeyboardEvent.KeyUp);
+        keyboardListener.Subscribe(Keys.S, backward_start);
+        keyboardListener.Subscribe(Keys.S, backward_stop, KeyboardEvent.KeyUp);
 
-        keyboardListener.Subscribe(Key.A, left_start);
-        keyboardListener.Subscribe(Key.A, left_stop, null, KeyboardEvent.KeyUp);
+        keyboardListener.Subscribe(Keys.A, left_start);
+        keyboardListener.Subscribe(Keys.A, left_stop, KeyboardEvent.KeyUp);
 
-        keyboardListener.Subscribe(Key.D, right_start);
-        keyboardListener.Subscribe(Key.D, right_stop, null, KeyboardEvent.KeyUp);
+        keyboardListener.Subscribe(Keys.D, right_start);
+        keyboardListener.Subscribe(Keys.D, right_stop, KeyboardEvent.KeyUp);
 
-        keyboardListener.Subscribe(Key.Space, up_start);
-        keyboardListener.Subscribe(Key.Space, up_stop, null, KeyboardEvent.KeyUp);
+        keyboardListener.Subscribe(Keys.Space, up_start);
+        keyboardListener.Subscribe(Keys.Space, up_stop, KeyboardEvent.KeyUp);
 
-        keyboardListener.Subscribe(Key.LeftShift, down_start);
-        keyboardListener.Subscribe(Key.LeftShift, down_stop, null, KeyboardEvent.KeyUp);
+        keyboardListener.Subscribe(Keys.LeftShift, down_start);
+        keyboardListener.Subscribe(Keys.LeftShift, down_stop, KeyboardEvent.KeyUp);
         
         if (_window.IsFocused && _mouseLocked)
         {

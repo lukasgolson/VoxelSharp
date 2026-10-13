@@ -11,12 +11,24 @@ namespace VoxelSharp.Renderer;
 
 public class Window : NativeWindow, IWindow, IRendererProcessing, IUpdatable
 {
-    private static readonly NativeWindowSettings NativeWindowSettings = new()
+    private static readonly NativeWindowSettings NativeWindowSettings;
+
+    static Window()
     {
-        ClientSize = new Vector2i(1920 / 2, 1080 / 2),
-        Title = "VoxelSharp Client",
-        Flags = ContextFlags.ForwardCompatible
-    };
+        // GLFW's Wayland backend can't query or set window positions, which CenterWindow and
+        // ImGui's multi-viewports rely on, so opt out of Wayland and use X11 (XWayland) instead.
+        // OpenTK reads this when it initializes GLFW; an explicit value set by the user still wins.
+        // This must run before NativeWindowSettings is created, as that already initializes GLFW.
+        if (OperatingSystem.IsLinux() && Environment.GetEnvironmentVariable("OPENTK_4_USE_WAYLAND") is null)
+            Environment.SetEnvironmentVariable("OPENTK_4_USE_WAYLAND", "0");
+
+        NativeWindowSettings = new NativeWindowSettings
+        {
+            ClientSize = new Vector2i(1920 / 2, 1080 / 2),
+            Title = "VoxelSharp Client",
+            Flags = ContextFlags.ForwardCompatible
+        };
+    }
 
 
     public Window(IGameLoop gameLoop) : base(NativeWindowSettings)
@@ -63,14 +75,8 @@ public class Window : NativeWindow, IWindow, IRendererProcessing, IUpdatable
 
     public (int Width, int Height) ScreenSize => (Size.X, Size.Y);
 
-    public unsafe long WindowHandle
-    {
-        get
-        {
-            var windowHandle = GLFW.GetWin32Window(WindowPtr);
-            return windowHandle.ToInt64();
-        }
-    }
+    // The GLFW window pointer; GLFW.GetWin32Window would only work on Windows
+    public unsafe long WindowHandle => (long)WindowPtr;
     
     protected override void OnFocusedChanged(FocusedChangedEventArgs e)
     {

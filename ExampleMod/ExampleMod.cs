@@ -37,9 +37,9 @@ public class ExampleMod : IMod
         var resourcePath = Path.Combine(Path.GetDirectoryName(assemblyPath)!, "Resources");
 
         resourceDictionary.AddTextResource("ExampleMod:Shaders/Sky.frag",
-            Path.Combine(resourcePath, "Shaders/Sky.frag"));
+            Path.Combine(resourcePath, "Shaders/sky.frag"));
         resourceDictionary.AddTextResource("ExampleMod:Shaders/Sky.vert",
-            Path.Combine(resourcePath, "Shaders/Sky.vert"));
+            Path.Combine(resourcePath, "Shaders/sky.vert"));
 
 
      

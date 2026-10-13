@@ -1,8 +1,8 @@
-﻿using System.Windows.Input;
-using DeftSharp.Windows.Input.Keyboard;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
+using OpenTK.Windowing.GraphicsLibraryFramework;
 using VoxelSharp.Abstractions.Client;
 using VoxelSharp.Abstractions.Loop;
+using VoxelSharp.Client.Input;
 using VoxelSharp.Core.World;
 using VoxelSharp.Renderer.Rendering;
 
@@ -31,7 +31,7 @@ public class Client : IClient
 
     public void Run()
     {
-        _keyboardListener.Subscribe(Key.Escape, _gameLoop.Stop);
+        _keyboardListener.Subscribe(Keys.Escape, _gameLoop.Stop);
 
 
         

@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>net8.0-windows</TargetFramework>
+        <TargetFramework>net8.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
@@ -29,7 +29,11 @@
         <!-- Remove the ResourcesDirectory if it exists -->
         <Copy SourceFiles="$(OutputPath)\$(AssemblyName).dll" DestinationFolder="$(ModsDirectory)"/>
 
-        <Exec Command="robocopy &quot;$(OutputPath)\Resources&quot; &quot;$(ResourcesDirectory)&quot; /E /COPY:DAT || exit 0" Condition="Exists('$(OutputPath)\Resources\')"/>
+        <ItemGroup>
+            <ModResourceFiles Include="$(OutputPath)Resources\**\*"/>
+        </ItemGroup>
+
+        <Copy SourceFiles="@(ModResourceFiles)" DestinationFolder="$(ResourcesDirectory)\%(RecursiveDir)" Condition="Exists('$(OutputPath)Resources\')"/>
     </Target>
 
 </Project>

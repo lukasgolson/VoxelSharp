@@ -1,4 +1,3 @@
-﻿using DeftSharp.Windows.Input.Keyboard;
 using Microsoft.Extensions.Logging;
 using Serilog;
 using SimpleInjector;
