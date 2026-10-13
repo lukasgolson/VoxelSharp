@@ -4,15 +4,12 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <RootNamespace>VoxelSharp.Core</RootNamespace>
-        <TargetFramework>net8.0-windows</TargetFramework>
+        <TargetFramework>net8.0</TargetFramework>
     </PropertyGroup>
 
     <ItemGroup>
-        <Folder Include="Math\"/>
-    </ItemGroup>
-
-    <ItemGroup>
         <ProjectReference Include="..\VoxelSharp.Abstractions\VoxelSharp.Abstractions.csproj"/>
+        <ProjectReference Include="..\VoxelSharp.Resources\VoxelSharp.Resources.csproj" />
     </ItemGroup>
 
     <ItemGroup>
@@ -22,6 +19,10 @@
       <PackageReference Include="Arch.System.SourceGenerator" Version="1.2.1" />
       <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.0" />
       <PackageReference Include="SimpleInjector" Version="5.5.0" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="Interfaces\" />
     </ItemGroup>
 
 </Project>

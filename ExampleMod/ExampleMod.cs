@@ -1,112 +1,64 @@
-﻿using HarmonyLib;
+﻿using ExampleMod.WorldGen;
+using HarmonyLib;
 using SimpleInjector;
-using VoxelSharp.Abstractions.Client;
-using VoxelSharp.Client;
-using VoxelSharp.Core.Structs;
-using VoxelSharp.Core.World;
+using VoxelSharp.Abstractions.Loop;
+using VoxelSharp.Core.Interfaces.WorldGen;
 using VoxelSharp.Modding.Interfaces;
 using VoxelSharp.Modding.Structs;
+using VoxelSharp.Resources;
+using VoxelSharp.Resources.Loading;
 using Version = VoxelSharp.Modding.Structs.Version;
 
 namespace ExampleMod;
 
 public class ExampleMod : IMod
 {
+    private SkyRenderer _skyRenderer;
+
     public ModInfo ModInfo { get; } = new(
         "ExampleMod",
         "com.voxelsharp.examplemod",
         new Version(1, 0, 0),
         "VoxelSharp"
-      
     );
 
-    public bool PreInitialize(Harmony harmony, Container container)
-    {
-        
-        
-        return true;
-    }
 
     public bool Initialize(Harmony harmony, Container container)
     {
-        if (container.GetInstance<IClient>() is not Client client)
-        {
-            return false;
-        }
-        
-        SetCursor(client.VoxelWorld);
+        container.Options.AllowOverridingRegistrations = true;
+        //container.RegisterSingleton<IWorldGenerator, BasicWorldGenerator>();
 
-        CreateHollowCube(client.VoxelWorld, new Position<int>(5, 5, 5), 8);
+        container.Register<SkyRenderer>();
 
-        
+
+        var resourceDictionary = container.GetInstance<ResourceDictionary>();
+
+        var assemblyPath = System.Reflection.Assembly.GetExecutingAssembly().Location;
+        var resourcePath = Path.Combine(Path.GetDirectoryName(assemblyPath)!, "Resources");
+
+        resourceDictionary.AddTextResource("ExampleMod:Shaders/Sky.frag",
+            Path.Combine(resourcePath, "Shaders/sky.frag"));
+        resourceDictionary.AddTextResource("ExampleMod:Shaders/Sky.vert",
+            Path.Combine(resourcePath, "Shaders/sky.vert"));
+
+
      
-
-      
         
+        
+
         return true;
     }
 
 
-    private void CreateHollowCube(VoxelWorld clientVoxelWorld, Position<int> position, int sideLength)
+    public bool PostInitialize(Container container)
     {
-        // Calculate half the size for centering
-        int halfSize = sideLength / 2;
-
-        for (int x = -halfSize; x <= halfSize; x++)
-        {
-            for (int y = -halfSize; y <= halfSize; y++)
-            {
-                for (int z = -halfSize; z <= halfSize; z++)
-                {
-                    // Determine if the current voxel is on the surface of the cube
-                    bool isOnSurface = (x == -halfSize || x == halfSize ||
-                                        y == -halfSize || y == halfSize ||
-                                        z == -halfSize || z == halfSize);
-
-                    if (isOnSurface)
-                    {
-                        // Set voxel at the calculated position
-                        clientVoxelWorld.SetVoxel(
-                            new Position<int>(
-                                position.X + x,
-                                position.Y + y,
-                                position.Z + z
-                            ),
-                            new Voxel(Color.GetRandomColor())
-                        );
-                    }
-                }
-            }
-        }
-    }
-
-  
+        // Get the Resource dictionary from the container
 
 
-    public bool Update(double deltaTime)
-    {
+        _skyRenderer = container.GetInstance<SkyRenderer>();
+        var loop = container.GetInstance<IGameLoop>();
+        
+
         return true;
     }
-
-    public bool Render()
-    {
-        return true;
-    }
-
-    public void InitializeShaders()
-    {
-    }
-
-
-    private static void SetCursor(VoxelWorld voxelWorld)
-    {
-        voxelWorld.SetVoxel(new Position<int>(0, 0, 0), new Voxel(Color.Red)); // Origin in red
-        voxelWorld.SetVoxel(new Position<int>(1, 0, 0), new Voxel(Color.Green)); // X-axis in green
-        voxelWorld.SetVoxel(new Position<int>(0, 1, 0), new Voxel(Color.Blue)); // Y-axis in blue
-        voxelWorld.SetVoxel(new Position<int>(0, 0, 1), new Voxel(Color.Yellow)); // Z-axis in yellow
-    }
-}
-
-public struct Dwarf
-{
 }

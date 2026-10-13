@@ -13,35 +13,38 @@ public readonly struct VoxelVertex
     public readonly float A; // Alpha (fully opaque)
     public readonly int FaceId; // Identifier for the face
 
-    public VoxelVertex(int x, int y, int z, Voxel voxel, FaceId faceId, bool debug = false)
+    public VoxelVertex(int x, int y, int z, Voxel voxel, FaceId faceId, bool debug = false, bool randomColor = false)
     {
         X = x;
         Y = y;
         Z = z;
         FaceId = (int)faceId;
 
-        if (debug)
+        if (randomColor)
+        {
+            (R, G, B, A) = (1.0f, (float)Random.Shared.NextDouble(),
+                (float)Random.Shared.NextDouble(), 1.0f);
+        }
+        else if (debug)
             // Assign unique colors based on FaceId for debugging
-            (R, G, B) = faceId switch
+            (R, G, B, A) = faceId switch
             {
-                World.FaceId.Top => (1.0f, 0.0f, 0.0f), // Red
-                World.FaceId.Bottom => (0.0f, 1.0f, 0.0f), // Green
-                World.FaceId.Right => (0.0f, 0.0f, 1.0f), // Blue
-                World.FaceId.Left => (1.0f, 1.0f, 0.0f), // Yellow
-                World.FaceId.Back => (0.0f, 1.0f, 1.0f), // Cyan
-                World.FaceId.Front => (1.0f, 0.0f, 1.0f), // Magenta
-                _ => (1.0f, 1.0f, 1.0f) // White (fallback)
+                World.FaceId.Top => (1.0f, 0.0f, 0.0f, 1.0f), // Red
+                World.FaceId.Bottom => (0.0f, 1.0f, 0.0f, 1.0f), // Green
+                World.FaceId.Right => (0.0f, 0.0f, 1.0f, 1.0f), // Blue
+                World.FaceId.Left => (1.0f, 1.0f, 0.0f, 1.0f), // Yellow
+                World.FaceId.Back => (0.0f, 1.0f, 1.0f, 1.0f), // Cyan
+                World.FaceId.Front => (1.0f, 0.0f, 1.0f, 1.0f), // Magenta
+                _ => (1.0f, 1.0f, 1.0f, 1.0f) // White (fallback)
             };
         else
             // Assign the color of the voxel to the vertex
-            (R, G, B, A) = (voxel.Color.R, voxel.Color.G, voxel.Color.B, voxel.Color.A);
+            (R, G, B, A) = (voxel.Rgba.R / 255f, voxel.Rgba.G / 255f, voxel.Rgba.B / 255f, voxel.Rgba.A / 255f);
     }
 
 
     public static IEnumerable<VoxelVertex> CreateFace(int x, int y, int z, Voxel voxel, FaceId faceId)
     {
-        // top face
-
         switch (faceId)
         {
             case World.FaceId.Top:
@@ -51,7 +54,7 @@ public readonly struct VoxelVertex
                 var v2 = new VoxelVertex(x + 1, y + 1, z + 1, voxel, faceId);
                 var v3 = new VoxelVertex(x, y + 1, z + 1, voxel, faceId);
 
-                // add in order: 0,3,2,0,2,1
+                // (Correct) add in order: 0,3,2,0,2,1
                 return [v0, v3, v2, v0, v2, v1];
             }
             case World.FaceId.Bottom:
@@ -61,8 +64,8 @@ public readonly struct VoxelVertex
                 var v2 = new VoxelVertex(x + 1, y, z + 1, voxel, faceId);
                 var v3 = new VoxelVertex(x, y, z + 1, voxel, faceId);
 
-                // add in order: 0,2,3,0,1,2
-                return [v0, v2, v3, v0, v1, v2];
+                // [FIXED] Flipped from 0,2,3,0,1,2 to 0,1,2,0,2,3
+                return [v0, v1, v2, v0, v2, v3];
             }
             case World.FaceId.Right:
             {
@@ -71,7 +74,7 @@ public readonly struct VoxelVertex
                 var v2 = new VoxelVertex(x + 1, y + 1, z + 1, voxel, faceId);
                 var v3 = new VoxelVertex(x + 1, y, z + 1, voxel, faceId);
 
-                // add in order: 0, 1, 2, 0, 2, 3
+                // (Correct) add in order: 0, 1, 2, 0, 2, 3
                 return [v0, v1, v2, v0, v2, v3];
             }
             case World.FaceId.Left:
@@ -81,8 +84,8 @@ public readonly struct VoxelVertex
                 var v2 = new VoxelVertex(x, y + 1, z + 1, voxel, faceId);
                 var v3 = new VoxelVertex(x, y, z + 1, voxel, faceId);
 
-                // add in order: 0, 2, 1, 0, 3, 2
-                return [v0, v2, v1, v0, v3, v2];
+                // [FIXED] Flipped from 0,2,1,0,3,2 to 0,3,2,0,2,1
+                return [v0, v3, v2, v0, v2, v1];
             }
             case World.FaceId.Back:
             {
@@ -91,7 +94,7 @@ public readonly struct VoxelVertex
                 var v2 = new VoxelVertex(x + 1, y + 1, z, voxel, faceId);
                 var v3 = new VoxelVertex(x + 1, y, z, voxel, faceId);
 
-                // add in order: 0, 1, 2, 0, 2, 3
+                // [FIXED] Flipped from 0,1,2,0,2,3 to 0,3,2,0,2,1
                 return [v0, v1, v2, v0, v2, v3];
             }
             case World.FaceId.Front:
@@ -101,7 +104,7 @@ public readonly struct VoxelVertex
                 var v2 = new VoxelVertex(x + 1, y + 1, z + 1, voxel, faceId);
                 var v3 = new VoxelVertex(x + 1, y, z + 1, voxel, faceId);
 
-                // add in order: 0, 2, 1, 0, 3, 2
+                // [FIXED] Flipped from 0,2,1,0,3,2 to 0,1,2,0,2,3
                 return [v0, v2, v1, v0, v3, v2];
             }
             default:

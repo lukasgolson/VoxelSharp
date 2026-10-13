@@ -1,8 +1,12 @@
 ﻿using System.Runtime.CompilerServices;
 using VoxelSharp.Core.Structs;
+using VoxelSharp.Resources;
 
 namespace VoxelSharp.Core.World;
 
+/// <summary>
+/// A chunk is a 3D grid of voxels that represents a portion of the world.
+/// </summary>
 public class Chunk
 {
     /// <summary>
@@ -25,7 +29,7 @@ public class Chunk
         // Fill the Memory<Voxel> with transparent voxels
         var span = VoxelBuffer.Span;
 
-        var transparentVoxel = new Voxel(Color.Transparent);
+        var transparentVoxel = new Voxel(Rgba.Transparent);
 
         for (var i = 0; i < span.Length; i++) span[i] = transparentVoxel;
     }
@@ -59,6 +63,8 @@ public class Chunk
     ///     The world position of this chunk.
     /// </summary>
     public Position<int> Position { get; }
+
+    public int Dimension { get; } = 0;
 
     /// <summary>
     ///     Sets a voxel at the specified local chunk coordinates, marking the chunk dirty.
@@ -120,6 +126,14 @@ public class Chunk
         return VoxelBuffer.Slice(offset, length).Span;
     }
 
+
+    public Span<Voxel> GetVoxelSpan(Position<int> start, Position<int> end)
+    {
+        var size = end - start;
+        return GetVoxelSpan(start.X, start.Y, start.Z, size.X, size.Y, size.Z);
+    }
+
+
     /// <summary>
     ///     Provides a span of the chunk's voxel data, useful for operations on the entire chunk.
     /// </summary>
@@ -127,5 +141,44 @@ public class Chunk
     public Span<Voxel> GetVoxelSpan()
     {
         return VoxelBuffer.Span;
+    }
+
+
+    
+    public Position<int> LocalToGlobalPosition(Position<int> localVoxelPosition)
+    {
+        return localVoxelPosition + Position * ChunkSize;
+    }
+
+    /// <summary>
+    /// Iterates over all local voxel positions within the chunk.
+    /// </summary>
+    /// <returns>An enumerable of (x, y, z) tuples representing local voxel coordinates.</returns>
+    public IEnumerable<(Position<int> position, int index)> IterateVoxelPositions(
+        bool globalPosition = false)
+    {
+        var voxelSpan = VoxelBuffer.Span;
+        int chunkVolume = ChunkVolume; // Cache for loop condition
+
+        for (int index = 0; index < chunkVolume; index++)
+        {
+
+            // Calculate 3D coordinates from index (only if needed)
+            int y = index / ChunkArea;
+            int remaining = index % ChunkArea;
+            int z = remaining / ChunkSize;
+            int x = remaining % ChunkSize;
+            var localPos = new Position<int>(x, y, z);
+
+            if (globalPosition)
+            {
+                var globalPos = LocalToGlobalPosition(localPos);
+                yield return (globalPos, index);
+            }
+            else
+            {
+                yield return (localPos, index);
+            }
+        }
     }
 }

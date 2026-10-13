@@ -128,15 +128,9 @@ public class ModLoader
         return harmony;
     }
 
-    public void Update(double deltaTime)
-    {
-        foreach (var mod in _mods) mod.Update(deltaTime);
-    }
 
-    public void Render()
-    {
-        foreach (var mod in _mods) mod.Render();
-    }
+
+
 
     private List<IMod> ResolveLoadingOrder(List<IMod> mods)
     {
@@ -212,8 +206,9 @@ public class ModLoader
         return mods;
     }
 
-    public void InitializeShaders()
+    public void PostInitializeMods(Container container)
     {
-        foreach (var mod in _mods) mod.InitializeShaders();
+        foreach (var mod in _mods) mod.PostInitialize(container);
+        
     }
 }

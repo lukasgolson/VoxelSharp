@@ -2,10 +2,12 @@
 
     <PropertyGroup>
         <OutputType>Exe</OutputType>
-        <TargetFramework>net8.0-windows</TargetFramework>
+        <TargetFramework>net8.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+        <!-- Allow running on newer .NET runtimes when 8.0 is not installed -->
+        <RollForward>Major</RollForward>
     </PropertyGroup>
 
     <ItemGroup>
@@ -15,7 +17,6 @@
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="DeftSharp.Windows.Input" Version="0.10.0"/>
         <PackageReference Include="Microsoft.Extensions.Logging" Version="9.0.0" />
         <PackageReference Include="Serilog.Extensions.Logging" Version="9.0.0" />
         <PackageReference Include="Serilog.Sinks.Console" Version="6.0.0" />

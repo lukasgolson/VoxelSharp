@@ -1,8 +1,11 @@
-﻿using VoxelSharp.Core.Structs;
+﻿using VoxelSharp.Resources;
 
 namespace VoxelSharp.Core.World;
 
-public readonly struct Voxel(Color value)
+public readonly struct Voxel(Rgba value)
 {
-    public readonly Color Color = value;
+    public readonly Rgba Rgba = value;
+
+
+    public bool IsEmpty => Rgba.IsTransparent;
 }

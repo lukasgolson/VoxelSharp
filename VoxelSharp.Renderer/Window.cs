@@ -1,4 +1,4 @@
-﻿using OpenTK.Graphics.OpenGL4;
+﻿using OpenTK.Graphics.OpenGL;
 using OpenTK.Mathematics;
 using OpenTK.Windowing.Common;
 using OpenTK.Windowing.Desktop;
@@ -11,25 +11,39 @@ namespace VoxelSharp.Renderer;
 
 public class Window : NativeWindow, IWindow, IRendererProcessing, IUpdatable
 {
-    private static readonly NativeWindowSettings NativeWindowSettings = new()
+    private static readonly NativeWindowSettings NativeWindowSettings;
+
+    static Window()
     {
-        ClientSize = new Vector2i(1920 / 2, 1080 / 2),
-        Title = "VoxelSharp Client",
-        Flags = ContextFlags.ForwardCompatible
-    };
+        // GLFW's Wayland backend can't query or set window positions, which CenterWindow and
+        // ImGui's multi-viewports rely on, so opt out of Wayland and use X11 (XWayland) instead.
+        // OpenTK reads this when it initializes GLFW; an explicit value set by the user still wins.
+        // This must run before NativeWindowSettings is created, as that already initializes GLFW.
+        if (OperatingSystem.IsLinux() && Environment.GetEnvironmentVariable("OPENTK_4_USE_WAYLAND") is null)
+            Environment.SetEnvironmentVariable("OPENTK_4_USE_WAYLAND", "0");
+
+        NativeWindowSettings = new NativeWindowSettings
+        {
+            ClientSize = new Vector2i(1920 / 2, 1080 / 2),
+            Title = "VoxelSharp Client",
+            Flags = ContextFlags.ForwardCompatible
+        };
+    }
 
 
     public Window(IGameLoop gameLoop) : base(NativeWindowSettings)
     {
         Context.MakeCurrent();
 
-        Load();
-
+        LoadOpenGL();
+        
         CenterWindow();
 
         gameLoop.RegisterRenderProcessingAction(this);
         gameLoop.RegisterUpdateAction(this);
     }
+
+  
 
     public void PreRender()
     {
@@ -39,40 +53,57 @@ public class Window : NativeWindow, IWindow, IRendererProcessing, IUpdatable
     public void PostRender()
     {
         Shader.Unuse();
+        
         Context.SwapBuffers();
     }
 
+
+  
+    
+    
     public void Update(double deltaTime)
     {
         ProcessWindowEvents(IsEventDriven);
     }
 
     public event EventHandler<double>? OnWindowResize;
+    public event Action? OnFocus;
+    public event Action? OnUnfocus;
+    
+    public bool IsFocused => base.IsFocused;
 
 
     public (int Width, int Height) ScreenSize => (Size.X, Size.Y);
 
-    public unsafe long WindowHandle
+    // The GLFW window pointer; GLFW.GetWin32Window would only work on Windows
+    public unsafe long WindowHandle => (long)WindowPtr;
+    
+    protected override void OnFocusedChanged(FocusedChangedEventArgs e)
     {
-        get
+        base.OnFocusedChanged(e);
+
+        if (e.IsFocused)
         {
-            var windowHandle = GLFW.GetWin32Window(WindowPtr);
-            return windowHandle.ToInt64();
+            OnFocus?.Invoke();
+        }
+        else
+        {
+            OnUnfocus?.Invoke();
         }
     }
 
-    protected void Load()
+    protected void LoadOpenGL()
     {
         GL.Enable(EnableCap.DepthTest);
         GL.DepthFunc(DepthFunction.Less);
-        GL.Disable(EnableCap.CullFace);
+        //GL.Disable(EnableCap.CullFace);
+        GL.Enable(EnableCap.CullFace); 
 
         GL.Clear(ClearBufferMask.DepthBufferBit);
 
 
         GL.Enable(EnableCap.Blend); // Enable blending for transparency
-        GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha); // Set blending function
-
+        GL.BlendFunc(BlendingFactor.One, BlendingFactor.OneMinusSrcAlpha);
 
         GL.ClearColor(0.1f, 0.1f, 0.1f, 1.0f);
     }

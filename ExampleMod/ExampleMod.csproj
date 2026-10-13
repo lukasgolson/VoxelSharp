@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>net8.0-windows</TargetFramework>
+        <TargetFramework>net8.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
@@ -13,6 +13,7 @@
         <ProjectReference Include="..\VoxelSharp.Client\VoxelSharp.Client.csproj"/>
         <ProjectReference Include="..\VoxelSharp.Core\VoxelSharp.Core.csproj"/>
         <ProjectReference Include="..\VoxelSharp.Modding\VoxelSharp.Modding.csproj"/>
+        <ProjectReference Include="..\VoxelSharp.Resources\VoxelSharp.Resources.csproj" />
     </ItemGroup>
 
     <ItemGroup>
@@ -23,9 +24,47 @@
       <Compile Remove="Test.cs" />
     </ItemGroup>
 
+    <ItemGroup>
+      <None Update="Shaders\sky.frag">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Shaders\sky.vert">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Resources\Shaders\sky.frag">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Resources\Shaders\sky.vert">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="Resources\" />
+    </ItemGroup>
+
 
     <Target Name="PostBuild" AfterTargets="Build">
-        <Copy SourceFiles="$(OutputPath)\$(AssemblyName).dll" DestinationFolder="..\.mods\"/>
+        <PropertyGroup>
+            <ModsDirectory>..\.mods</ModsDirectory>
+            <ResourcesDirectory>$(ModsDirectory)\Resources</ResourcesDirectory>
+        </PropertyGroup>
+
+        <MakeDir Directories="$(ModsDirectory)" Condition="!Exists('$(ModsDirectory)')"/>
+
+        <!-- Remove the ResourcesDirectory if it exists -->
+        <RemoveDir Directories="$(ResourcesDirectory)" Condition="Exists('$(ResourcesDirectory)')"/>
+
+        <MakeDir Directories="$(ResourcesDirectory)"/>
+
+        <Copy SourceFiles="$(OutputPath)\$(AssemblyName).dll" DestinationFolder="$(ModsDirectory)"/>
+
+        <ItemGroup>
+            <ModResourceFiles Include="$(OutputPath)Resources\**\*"/>
+        </ItemGroup>
+
+        <Copy SourceFiles="@(ModResourceFiles)" DestinationFolder="$(ResourcesDirectory)\%(RecursiveDir)" Condition="Exists('$(OutputPath)Resources\')"/>
     </Target>
+
 
 </Project>

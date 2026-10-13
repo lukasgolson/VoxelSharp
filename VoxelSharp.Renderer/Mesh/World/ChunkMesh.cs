@@ -6,28 +6,65 @@ using VoxelSharp.Core.World;
 
 namespace VoxelSharp.Renderer.Mesh.World;
 
-public class ChunkMesh(Chunk chunk) : BaseMesh
+public class ChunkMesh : BaseMesh
 {
-    public override void Render(Shader shaderProgram)
+    private readonly VoxelWorld _voxelWorld; // Add this
+
+    public Chunk? Chunk { get; }
+
+    public ChunkMesh(Chunk chunk, VoxelWorld voxelWorld) : base() // Add VoxelWorld here
     {
-        // Check if the chunk is dirty or uninitialized
-        if (chunk.IsDirty || !IsInitialized)
-        {
-            // Rebuild the mesh (8 elements per vertex)
-            SetupMesh(8, shaderProgram);
-            chunk.IsDirty = false;
-        }
+        Chunk = chunk;
+        _voxelWorld = voxelWorld; // Store it
+    }
+    
+    private enum MeshType {Opaque, Transparent}
+    
+    
 
-        // After setup, skip rendering if there are no vertices
-        if (VertexCount == 0) return;
+    private Position<int>? Position => Chunk?.Position;
 
-        // Set the model matrix for this chunk
-        shaderProgram.SetUniform("m_model", GetModelMatrix());
+    /// <summary>
+    ///     Whether the mesh has never been built, or its chunk has changed since it was last built.
+    /// </summary>
+    public bool NeedsRebuild => Chunk.IsDirty || !IsOpaqueInitialized || !IsTransparentInitialized;
 
-        // Call the base Render to handle VAO binding and OpenGL draw calls
-        base.Render(shaderProgram);
+    /// <summary>
+    ///     Rebuilds the opaque and transparent meshes from the chunk's current voxels.
+    /// </summary>
+    public void Rebuild(Shader shaderProgram)
+    {
+        SetupOpaqueMesh(8, shaderProgram);
+        SetupTransparentMesh(8, shaderProgram);
+
+        Chunk.IsDirty = false;
     }
 
+    public override void RenderOpaque(Shader shaderProgram)
+    {
+        if (OpaqueVertexCount == 0) return;
+
+        shaderProgram.SetUniform("m_model", GetModelMatrix());
+
+        base.RenderOpaque(shaderProgram);
+    }
+
+    public override void RenderTransparent(Shader shaderProgram)
+    {
+        if (TransparentVertexCount == 0) return;
+
+        shaderProgram.SetUniform("m_model", GetModelMatrix());
+
+        base.RenderTransparent(shaderProgram);
+    }
+    
+    public override void Render(Shader shaderProgram)
+    {
+        RenderOpaque(shaderProgram);
+        RenderTransparent(shaderProgram);
+    }
+    
+    
     /// <summary>
     ///     Uses a memory pool to rent a float buffer to store vertex data.
     ///     Once completed, SetupMesh will store this data in a GPU buffer,
@@ -35,40 +72,56 @@ public class ChunkMesh(Chunk chunk) : BaseMesh
     /// </summary>
     /// <param name="vertexCount">Returns the total float elements used.</param>
     /// <returns>An IMemoryOwner of float, which you can dispose or return to the pool.</returns>
-    protected override IMemoryOwner<float> GetVertexDataMemory(out int vertexCount)
+    private IMemoryOwner<float> BuildVertexDataMemory(out int vertexCount, MeshType meshType)
     {
-        // Estimate the required size for the vertex buffer:
-        //   ChunkVolume * 6 faces * 6 vertices/face * 8 float elements/vertex
-        var estimatedVertexCount = chunk.ChunkVolume * 6 * 6 * 8;
+        var estimatedVertexCount = Chunk.ChunkVolume * 6 * 6 * 8;
         var memoryOwner = MemoryPool<float>.Shared.Rent(estimatedVertexCount);
-
-        // Get a span from the rented memory
         var span = memoryOwner.Memory.Span;
-
         var index = 0;
+        var chunkVoxelSpan = Chunk.GetVoxelSpan();
 
-        // Retrieve a span of the chunk's voxel data
-        var chunkVoxelSpan = chunk.GetVoxelSpan();
-
-
-        for (var x = 0; x < chunk.ChunkSize; x++)
-        for (var z = 0; z < chunk.ChunkSize; z++)
-        for (var y = 0; y < chunk.ChunkSize; y++)
+        for (var x = 0; x < Chunk.ChunkSize; x++)
+        for (var z = 0; z < Chunk.ChunkSize; z++)
+        for (var y = 0; y < Chunk.ChunkSize; y++)
         {
-            // Compute this voxel's index
-            var voxelIndex = chunk.GetVoxelIndex(new Position<int>(x, y, z));
+            var voxelIndex = Chunk.GetVoxelIndex(new Position<int>(x, y, z));
             var voxel = chunkVoxelSpan[voxelIndex];
-
-            // Skip transparent voxels
-            if (voxel.Color.A == 0) continue;
-
-            // Add visible faces
+            var alpha = voxel.Rgba.A;
+            
+            // This is the only logic that changes
+            switch (meshType)
+            {
+                case MeshType.Opaque:
+                    // Skip non-opaque (A != 255) voxels
+                    if (alpha != 255) continue;
+                    break;
+                case MeshType.Transparent:
+                    // Skip opaque (A=255) and fully transparent/air (A=0) voxels
+                    if (alpha is 255 or 0) continue;
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(meshType), meshType, null);
+            }
+            
+            // The rest of the logic is shared
             AddVisibleFacesToSpan(span, chunkVoxelSpan, ref index, x, y, z, voxel);
         }
 
-        vertexCount = index; // The total floats used in the span
+        vertexCount = index;
         return memoryOwner;
     }
+    
+    protected override IMemoryOwner<float> GetOpaqueVertexDataMemory(out int vertexCount)
+    {
+        return BuildVertexDataMemory(out vertexCount, MeshType.Opaque);
+    }
+
+    protected override IMemoryOwner<float> GetTransparentVertexDataMemory(out int vertexCount)
+    {
+        return BuildVertexDataMemory(out vertexCount, MeshType.Transparent);
+    }
+    
+   
 
     /// <summary>
     ///     Sets up vertex attribute pointers for this mesh.
@@ -95,7 +148,7 @@ public class ChunkMesh(Chunk chunk) : BaseMesh
         }
 
         // Face ID attribute
-        var faceIndex = shaderProgram.GetAttribLocation("face_id");
+        var faceIndex = shaderProgram.GetAttribLocation("in_face_id_float");
         if (faceIndex == -1) return;
         GL.EnableVertexAttribArray(faceIndex);
         GL.VertexAttribPointer(faceIndex, 1, VertexAttribPointerType.Float, false, 8 * sizeof(float),
@@ -110,9 +163,9 @@ public class ChunkMesh(Chunk chunk) : BaseMesh
     {
         // Calculate the translation for this chunk
         return Matrix4.CreateTranslation(
-            chunk.Position.X * chunk.ChunkSize,
-            chunk.Position.Y * chunk.ChunkSize,
-            chunk.Position.Z * chunk.ChunkSize
+            Chunk.Position.X * Chunk.ChunkSize,
+            Chunk.Position.Y * Chunk.ChunkSize,
+            Chunk.Position.Z * Chunk.ChunkSize
         );
     }
 
@@ -127,22 +180,45 @@ public class ChunkMesh(Chunk chunk) : BaseMesh
     /// <param name="voxelSpan">Span of all voxels in this chunk.</param>
     private bool IsVoid(int x, int y, int z, int currentAlpha, Span<Voxel> voxelSpan)
     {
-        // If the current voxel is transparent, treat as void
-        if (currentAlpha == 0) return true;
+        byte adjacentAlpha;
+        var neighborLocalPos = new Position<int>(x, y, z);
 
-        // If out of chunk bounds, treat as void
-        if (!IsWithinBounds(x, y, z)) return true;
+        if (!IsWithinBounds(x, y, z))
+        {
+            // --- NEIGHBOR CHUNK LOGIC ---
+            // 1. Get the global position of this neighbor
+            var neighborGlobalPos = Chunk.LocalToGlobalPosition(neighborLocalPos);            
+            // 2. Ask the world for the voxel at that global position
+            var neighborVoxel = _voxelWorld.GetVoxel(neighborGlobalPos);
+            adjacentAlpha = neighborVoxel.Rgba.A;
+        }
+        else
+        {
+            // --- SAME CHUNK LOGIC ---
+            var idx = Chunk.GetVoxelIndex(neighborLocalPos);
+            adjacentAlpha = voxelSpan[idx].Rgba.A;
+        }
 
-        // Otherwise, check if the adjacent voxel is transparent
-        var idx = chunk.GetVoxelIndex(new Position<int>(x, y, z));
-        return voxelSpan[idx].Color.A != currentAlpha;
+        // --- SHARED CULLING LOGIC ---
+        
+        // If adjacent is Air, always draw
+        if (adjacentAlpha == 0) return true;
+        
+        bool isCurrentOpaque = (currentAlpha == 255);
+        bool isAdjacentOpaque = (adjacentAlpha == 255);
+
+        // Draw if one is opaque and the other is not
+        // This correctly handles:
+        //   Solid-Solid (false), Water-Water (false)
+        //   Solid-Water (true), Water-Air (true)
+        return isCurrentOpaque != isAdjacentOpaque;
     }
 
     private bool IsWithinBounds(int x, int y, int z)
     {
-        return x >= 0 && x < chunk.ChunkSize &&
-               y >= 0 && y < chunk.ChunkSize &&
-               z >= 0 && z < chunk.ChunkSize;
+        return x >= 0 && x < Chunk.ChunkSize &&
+               y >= 0 && y < Chunk.ChunkSize &&
+               z >= 0 && z < Chunk.ChunkSize;
     }
 
     /// <summary>
@@ -159,7 +235,7 @@ public class ChunkMesh(Chunk chunk) : BaseMesh
     private void AddVisibleFacesToSpan(Span<float> span, Span<Voxel> voxelSpan, ref int index,
         int x, int y, int z, Voxel voxel)
     {
-        int alpha = voxel.Color.A;
+        int alpha = voxel.Rgba.A;
 
         // Top face
         if (IsVoid(x, y + 1, z, alpha, voxelSpan))

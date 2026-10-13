@@ -1,42 +1,35 @@
 ﻿#version 330 core
 
-layout (location = 0) out vec4 fragColor;
+// Output color
+out vec4 fragColor;
 
+// Inputs from vertex shader
 in vec4 voxel_color;
 in vec2 frag_uv;
-in vec3 frag_normal;
+flat in vec3 frag_normal;
 
-// Optional texture sampler (if you have a texture atlas)
-//uniform sampler2D atlas;
-
-// Simple lighting uniforms
-vec3 lightDirection = normalize(vec3(0.3, -1.0, 0.2));
-uniform vec3 lightColour = vec3(1.0, 1.0, 1.0);
-uniform float ambientFactor = 0.1;
-
-// Optional gamma correction
+// Lighting uniforms
+uniform vec3 lightDirection = vec3(0.5, 0.8, 0.3); // Direction of light
+uniform vec3 lightColour = vec3(1.0, 1.0, 1.0); // Light color
+uniform float ambientFactor = 0; // Ambient light factor
 const float gamma = 2.2;
 
 void main()
 {
-    // If using a texture atlas, multiply the sampled colour by the voxel colour.
-    // Otherwise, just use voxel_color.
-    //vec4 texColour = texture(atlas, frag_uv) * voxel_color;
-    vec4 texColour = voxel_color;
-
     // Simple Lambertian lighting
     vec3 N = normalize(frag_normal);
-    vec3 L = normalize(-lightDirection); // negative if light is from "above"
-    float diffuse = max(dot(N, L), 0.0);
+    vec3 L = normalize(-lightDirection); // Invert light direction for calculation
+    float diffuse = max(dot(N, L), 0.0); // Calculate diffuse lighting
 
-    // Combine diffuse with an ambient term
-    vec3 lighting = ambientFactor + (diffuse * lightColour);
+    // Darken faces based on the dot product
+    float darkeningFactor = 0.5 + (0.5 * diffuse); // Adjust darkening factor
+    vec3 lighting = (ambientFactor + (darkeningFactor * lightColour)); // Calculate final lighting
 
-    // Final colour (before gamma correction)
-    vec4 finalColour = vec4(texColour.rgb * lighting, texColour.a);
-
-    // (Optional) Apply gamma correction
-    finalColour.rgb = pow(finalColour.rgb, vec3(1.0 / gamma));
+    vec4 finalColour;
+    // Combine voxel color with lighting
+    finalColour.rgb = voxel_color.rgb * lighting * voxel_color.a;
+    finalColour.a = voxel_color.a;
 
     fragColor = finalColour;
+
 }

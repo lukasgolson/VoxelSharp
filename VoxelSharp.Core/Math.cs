@@ -22,6 +22,18 @@ public static class Math
         };
     }
 
+    /// <summary>
+    ///     Computes integer division rounded towards negative infinity, so that e.g. -1 / 16 = -1.
+    /// </summary>
+    /// <param name="value">The value to be divided.</param>
+    /// <param name="divisor">The positive divisor.</param>
+    /// <returns>The floored quotient.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static int FloorDiv(int value, int divisor)
+    {
+        return (value - EModulo(value, divisor)) / divisor;
+    }
+
     public static T Clamp<T>(T value, T min, T max) where T : INumber<T>
     {
         return value < min ? min : value > max ? max : value;
